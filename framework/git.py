@@ -71,7 +71,10 @@ class GitRepository(object):
         return self.repository_base
 
     def tracked_files(self):
+        orig = os.getcwd()
+        os.chdir(self.repository_base)
         out = subprocess.check_output(['git', 'ls-files'])
+        os.chdir(orig)
         return [os.path.join(self.repository_base, f) for f in
                 out.decode("utf-8").split('\n') if f != '']
 
