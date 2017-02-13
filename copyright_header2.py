@@ -347,7 +347,7 @@ class ReportCmd(CopyrightHeaderCmd):
 def add_report_cmd(subparsers):
     def exec_report_cmd(options):
         ReportCmd(options.repository, options.jobs,
-                  options.target_fnmatches, options.json).exec()
+                  options.target_fnmatches, options.json).exec_analysis()
 
     report_help = ("Produces a report of copyright header notices and "
                    "identifies")
@@ -403,7 +403,7 @@ class CheckCmd(CopyrightHeaderCmd):
 def add_check_cmd(subparsers):
     def exec_check_cmd(options):
         CheckCmd(options.repository, options.jobs,
-                 options.target_fnmatches, options.json).exec()
+                 options.target_fnmatches, options.json).exec_analysis()
 
     check_help = ("")
     parser = subparsers.add_parser('check', help=check_help)
