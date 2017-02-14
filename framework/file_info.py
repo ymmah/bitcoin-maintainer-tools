@@ -30,10 +30,12 @@ class FileInfo(dict):
     def compute(self):
         sys.exit("*** 'compute' function must be redefined by subclass")
 
-    def set_write_content(self, contents):
-        self['write_content'] = contents
+    def set_write_content(self, write_content):
+        self['write_content'] = write_content
 
     def write(self):
+        if self['content'] == self['write_content']:
+            return
         write_file(self['file_path'], self['write_content'])
 
 

@@ -15,6 +15,7 @@ from framework.file_content_cmd import FileContentCmd
 from framework.args import add_jobs_arg
 from framework.args import add_json_arg
 from framework.git import add_git_tracked_targets_arg
+from framework.git import GitFilePath
 from framework.style import StyleDiff, StyleScore
 
 ###############################################################################
@@ -417,6 +418,11 @@ def add_check_cmd(subparsers):
 # update cmd
 ###############################################################################
 
+COPYRIGHT = 'Copyright \\(c\\)'
+HOLDER = 'The Bitcoin Core developers'
+UPDATEABLE_LINE_COMPILED = re.compile(' '.join([COPYRIGHT, YEAR_RANGE,
+                                                HOLDER]))
+
 class UpdateCmd(CopyrightHeaderCmd):
     """
     'update' subcommand class.
@@ -424,13 +430,63 @@ class UpdateCmd(CopyrightHeaderCmd):
     def __init__(self, repository, target_fnmatches):
         super().__init__(repository, 1, target_fnmatches, False)
 
+    def _updatable_copyright_line(self, file_lines):
+        index = 0
+        for line in file_lines:
+            if UPDATEABLE_LINE_COMPILED.search(line) is not None:
+                return index, line
+            index = index + 1
+        return None, None
+
+    def _year_range_to_str(self, start_year, end_year):
+        if start_year == end_year:
+            return start_year
+        return "%s-%s" % (start_year, end_year)
+
+    def _updated_copyright_line(self, line, last_git_change_year):
+        match = YEAR_RANGE_COMPILED.search(line)
+        start_year = match.group('start_year')
+        end_year = match.group('end_year')
+        if end_year is None:
+            end_year = start_year
+        if end_year == last_git_change_year:
+            return line
+        new_range_str = self._year_range_to_str(start_year,
+                                                last_git_change_year)
+        return YEAR_RANGE_COMPILED.sub(new_range_str, line)
+
+    def _update_header(self, file_info):
+        file_lines = file_info['content'].split('\n')
+        index, line = self._updatable_copyright_line(file_lines)
+        if line is None:
+            return file_info['content']
+        last_git_change_year = file_info['change_years'][1]
+        new_line = self._updated_copyright_line(line, last_git_change_year)
+        if line == new_line:
+            return file_info['content']
+        file_lines[index] = new_line
+        return'\n'.join(file_lines)
+
     def _compute_file_infos(self):
         super()._compute_file_infos()
+        r = self.report
+        r.add("Querying git for file update history...\n")
+        r.flush()
         for file_info in self.file_infos:
-           file_info.set_write_content(file_info['content'])
+            file_path = GitFilePath(file_info['file_path'])
+            file_info['change_years'] = file_path.change_year_range()
+            updated = self._update_header(file_info)
+            file_info['updated'] = updated != file_info['content']
+            file_info.set_write_content(updated)
+        r.add("Done.\n")
+        r.flush()
 
     def _write_files(self):
+        r = self.report
         self.file_infos.write_all()
+        r.add("Updated copyright header years in %d files.\n" %
+              sum(1 for f in self.file_infos if f['updated']))
+        r.flush()
 
 
 def add_update_cmd(subparsers):

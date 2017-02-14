@@ -7,6 +7,7 @@ import os
 import sys
 import subprocess
 import argparse
+import datetime
 from framework.path import Path
 
 
@@ -50,8 +51,40 @@ class GitPath(Path):
 
 
 ###############################################################################
-# tracked file in repository
+# query info about a particular file in repository
 ###############################################################################
+
+GIT_LOG_CMD = "git log --follow --pretty=format:%%ai %s"
+
+class GitFilePath(GitPath):
+    def __init__(self, path):
+        super().__init__(path)
+        self.assert_is_file()
+        self.assert_in_git_repository()
+        self.repository = str(self.repository_base())
+
+    def _git_log(self):
+        cmd = (GIT_LOG_CMD % self).split(' ')
+        orig = os.getcwd()
+        os.chdir(self.repository)
+        out = subprocess.check_output(cmd)
+        os.chdir(orig)
+        decoded = out.decode("utf-8")
+        if decoded == '':
+            return []
+        return decoded.split('\n')
+
+    def _git_change_years(self):
+        git_log_lines = self._git_log()
+        # timestamp is in ISO 8601 format. e.g. "2016-09-05 14:25:32 -0600"
+        return [line.split(' ')[0].split('-')[0] for line in git_log_lines]
+
+    def year_of_most_recent_change(self):
+        return max(self._git_change_years())
+
+    def change_year_range(self):
+        years = self._git_change_years()
+        return min(years), max(years)
 
 
 ###############################################################################
