@@ -272,3 +272,42 @@ def clang_format_from_options(options, style_file_default):
     style_path = (options.style_file if options.style_file else
                   os.path.join(str(options.repository), style_file_default))
     return ClangFormat(binary, style_path)
+
+
+###############################################################################
+# TODO
+###############################################################################
+
+class ReportPathAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not isinstance(values, str):
+            sys.exit("*** %s is not a single string" % values)
+        p = Path(values)
+        p.assert_exists()
+        p.assert_is_file()
+        p.assert_mode(os.R_OK | os.W_OK)
+
+
+DEFAULT_REPORT_PATH = "/tmp/bitcoin-scan-build/"
+
+def add_clang_static_analysis_args(parser):
+    b_help = ("path to the clang directory or binary to be used "
+              "(default=The required clang binary installed in PATH with the "
+              "highest version number)")
+    parser.add_argument("-b", "--bin-path", type=str,
+                        action=ClangDirectoryAction, help=b_help)
+    r_help = ("The path for scan-build to write its report files. "
+              "(default=%s)" % DEFAULT_REPORT_PATH)
+    parser.add_argument("-r", "--report-path", default=DEFAULT_REPORT_PATH,
+                        type=str, action=ReportPathAction, help=r_help)
+
+
+def scan_build_binaries_from_options(options):
+    if hasattr(options, 'clang_executables'):
+        scan_build = options.clang_executables['scan-build']
+        scan_view = options.clang_executables['scan-view']
+    else:
+        finder = ClangFind()
+        scan_build = finder.best('scan-build')
+        scan_view = finder.best('scan-view')
+    return scan_build, scan_view

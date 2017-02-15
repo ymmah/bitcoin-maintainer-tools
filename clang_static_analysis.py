@@ -10,6 +10,11 @@ import time
 import argparse
 
 from framework.scan_build import ScanBuildResultDirectory
+from framework.args import add_jobs_arg
+from framework.args import add_json_arg
+from framework.clang import add_clang_static_analysis_args
+from framework.clang import scan_build_binaries_from_options
+from framework.git import add_git_repository_arg
 
 ###############################################################################
 # do analysis
@@ -158,30 +163,6 @@ class RepositoryPathAction(PathAction):
         namespace.repository = path
 
 
-class ReportPathAction(PathAction):
-    def __call__(self, parser, namespace, values, option_string=None):
-        path = os.path.abspath(values)
-        self._assert_exists(path)
-        self._assert_mode(path, os.R_OK | os.W_OK)
-        namespace.report_path = path
-
-
-class BinPathAction(PathAction):
-    def __call__(self, parser, namespace, values, option_string=None):
-        path = os.path.abspath(values)
-        self._assert_exists(path)
-        scan_build = os.path.join(path, 'scan-build')
-        scan_view = os.path.join(path, 'scan-view')
-
-        self._assert_exists(scan_build)
-        self._assert_mode(scan_build, os.R_OK | os.X_OK)
-        self._assert_exists(scan_view)
-        self._assert_mode(scan_view, os.R_OK | os.X_OK)
-
-        namespace.scan_build = scan_build
-        namespace.scan_view = scan_view
-
-
 ###############################################################################
 # helpers for defaults
 ###############################################################################
@@ -190,20 +171,50 @@ class BinPathAction(PathAction):
 DEFAULT_REPORT_PATH = "/tmp/bitcoin-scan-build/"
 
 
-def make_report_path_if_missing():
-    if not os.path.exists(DEFAULT_REPORT_PATH):
-        os.makedirs(DEFAULT_REPORT_PATH)
+###############################################################################
+# cmd base class
+###############################################################################
+
+class ClangStaticAnalysisCmd(object):
+    """
+    Common base class for the commands in this script.
+    """
+    def __init__(self, repository, jobs, json, scan_build, scan_view):
+        self.repository = repository
+        self.jobs = jobs
+        self.json = json
+        self.scan_build = scan_build
+        self.scan_view = scan_view
+
+###############################################################################
+# report cmd
+###############################################################################
+
+class ReportCmd(ClangStaticAnalysisCmd):
+    """
+    'report' subcommand class.
+    """
+    def __init__(self, repository, jobs, json, scan_build, scan_view):
+        super().__init__(repository, jobs, json, scan_build, scan_view)
+
+    def exec_analysis(self):
+        print("analysis")
+        pass
 
 
-def locate_installed_binaries():
-    def which(binary):
-        out = subprocess.check_output(['which', binary])
-        lines = [l for l in out.decode("utf-8").split('\n') if l != '']
-        if len(lines) != 1:
-            sys.exit("*** could not find installed %s" % binary)
-        return lines[0]
-    return (os.path.realpath(which('scan-build')),
-            os.path.realpath(which('scan-view')))
+def add_report_cmd(subparsers):
+    def exec_report_cmd(options):
+        ReportCmd(options.repository, options.jobs, options.json,
+                  options.scan_build, options.scan_view).exec_analysis()
+
+    report_help = ("Runs clang static analysis and produces a summary report "
+                   "of the findings.")
+    parser = subparsers.add_parser('report', help=report_help)
+    parser.set_defaults(func=exec_report_cmd)
+    add_jobs_arg(parser)
+    add_json_arg(parser)
+    add_clang_static_analysis_args(parser)
+    add_git_repository_arg(parser)
 
 
 ###############################################################################
@@ -211,51 +222,30 @@ def locate_installed_binaries():
 ###############################################################################
 
 
-if __name__ == "__main__":
-    # parse arguments
-    description = ("A utility for running clang static analysis on the "
-                   "codebase in a consistent way.")
-    parser = argparse.ArgumentParser(description=description)
-    b_help = ("The path holding 'scan-build' and 'scan-view' binaries. "
-              "(Uses 'scan-build' and 'scan-view' installed in PATH by "
-              "default)")
-    parser.add_argument("-b", "--bin-path", type=str,
-                        action=BinPathAction, help=b_help)
-    r_help = ("The path for scan-build to write its report files. "
-              "(default=/tmp/bitcoin-scan-build/)")
-    parser.add_argument("-r", "--report-path",
-                        default=DEFAULT_REPORT_PATH,
-                        type=str, action=ReportPathAction, help=r_help)
-    j_help = "The number of parallel jobs to run with 'make'. (default=6)"
-    parser.add_argument("-j", "--jobs", type=int, default=6, help=j_help)
-    s_help = ("Selects the output behavior. 'report' generates a summary "
-              "report on the issues found. 'check' compares the state of the "
-              "repository against a standard, provides a return code for the "
-              "shell and prints more specific details when issues are found.")
-    parser.add_argument("subcommand", type=str, choices=['report', 'check'],
-                        help=s_help)
-    repo_help = ("A source code repository for which the static analysis is "
-                 "to be performed upon.")
-    parser.add_argument("repository", type=str, action=RepositoryPathAction,
-                        help=repo_help)
-    opts = parser.parse_args()
-
     # additional setup for default opts
-    if not (hasattr(opts, 'scan_build') and hasattr(opts, 'scan_view')):
-        opts.scan_build, opts.scan_view = locate_installed_binaries()
-    if opts.report_path == DEFAULT_REPORT_PATH:
-        make_report_path_if_missing()
+#    if not (hasattr(opts, 'scan_build') and hasattr(opts, 'scan_view')):
+#        opts.scan_build, opts.scan_view = locate_installed_binaries()
+#    if opts.report_path == DEFAULT_REPORT_PATH:
+#        make_report_path_if_missing()
 
     # non-configurable defaults
-    opts.make_clean_cmd = 'make clean'
-    opts.make_clean_log = 'make_clean.log'
-    opts.scan_build_log = 'scan_build.log'
-    opts.scan_build_cmd = ('%s -k -plist-html --keep-empty -o %s make -j%d' %
-                           (opts.scan_build, opts.report_path, opts.jobs))
+#    opts.make_clean_cmd = 'make clean'
+#    opts.make_clean_log = 'make_clean.log'
+#    opts.scan_build_log = 'scan_build.log'
+#    opts.scan_build_cmd = ('%s -k -plist-html --keep-empty -o %s make -j%d' %
+#                           (opts.scan_build, opts.report_path, opts.jobs))
 
-    # execute commands
-    os.chdir(opts.repository)
-    if opts.subcommand == 'report':
-        exec_report(opts)
-    else:
-        exec_check(opts)
+
+if __name__ == "__main__":
+    description = ("A utility for running clang static analysis on a codebase "
+                   "in a consistent way.")
+    parser = argparse.ArgumentParser(description=description)
+    subparsers = parser.add_subparsers()
+    add_report_cmd(subparsers)
+    options = parser.parse_args()
+    if not hasattr(options, "func"):
+        parser.print_help()
+        sys.exit("*** missing argument")
+    options.scan_build, options.scan_view = (
+        scan_build_binaries_from_options(options))
+    options.func(options)

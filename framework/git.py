@@ -96,7 +96,7 @@ class GitRepository(object):
     Represents and queries information from a git repository clone.
     """
     def __init__(self, repository_base):
-        self.repository_base = repository_base
+        self.repository_base = str(Path(repository_base))
         git_path = GitPath(repository_base)
         git_path.assert_exists()
         git_path.assert_mode(os.R_OK)
@@ -179,5 +179,18 @@ def add_git_tracked_targets_arg(parser):
 # getting a single git repo
 ###############################################################################
 
+
+class GitRepositoryAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not isinstance(values, str):
+            sys.exit("*** %s is not a string" % values)
+        namespace.repository = GitRepository(values)
+
+
+def add_git_repository_arg(parser):
+    repo_help = ("A source code repository for which the static analysis is "
+                 "to be performed upon.") 
+    parser.add_argument("repository", type=str, action=GitRepositoryAction,
+                        help=repo_help)
 
 

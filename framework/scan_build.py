@@ -27,7 +27,6 @@ class ScanBuildPlistDirectory(Path):
                        'col':     p['location']['col'],
                        'file':    files[p['location']['file']]}
 
-
     def _plist_to_issue(plist):
         files = plist['files']
         for d in plist['diagnostics']:
@@ -51,11 +50,16 @@ class ScanBuildPlistDirectory(Path):
 
 class ScanBuildResultDirectory(Path):
     def __init__(self, directory):
+        self._create_if_missing(directory)
         path = Path(directory)
         self.assert_exists()
         self.assert_is_directory()
-        self.assert_mode(os.R_OK)
+        self.assert_mode(os.R_OK, os.W_OK)
         self.directory = directory
+
+    def _create_if_missing(self, directory):
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
     def most_recent_results(self):
         # scan-build puts results in a subdirectory where the directory name is
