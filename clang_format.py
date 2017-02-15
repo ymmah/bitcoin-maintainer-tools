@@ -8,6 +8,7 @@ import os
 import argparse
 import hashlib
 
+from repo_info import REPO_INFO
 from framework.report import Report
 from framework.clang import add_clang_format_args, clang_format_from_options
 from framework.file_info import FileInfo
@@ -23,15 +24,6 @@ from framework.style import StyleDiff, StyleScore
 ###############################################################################
 
 SOURCE_FILES = ['*.cpp', '*.h']
-
-REPO_INFO = {
-    'subtrees':                 ['src/secp256k1/*',
-                                 'src/leveldb/*',
-                                 'src/univalue/*',
-                                 'src/crypto/ctaes/*'],
-    'clang_format_style':       'src/.clang-format',
-    'clang_format_recommended': '3.9.0',
-}
 
 ###############################################################################
 # gather file and diff info

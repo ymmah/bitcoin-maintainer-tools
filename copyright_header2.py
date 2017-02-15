@@ -17,6 +17,7 @@ from framework.args import add_json_arg
 from framework.git import add_git_tracked_targets_arg
 from framework.git import GitFilePath
 from framework.style import StyleDiff, StyleScore
+from repo_info import REPO_INFO
 
 ###############################################################################
 # define which files the rules apply to
@@ -24,71 +25,6 @@ from framework.style import StyleDiff, StyleScore
 
 # this script is only applied to files in 'git ls-files' of these extensions:
 SOURCE_FILES = ['*.h', '*.cpp', '*.py', '*.sh', '*.am', '*.m4', '*.include']
-
-REPO_INFO = {
-    'subtrees': [
-        'src/secp256k1/*',
-        'src/leveldb/*',
-        'src/univalue/*',
-        'src/crypto/ctaes/*',
-    ],
-    'no_copyright_header': [
-        '*__init__.py',
-        'doc/man/Makefile.am',
-        'build-aux/m4/ax_boost_base.m4',
-        'build-aux/m4/ax_boost_chrono.m4',
-        'build-aux/m4/ax_boost_filesystem.m4',
-        'build-aux/m4/ax_boost_program_options.m4',
-        'build-aux/m4/ax_boost_system.m4',
-        'build-aux/m4/ax_boost_thread.m4',
-        'build-aux/m4/ax_boost_unit_test_framework.m4',
-        'build-aux/m4/ax_check_compile_flag.m4',
-        'build-aux/m4/ax_check_link_flag.m4',
-        'build-aux/m4/ax_check_preproc_flag.m4',
-        'build-aux/m4/ax_cxx_compile_stdcxx.m4',
-        'build-aux/m4/ax_gcc_func_attribute.m4',
-        'build-aux/m4/ax_pthread.m4',
-        'build-aux/m4/l_atomic.m4',
-        'src/qt/bitcoinstrings.cpp',
-        'src/chainparamsseeds.h',
-        'src/tinyformat.h',
-        'qa/rpc-tests/test_framework/bignum.py',
-        'contrib/devtools/clang-format-diff.py',
-        'qa/rpc-tests/test_framework/authproxy.py',
-        'qa/rpc-tests/test_framework/key.py',
-    ],
-    'other_copyright_occurrences': [
-        'qa/code-tests/copyright_header.py',
-        'contrib/devtools/gen-manpages.sh',
-        'share/qt/extract_strings_qt.py',
-        'src/Makefile.qt.include',
-        'src/clientversion.h',
-        'src/init.cpp',
-        'src/qt/bitcoinstrings.cpp',
-        'src/qt/splashscreen.cpp',
-        'src/util.cpp',
-        'src/util.h',
-        'src/tinyformat.h',
-        'contrib/devtools/clang-format-diff.py',
-        'qa/rpc-tests/test_framework/authproxy.py',
-        'qa/rpc-tests/test_framework/key.py',
-        'contrib/devtools/git-subtree-check.sh',
-        'build-aux/m4/l_atomic.m4',
-        'build-aux/m4/ax_boost_base.m4',
-        'build-aux/m4/ax_boost_chrono.m4',
-        'build-aux/m4/ax_boost_filesystem.m4',
-        'build-aux/m4/ax_boost_program_options.m4',
-        'build-aux/m4/ax_boost_system.m4',
-        'build-aux/m4/ax_boost_thread.m4',
-        'build-aux/m4/ax_boost_unit_test_framework.m4',
-        'build-aux/m4/ax_check_compile_flag.m4',
-        'build-aux/m4/ax_check_link_flag.m4',
-        'build-aux/m4/ax_check_preproc_flag.m4',
-        'build-aux/m4/ax_cxx_compile_stdcxx.m4',
-        'build-aux/m4/ax_gcc_func_attribute.m4',
-        'build-aux/m4/ax_pthread.m4',
-    ],
-}
 
 ###############################################################################
 # regexes
@@ -201,6 +137,7 @@ CPP_HEADER = ("// Copyright (c) %s The Bitcoin Core developers\n// "
               "accompanying\n// file COPYING or http://www.opensource.org/"
               "licenses/mit-license.php.\n")
 
+
 ###############################################################################
 # file info
 ###############################################################################
@@ -310,8 +247,8 @@ class ReportCmd(CopyrightHeaderCmd):
                                    f['hdr_expected'])
         a['other_copyright_expected'] = sum(1 for f in self.file_infos if
                                             f['other_copyright_expected'])
-        a['no_other_copyright_expected'] = sum(1 for f in self.file_infos if not
-                                               f['other_copyright_expected'])
+        a['no_other_copyright_expected'] = sum(
+            1 for f in self.file_infos if not f['other_copyright_expected'])
         a['passed'] = sum(1 for f in self.file_infos if f['pass'])
         a['failed'] = sum(1 for f in self.file_infos if not f['pass'])
         a['issues'] = {}
@@ -334,7 +271,7 @@ class ReportCmd(CopyrightHeaderCmd):
                a['other_copyright_expected']))
         r.add("%-70s %6d\n" %
               ("Files not expected to have 'copyright' occurrence outside "
-              "header:", a['no_other_copyright_expected']))
+               "header:", a['no_other_copyright_expected']))
         r.add("%-70s %6d\n" % ("Files passed:", a['passed']))
         r.add("%-70s %6d\n" % ("Files failed:", a['failed']))
         r.separator()
@@ -349,8 +286,9 @@ def add_report_cmd(subparsers):
         ReportCmd(options.repository, options.jobs,
                   options.target_fnmatches, options.json).exec_analysis()
 
-    report_help = ("Produces a report of copyright header notices and "
-                   "identifies")
+    report_help = ("Produces a report of copyright header notices within "
+                   "selected targets to help identify files that don't meet "
+                   "expectations.")
     parser = subparsers.add_parser('report', help=report_help)
     parser.set_defaults(func=exec_report_cmd)
     add_jobs_arg(parser)
@@ -405,7 +343,9 @@ def add_check_cmd(subparsers):
         CheckCmd(options.repository, options.jobs,
                  options.target_fnmatches, options.json).exec_analysis()
 
-    check_help = ("")
+    check_help = ("Validates that selected targets do not have copyright "
+                  "header issues, gives a per-file report and returns a "
+                  "non-zero shell status if there are any issues discovered.")
     parser = subparsers.add_parser('check', help=check_help)
     parser.set_defaults(func=exec_check_cmd)
     add_jobs_arg(parser)
@@ -421,6 +361,7 @@ COPYRIGHT = 'Copyright \\(c\\)'
 HOLDER = 'The Bitcoin Core developers'
 UPDATEABLE_LINE_COMPILED = re.compile(' '.join([COPYRIGHT, YEAR_RANGE,
                                                 HOLDER]))
+
 
 class UpdateCmd(CopyrightHeaderCmd):
     """
@@ -487,7 +428,10 @@ def add_update_cmd(subparsers):
     def exec_update_cmd(options):
         UpdateCmd(options.repository, options.target_fnmatches).exec_write()
 
-    update_help = ("")
+    update_help = ('Updates the end year of the copyright headers of '
+                   '"The Bitcoin Core developers" in files amongst the '
+                   'selected targets which have been changed more recently '
+                   'than the year that is listed.')
     parser = subparsers.add_parser('update', help=update_help)
     parser.set_defaults(func=exec_update_cmd)
     add_git_tracked_targets_arg(parser)
@@ -497,7 +441,7 @@ def add_update_cmd(subparsers):
 # insert cmd
 ###############################################################################
 
-ALL_EXTS = [s[1:] for s in SOURCE_FILES]
+ALL_EXTS = [s[1:] for s in SOURCE_FILES if s[0] is '*']
 
 SCRIPT_HEADER = ("# Copyright (c) %s The Bitcoin Core developers\n"
                  "# Distributed under the MIT software license, see the "
@@ -521,6 +465,7 @@ CPP_HEADER = ("// Copyright (c) %s The Bitcoin Core developers\n// "
 CPP_EXTS = ['.h', '.cpp']
 
 assert set(ALL_EXTS) == set(SCRIPT_EXTS + M4_EXTS + CPP_EXTS)
+
 
 class InsertCmd(CopyrightHeaderCmd):
     """
@@ -557,7 +502,7 @@ class InsertCmd(CopyrightHeaderCmd):
         super()._compute_file_infos()
         for file_info in self.file_infos:
             header_needed = (file_info['hdr_expected'] and not
-                                      file_info['has_header'])
+                             file_info['has_header'])
             to_write = (self._content_with_header(file_info) if
                         header_needed else file_info['content'])
             file_info['hdr_added'] = header_needed
@@ -574,16 +519,19 @@ def add_insert_cmd(subparsers):
         InsertCmd(options.repository, options.jobs,
                   options.target_fnmatches).exec_write()
 
-    insert_help = ("")
+    insert_help = ('Inserts a correct MIT-licence copyright header for "The '
+                   'Bitcoin Core developers" at the top of files amongst the '
+                   'selected targets where the header is expected but not '
+                   'currently found.')
     parser = subparsers.add_parser('insert', help=insert_help)
     add_jobs_arg(parser)
     parser.set_defaults(func=exec_insert_cmd)
     add_git_tracked_targets_arg(parser)
 
+
 ###############################################################################
 # UI
 ###############################################################################
-
 
 if __name__ == "__main__":
     description = ("utilities for managing copyright headers of 'The Bitcoin "

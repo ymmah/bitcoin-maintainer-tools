@@ -9,6 +9,7 @@ import os
 import itertools
 import argparse
 
+from repo_info import REPO_INFO
 from framework.file_filter import FileFilter
 from framework.file_info import FileInfo
 from framework.file_content_cmd import FileContentCmd
@@ -74,15 +75,7 @@ class BasicStyleRules(object):
 # define which files the rules apply to
 ###############################################################################
 
-REPO_INFO = {
-    'subtrees': ['src/secp256k1/*',
-                 'src/leveldb/*',
-                 'src/univalue/*',
-                 'src/crypto/ctaes/*'],
-}
-
 SOURCE_FILES = list(set(itertools.chain(*[r['applies'] for r in STYLE_RULES])))
-
 
 ###############################################################################
 # file info
