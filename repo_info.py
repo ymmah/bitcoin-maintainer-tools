@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# TODO move this into bitcoin repo.
+# TODO move this into bitcoin repo as a .json file?
 REPO_INFO = {
     'subtrees': [
         'src/secp256k1/*',
@@ -11,7 +11,7 @@ REPO_INFO = {
         'src/univalue/*',
         'src/crypto/ctaes/*',
     ],
-    'clang_format_style':       'src/.clang-format',
+    'clang_format_style': 'src/.clang-format',
     'clang_format_recommended': '3.9.0',
     'no_copyright_header_expected': [
         '*__init__.py',

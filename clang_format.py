@@ -4,7 +4,6 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import sys
-import os
 import argparse
 import hashlib
 
