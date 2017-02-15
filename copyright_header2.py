@@ -23,8 +23,7 @@ from framework.style import StyleDiff, StyleScore
 ###############################################################################
 
 # this script is only applied to files in 'git ls-files' of these extensions:
-SOURCE_FILES = ['*.h', '*.cpp', '*.cc', '*.c', '*.py', '*.sh', '*.am', '*.m4',
-                '*.include']
+SOURCE_FILES = ['*.h', '*.cpp', '*.py', '*.sh', '*.am', '*.m4', '*.include']
 
 REPO_INFO = {
     'subtrees': [
@@ -223,10 +222,9 @@ class CopyrightHeaderFileInfo(FileInfo):
 
     def _header_match_in_correct_place(self, header_match):
         start = header_match.start(0)
-        shebang = self._starts_with_shebang()
         if start == 0:
-            return not shebang
-        return shebang and (self['content'][:start].count('\n') == 1)
+            return not self['shebang']
+        return self['shebang'] and (self['content'][:start].count('\n') == 1)
 
     def _has_header(self):
         header_match = HEADER_COMPILED.search(self['content'])
@@ -257,6 +255,7 @@ class CopyrightHeaderFileInfo(FileInfo):
         return NO_ISSUE
 
     def compute(self):
+        self['shebang'] = self._starts_with_shebang()
         self['has_header'] = self._has_header()
         self['has_other'] = self._has_other_copyright()
         self['evaluation'] = self._evaluate()
@@ -469,24 +468,19 @@ class UpdateCmd(CopyrightHeaderCmd):
 
     def _compute_file_infos(self):
         super()._compute_file_infos()
-        r = self.report
-        r.add("Querying git for file update history...\n")
-        r.flush()
+        print("Querying git for file update history...")
         for file_info in self.file_infos:
             file_path = GitFilePath(file_info['file_path'])
             file_info['change_years'] = file_path.change_year_range()
             updated = self._update_header(file_info)
             file_info['updated'] = updated != file_info['content']
             file_info.set_write_content(updated)
-        r.add("Done.\n")
-        r.flush()
+        print("Done.")
 
     def _write_files(self):
-        r = self.report
         self.file_infos.write_all()
-        r.add("Updated copyright header years in %d files.\n" %
+        print("Updated copyright header years in %d files." %
               sum(1 for f in self.file_infos if f['updated']))
-        r.flush()
 
 
 def add_update_cmd(subparsers):
@@ -496,6 +490,94 @@ def add_update_cmd(subparsers):
     update_help = ("")
     parser = subparsers.add_parser('update', help=update_help)
     parser.set_defaults(func=exec_update_cmd)
+    add_git_tracked_targets_arg(parser)
+
+
+###############################################################################
+# insert cmd
+###############################################################################
+
+ALL_EXTS = [s[1:] for s in SOURCE_FILES]
+
+SCRIPT_HEADER = ("# Copyright (c) %s The Bitcoin Core developers\n"
+                 "# Distributed under the MIT software license, see the "
+                 "accompanying\n# file COPYING or http://www.opensource.org/"
+                 "licenses/mit-license.php.\n")
+
+SCRIPT_EXTS = ['.py', '.sh', '.am', '.include']
+
+M4_HEADER = ("dnl Copyright (c) %s The Bitcoin Core developers\n"
+             "dnl Distributed under the MIT software license, see the "
+             "accompanying\ndnl file COPYING or http://www.opensource.org/"
+             "licenses/mit-license.php.\n")
+
+M4_EXTS = ['.m4']
+
+CPP_HEADER = ("// Copyright (c) %s The Bitcoin Core developers\n// "
+              "Distributed under the MIT software license, see the "
+              "accompanying\n// file COPYING or http://www.opensource.org/"
+              "licenses/mit-license.php.\n")
+
+CPP_EXTS = ['.h', '.cpp']
+
+assert set(ALL_EXTS) == set(SCRIPT_EXTS + M4_EXTS + CPP_EXTS)
+
+class InsertCmd(CopyrightHeaderCmd):
+    """
+    'insert' subcommand class.
+    """
+    def __init__(self, repository, jobs, target_fnmatches):
+        super().__init__(repository, jobs, target_fnmatches, False)
+
+    def _year_range_string(self, start_year, end_year):
+        if start_year == end_year:
+            return start_year
+        return "%s-%s" % (start_year, end_year)
+
+    def _header(self, file_path, start_year, end_year):
+        file_path.assert_extension_is_one_of(ALL_EXTS)
+        year_range = self._year_range_string(start_year, end_year)
+        if file_path.extension_is_one_of(SCRIPT_EXTS):
+            return SCRIPT_HEADER % year_range
+        if file_path.extension_is_one_of(M4_EXTS):
+            return CPP_HEADER % year_range
+        else:
+            return M4_HEADER % year_range
+
+    def _content_with_header(self, file_info):
+        file_path = GitFilePath(file_info['file_path'])
+        start_year, end_year = file_path.change_year_range()
+        header = self._header(file_path, start_year, end_year)
+        insertion_point = (file_info['content'].find('\n') + 1 if
+                           file_info['shebang'] else 0)
+        content = file_info['content']
+        return content[:insertion_point] + header + content[insertion_point:]
+
+    def _compute_file_infos(self):
+        super()._compute_file_infos()
+        for file_info in self.file_infos:
+            header_needed = (file_info['hdr_expected'] and not
+                                      file_info['has_header'])
+            to_write = (self._content_with_header(file_info) if
+                        header_needed else file_info['content'])
+            file_info['hdr_added'] = header_needed
+            file_info.set_write_content(to_write)
+
+    def _write_files(self):
+        self.file_infos.write_all()
+        print("Added copyright header to %d files." %
+              sum(1 for f in self.file_infos if f['hdr_added']))
+
+
+def add_insert_cmd(subparsers):
+    def exec_insert_cmd(options):
+        InsertCmd(options.repository, options.jobs,
+                  options.target_fnmatches).exec_write()
+
+    insert_help = ("")
+    parser = subparsers.add_parser('insert', help=insert_help)
+    add_jobs_arg(parser)
+    parser.set_defaults(func=exec_insert_cmd)
     add_git_tracked_targets_arg(parser)
 
 ###############################################################################
@@ -511,6 +593,7 @@ if __name__ == "__main__":
     add_report_cmd(subparsers)
     add_check_cmd(subparsers)
     add_update_cmd(subparsers)
+    add_insert_cmd(subparsers)
     options = parser.parse_args()
     if not hasattr(options, "func"):
         parser.print_help()

@@ -71,3 +71,15 @@ class Path(object):
 
     def directory(self):
         return self.containing_directory() if self.is_file() else self.path
+
+    def extension(self):
+        _, ext = os.path.splitext(self.filename())
+        return ext
+
+    def extension_is_one_of(self, extensions):
+        return self.extension() in extensions
+
+    def assert_extension_is_one_of(self, extensions):
+        if not self.extension_is_one_of(extensions):
+            sys.exit("*** %s does not have extension %s" % (self.path,
+                                                            extensions))
