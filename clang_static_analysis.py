@@ -7,48 +7,9 @@ import sys
 import os
 import subprocess
 import time
-import plistlib
-import itertools
 import argparse
-from framework.report import Report
 
-R = Report()
-
-###############################################################################
-# parse .plist files in directory into issues
-###############################################################################
-
-
-def find_events(paths, files):
-    for p in paths:
-        if p['kind'] == 'event':
-            yield {'message': p['extended_message'],
-                   'line':    p['location']['line'],
-                   'col':     p['location']['col'],
-                   'file':    files[p['location']['file']]}
-
-
-def plist_to_issue(plist):
-    files = plist['files']
-    for d in plist['diagnostics']:
-        yield {'type':        d['type'],
-               'description': d['description'],
-               'line':        d['location']['line'],
-               'col':         d['location']['col'],
-               'file':        files[d['location']['file']],
-               'events':      list(find_events(d['path'], files))}
-
-
-def parse_plist_files(directory):
-    plist_files = [os.path.join(directory, f) for f in os.listdir(directory) if
-                   f.endswith('.plist')]
-    read_plists = [plistlib.readPlist(plist_file) for plist_file in
-                   plist_files]
-    relevant_plists = [plist for plist in read_plists if
-                       len(plist['diagnostics']) > 0]
-    return list(itertools.chain(*[plist_to_issue(plist) for plist in
-                                  relevant_plists]))
-
+from framework.scan_build import ScanBuildResultDirectory
 
 ###############################################################################
 # do analysis
@@ -61,17 +22,6 @@ def call_cmd(cmd, outfile):
         sys.exit("*** '%s' returned a non-zero status" % cmd)
     file.close()
 
-
-def find_results_subdirectory(opts):
-    # scan-build puts results in a subdirectory where the directory name is a
-    # timestamp. e.g. /tmp/bitcoin-scan-build/2017-01-23-115243-901-1
-    # We want the most recent directory, so we sort and return the path name
-    # sorted highest.
-    subdir = sorted([d for d in os.listdir(opts.report_path) if
-                     os.path.isdir(os.path.join(opts.report_path, d))])[-1]
-    return os.path.join(opts.report_path, subdir)
-
-
 def run_scan_build(opts):
     print("Running command:     %s" % opts.make_clean_cmd)
     call_cmd(opts.make_clean_cmd, opts.make_clean_log)
@@ -80,14 +30,12 @@ def run_scan_build(opts):
     print("This might take a few minutes...")
     call_cmd(opts.scan_build_cmd, opts.scan_build_log)
     print("Done.")
-    directory = find_results_subdirectory(opts)
-    print("Results in:          %s\n" % directory)
-    return directory
 
 
 def do_analysis(opts):
-    result_subdir = run_scan_build(opts)
-    return result_subdir, parse_plist_files(result_subdir)
+    run_scan_build(opts)
+    report_path = ScanBuildResultDirectory(opts.report_path)
+    return report_path.most_recent_results()
 
 
 ###############################################################################

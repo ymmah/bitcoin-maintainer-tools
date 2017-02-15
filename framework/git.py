@@ -173,3 +173,11 @@ def add_git_tracked_targets_arg(parser):
               "git repository clone. (default=The current directory)")
     parser.add_argument("target", type=str, action=GitTrackedTargetsAction,
                         nargs='*', default=['.'], help=t_help)
+
+
+###############################################################################
+# getting a single git repo
+###############################################################################
+
+
+
