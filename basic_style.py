@@ -45,6 +45,8 @@ STYLE_RULES = [
      'fix':     ';\n'},
 ]
 
+APPLIES_TO = list(set(itertools.chain(*[r['applies'] for r in STYLE_RULES])))
+
 
 class BasicStyleRules(object):
     """
@@ -70,12 +72,6 @@ class BasicStyleRules(object):
         return next((rule for rule in self.rules if rule['title'] == title),
                     None)
 
-
-###############################################################################
-# define which files the rules apply to
-###############################################################################
-
-SOURCE_FILES = list(set(itertools.chain(*[r['applies'] for r in STYLE_RULES])))
 
 ###############################################################################
 # file info
@@ -152,7 +148,7 @@ class BasicStyleCmd(FileContentCmd):
     Common base class for the commands in this script.
     """
     def __init__(self, repository, jobs, target_fnmatches, json):
-        super().__init__(repository, jobs, SOURCE_FILES, REPO_INFO['subtrees'],
+        super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
                          target_fnmatches, json)
         self.rules = BasicStyleRules(repository)
 

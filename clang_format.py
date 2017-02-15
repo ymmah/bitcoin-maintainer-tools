@@ -19,11 +19,8 @@ from framework.args import add_json_arg
 from framework.git import add_git_tracked_targets_arg
 from framework.style import StyleDiff, StyleScore
 
-###############################################################################
-# settings for the set of files that this applies to
-###############################################################################
 
-SOURCE_FILES = ['*.cpp', '*.h']
+APPLIES_TO = ['*.cpp', '*.h']
 
 ###############################################################################
 # gather file and diff info
@@ -85,7 +82,7 @@ class ClangFormatCmd(FileContentCmd):
     """
     def __init__(self, repository, jobs, target_fnmatches, json, clang_format,
                  force):
-        super().__init__(repository, jobs, SOURCE_FILES, REPO_INFO['subtrees'],
+        super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
                          target_fnmatches, json)
         self.clang_format = clang_format
         self.force = force

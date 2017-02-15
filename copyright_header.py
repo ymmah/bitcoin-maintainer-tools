@@ -4,60 +4,36 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 import re
-import fnmatch
 import sys
-import subprocess
-import datetime
 import os
-from framework.report import Report
+import itertools
+import argparse
 
-R = Report()
+from framework.file_filter import FileFilter
+from framework.file_info import FileInfo
+from framework.file_content_cmd import FileContentCmd
+from framework.args import add_jobs_arg
+from framework.args import add_json_arg
+from framework.git import add_git_tracked_targets_arg
+from framework.git import GitFilePath
+from framework.style import StyleDiff, StyleScore
+from repo_info import REPO_INFO
+
+
+APPLIES_TO = ['*.h', '*.cpp', '*.py', '*.sh', '*.am', '*.m4', '*.include']
 
 ###############################################################################
-# helper for converting fnmatch expressions into python regexes and compiling
+# regexes
 ###############################################################################
-
-
-def compile_fnmatches(fnmatches):
-    if fnmatches is None or len(fnmatches) == 0:
-        # a regex that matches nothing (including not matching an empty string)
-        return re.compile('(?!)')
-    return re.compile('|'.join([fnmatch.translate(m) for m in fnmatches]))
-
-
-###############################################################################
-# common constants for regexes
-###############################################################################
-
-
-# this script is only applied to files in 'git ls-files' of these extensions:
-SOURCE_FILES = ['*.h', '*.cpp', '*.cc', '*.c', '*.py', '*.sh', '*.am', '*.m4',
-                '*.include']
-
-SOURCE_FILES_COMPILED = compile_fnmatches(SOURCE_FILES)
-
-ALWAYS_IGNORE = [
-    # empty files for python init:
-    '*__init__.py',
-    # files in subtrees:
-    'src/secp256k1/*',
-    'src/leveldb/*',
-    'src/univalue/*',
-    'src/crypto/ctaes/*',
-]
-
-ALWAYS_IGNORE_COMPILED = compile_fnmatches(ALWAYS_IGNORE)
 
 YEAR = "20[0-9][0-9]"
 YEAR_RANGE = '(?P<start_year>%s)(-(?P<end_year>%s))?' % (YEAR, YEAR)
 
 YEAR_RANGE_COMPILED = re.compile(YEAR_RANGE)
 
-
 ###############################################################################
 # header regex and ignore list for the base bitcoin core repository
 ###############################################################################
-
 
 HOLDERS = [
     "Satoshi Nakamoto",
@@ -82,182 +58,22 @@ HEADER = "(%s\n)+%s" % (COPYRIGHT_LINE, LAST_TWO_LINES)
 
 HEADER_COMPILED = re.compile(HEADER)
 
-NO_HEADER_EXPECTED = [
-    # build scripts
-    'doc/man/Makefile.am',
-    'build-aux/m4/ax_boost_base.m4',
-    'build-aux/m4/ax_boost_chrono.m4',
-    'build-aux/m4/ax_boost_filesystem.m4',
-    'build-aux/m4/ax_boost_program_options.m4',
-    'build-aux/m4/ax_boost_system.m4',
-    'build-aux/m4/ax_boost_thread.m4',
-    'build-aux/m4/ax_boost_unit_test_framework.m4',
-    'build-aux/m4/ax_check_compile_flag.m4',
-    'build-aux/m4/ax_check_link_flag.m4',
-    'build-aux/m4/ax_check_preproc_flag.m4',
-    'build-aux/m4/ax_cxx_compile_stdcxx.m4',
-    'build-aux/m4/ax_gcc_func_attribute.m4',
-    'build-aux/m4/ax_pthread.m4',
-    'build-aux/m4/l_atomic.m4',
-    # auto generated files:
-    'src/qt/bitcoinstrings.cpp',
-    'src/chainparamsseeds.h',
-    # other copyright notices:
-    'src/tinyformat.h',
-    'qa/rpc-tests/test_framework/bignum.py',
-    'contrib/devtools/clang-format-diff.py',
-    'qa/rpc-tests/test_framework/authproxy.py',
-    'qa/rpc-tests/test_framework/key.py',
-]
-
-NO_HEADER_EXPECTED_COMPILED = compile_fnmatches(NO_HEADER_EXPECTED)
-
-OTHER_COPYRIGHT_EXPECTED = [
-    # Uses of the word 'copyright' that are unrelated to the header:
-    'qa/code-tests/copyright_header.py',
-    'contrib/devtools/gen-manpages.sh',
-    'share/qt/extract_strings_qt.py',
-    'src/Makefile.qt.include',
-    'src/clientversion.h',
-    'src/init.cpp',
-    'src/qt/bitcoinstrings.cpp',
-    'src/qt/splashscreen.cpp',
-    'src/util.cpp',
-    'src/util.h',
-    # other, non-core copyright notices:
-    'src/tinyformat.h',
-    'contrib/devtools/clang-format-diff.py',
-    'qa/rpc-tests/test_framework/authproxy.py',
-    'qa/rpc-tests/test_framework/key.py',
-    'contrib/devtools/git-subtree-check.sh',
-    'build-aux/m4/l_atomic.m4',
-    # build scripts:
-    'build-aux/m4/ax_boost_base.m4',
-    'build-aux/m4/ax_boost_chrono.m4',
-    'build-aux/m4/ax_boost_filesystem.m4',
-    'build-aux/m4/ax_boost_program_options.m4',
-    'build-aux/m4/ax_boost_system.m4',
-    'build-aux/m4/ax_boost_thread.m4',
-    'build-aux/m4/ax_boost_unit_test_framework.m4',
-    'build-aux/m4/ax_check_compile_flag.m4',
-    'build-aux/m4/ax_check_link_flag.m4',
-    'build-aux/m4/ax_check_preproc_flag.m4',
-    'build-aux/m4/ax_cxx_compile_stdcxx.m4',
-    'build-aux/m4/ax_gcc_func_attribute.m4',
-    'build-aux/m4/ax_pthread.m4',
-]
-
-OTHER_COPYRIGHT_EXPECTED_COMPILED = compile_fnmatches(OTHER_COPYRIGHT_EXPECTED)
-
-
-###############################################################################
-# obtain list of files in repo to check that match extensions
-###############################################################################
-
-
-GIT_LS_CMD = 'git ls-files'
-
-
-def git_ls():
-    out = subprocess.check_output(GIT_LS_CMD.split(' '))
-    return [f for f in out.decode("utf-8").split('\n') if f != '']
-
-
-SOURCE_FILES_COMPILED = re.compile('|'.join([fnmatch.translate(match)
-                                             for match in SOURCE_FILES]))
-
-ALWAYS_IGNORE_COMPILED = re.compile('|'.join([fnmatch.translate(match)
-                                              for match in ALWAYS_IGNORE]))
-
-
-def filename_is_to_be_examined(filename):
-    return (SOURCE_FILES_COMPILED.match(filename) and not
-            ALWAYS_IGNORE_COMPILED.match(filename))
-
-
-def get_filenames_to_examine(full_file_list):
-    return sorted([filename for filename in full_file_list if
-                   filename_is_to_be_examined(filename)])
-
-
-###############################################################################
-# detect if file contents have the copyright header in the right place
-###############################################################################
-
-
-def starts_with_shebang(contents):
-    if len(contents) < 2:
-        return False
-    return contents[:2] == '#!'
-
-
-def header_match_in_correct_place(contents, header_match):
-    start = header_match.start(0)
-    shebang = starts_with_shebang(contents)
-    if start == 0:
-        return not shebang
-    return shebang and (contents[:start].count('\n') == 1)
-
-
-def file_has_header(contents):
-    header_match = HEADER_COMPILED.search(contents)
-    if not header_match:
-        return False
-    return header_match_in_correct_place(contents, header_match)
-
-
-###############################################################################
-# detect if file has a copyright message in a place outside the header
-###############################################################################
-
-
 OTHER_COPYRIGHT = "(Copyright|COPYRIGHT|copyright)"
 OTHER_COPYRIGHT_COMPILED = re.compile(OTHER_COPYRIGHT)
-
-
-def has_copyright_in_region(contents_region):
-    return OTHER_COPYRIGHT_COMPILED.search(contents_region)
-
-
-def file_has_other_copyright(contents):
-    # look for the OTHER_COPYRIGHT regex outside the normal header regex match
-    header_match = HEADER_COMPILED.search(contents)
-    if header_match:
-        return has_copyright_in_region(contents[header_match.end():])
-    return has_copyright_in_region(contents)
-
-
-###############################################################################
-# file IO
-###############################################################################
-
-
-def read_file(filename):
-    file = open(os.path.abspath(filename), 'r')
-    contents = file.read()
-    file.close()
-    return contents
-
-
-def write_file(filename, contents):
-    file = open(os.path.abspath(filename), 'w')
-    file.write(contents)
-    file.close()
-
 
 ###############################################################################
 # get file info
 ###############################################################################
 
 
-FAILURE_REASON_1 = {
+ISSUE_1 = {
     'description': "A valid header was expected, but the file does not match "
-                   "the regex",
+                   "the regex.",
     'resolution': """
 A correct MIT License header copyrighted by 'The Bitcoin Core developers' in
 the present year can be inserted into a file by running:
 
-    $ ./contrib/devtools/copyright_header.py insert <filename>
+    $ ./copyright_header.py insert <filename>
 
 If there was a preexisting invalid header in the file, that will need to be
 manually deleted. If there is a new copyright holder for the MIT License, the
@@ -266,9 +82,9 @@ check.
 """
 }
 
-FAILURE_REASON_2 = {
+ISSUE_2 = {
     'description': "A valid header was found in the file, but it wasn't "
-                   "expected",
+                   "expected.",
     'resolution': """
 The header was not expected due to a setting in copyright_header.py. If a valid
 copyright header has been added to the file, the filename can be removed from
@@ -276,9 +92,9 @@ the NO_HEADER_EXPECTED listing.
 """
 }
 
-FAILURE_REASON_3 = {
+ISSUE_3 = {
     'description': "Another 'copyright' occurrence was found, but it wasn't "
-                   "expected",
+                   "expected.",
     'resolution': """
 This file's body has a regular expression match for the (case-sensitive) words
 "Copyright", "COPYRIGHT" or 'copyright". If this was an appropriate addition,
@@ -287,7 +103,7 @@ OTHER_COPYRIGHT_EXPECTED listing.
 """
 }
 
-FAILURE_REASON_4 = {
+ISSUE_4 = {
     'description': "Another 'copyright' occurrence was expected, but wasn't "
                    "found.",
     'resolution': """
@@ -299,388 +115,12 @@ from the OTHER_COPYRIGHT_EXPECTED listing.
 """
 }
 
-FAILURE_REASONS = [FAILURE_REASON_1, FAILURE_REASON_2, FAILURE_REASON_3,
-                   FAILURE_REASON_4]
-
-NO_FAILURE = {
+NO_ISSUE = {
     'description': "Everything is excellent",
     'resolution': "(none)"
 }
 
-
-def evaluate(file_info):
-    if not file_info['has_header'] and file_info['hdr_expected']:
-        return FAILURE_REASON_1
-    if file_info['has_header'] and not file_info['hdr_expected']:
-        return FAILURE_REASON_2
-    if file_info['has_other'] and not file_info['other_copyright_expected']:
-        return FAILURE_REASON_3
-    if not file_info['has_other'] and file_info['other_copyright_expected']:
-        return FAILURE_REASON_4
-    return NO_FAILURE
-
-
-def gather_file_info(filename):
-    info = {}
-    info['filename'] = filename
-    info['contents'] = read_file(filename)
-    info['hdr_expected'] = not NO_HEADER_EXPECTED_COMPILED.match(filename)
-    info['other_copyright_expected'] = (
-        OTHER_COPYRIGHT_EXPECTED_COMPILED.match(filename))
-    info['has_header'] = file_has_header(info['contents'])
-    info['has_other'] = file_has_other_copyright(info['contents'])
-    info['evaluation'] = evaluate(info)
-    info['pass'] = info['evaluation'] is NO_FAILURE
-    return info
-
-
-###############################################################################
-# report execution
-###############################################################################
-
-
-def report_filenames(file_infos):
-    if len(file_infos) == 0:
-        return
-    R.add('\t')
-    R.add('\n\t'.join([file_info['filename'] for file_info in file_infos]))
-    R.add('\n')
-
-
-def report_summary(file_infos, full_file_list):
-    R.add("%4d files tracked according to '%s'\n" %
-           (len(full_file_list), GIT_LS_CMD))
-    R.add("%4d files examined according to SOURCE_FILES and ALWAYS_IGNORE "
-          "fnmatch rules\n" % len(file_infos))
-
-
-def report_failure_reason(reason, failed_file_infos):
-    R.add('Reason - "%s":\n' % reason['description'])
-    report_filenames(failed_file_infos)
-
-
-def report_failure_reasons(failed_file_infos):
-    for failure_reason in FAILURE_REASONS:
-        file_infos = [file_info for file_info in failed_file_infos if
-                      file_info['evaluation'] is failure_reason]
-        if len(file_infos) == 0:
-            continue
-        report_failure_reason(failure_reason, file_infos)
-
-
-def report_details(file_infos):
-    hdr_expected = [file_info for file_info in file_infos if
-                    file_info['hdr_expected']]
-    no_hdr_expected = [file_info for file_info in file_infos if not
-                       file_info['hdr_expected']]
-    no_other_copyright_expected = [file_info for file_info in file_infos if not
-                                   file_info['other_copyright_expected']]
-    other_copyright_expected = [file_info for file_info in file_infos if
-                                file_info['other_copyright_expected']]
-    failed = [file_info for file_info in file_infos if not file_info['pass']]
-    passed = [file_info for file_info in file_infos if file_info['pass']]
-
-    R.add("Files expected to have header:                                    "
-          "%4d\n" % len(hdr_expected))
-    R.add("Files not expected to have header:                                "
-          "%4d\n" % len(no_hdr_expected))
-    R.add("Files not expected to have 'copyright' occurrence outside header: "
-          "%4d\n" % len(no_other_copyright_expected))
-    R.add("Files expected to have 'copyright' occurrence outside header:     "
-          "%4d\n" % len(other_copyright_expected))
-    R.add("Files passed:                                                     "
-           "%4d\n" % len(passed))
-    R.add("Files failed:                                                     "
-          "%4d\n" % len(failed))
-    report_failure_reasons(failed)
-
-
-def print_report(file_infos, full_file_list):
-    R.separator()
-    report_summary(file_infos, full_file_list)
-    R.separator()
-    report_details(file_infos)
-    R.separator()
-    R.flush()
-
-
-def exec_report(base_directory):
-    original_cwd = os.getcwd()
-    os.chdir(base_directory)
-    full_file_list = git_ls()
-    file_infos = [gather_file_info(filename) for filename in
-                  get_filenames_to_examine(full_file_list)]
-    print_report(file_infos, full_file_list)
-    os.chdir(original_cwd)
-
-
-###############################################################################
-# report cmd
-###############################################################################
-
-
-REPORT_USAGE = """
-Produces a report of all copyright header notices found inside the source files
-of a repository.
-
-Usage:
-    $ ./copyright_header.py report <base_directory>
-
-Arguments:
-    <base_directory> - The base directory of a bitcoin core source code
-    repository.
-"""
-
-
-def report_cmd(argv):
-    if len(argv) != 3:
-        sys.exit(REPORT_USAGE)
-
-    base_directory = argv[2]
-    if not os.path.exists(base_directory):
-        sys.exit("*** bad <base_directory>: %s" % base_directory)
-
-    exec_report(base_directory)
-
-
-###############################################################################
-# check execution
-###############################################################################
-
-
-def get_failures(file_infos):
-    return [file_info for file_info in file_infos if not file_info['pass']]
-
-
-def report_failure(failure):
-    R.add("An issue was found with ")
-    R.add_red("%s" % failure['filename'])
-    R.add('\n\n%s\n\n' % failure['evaluation']['description'])
-    R.add('Info for resolution:\n')
-    R.add(failure['evaluation']['resolution'])
-
-
-def print_check_report(full_file_list, file_infos, failures):
-    R.separator()
-    report_summary(file_infos, full_file_list)
-    for failure in failures:
-        R.separator()
-        report_failure(failure)
-    R.separator()
-    if len(failures) == 0:
-        R.add_gren("No copyright header issues found!\n")
-        R.separator()
-    R.flush()
-
-
-def exec_check(base_directory):
-    original_cwd = os.getcwd()
-    os.chdir(base_directory)
-    full_file_list = git_ls()
-    file_infos = [gather_file_info(filename) for filename in
-                  get_filenames_to_examine(full_file_list)]
-    failures = get_failures(file_infos)
-    print_check_report(full_file_list, file_infos, failures)
-    os.chdir(original_cwd)
-    if len(failures) > 0:
-        sys.exit("*** Copyright header issues found!")
-
-
-###############################################################################
-# check cmd
-###############################################################################
-
-
-CHECK_USAGE = """
-Checks over the repository for any issues with the copyright header. Returns a
-non-zero status if there are any issues found. Also, a report is printed
-specifically identifying which files are problematic and a suggestion for what
-can be done to resolve the issue.
-
-Usage:
-    $ ./copyright_header.py check <base_directory>
-
-Arguments:
-    <base_directory> - The base directory of a bitcoin core source code
-    repository.
-"""
-
-
-def check_cmd(argv):
-    if len(argv) != 3:
-        sys.exit(CHECK_USAGE)
-
-    base_directory = argv[2]
-    if not os.path.exists(base_directory):
-        sys.exit("*** bad <base_directory>: %s" % base_directory)
-
-    exec_check(base_directory)
-
-
-###############################################################################
-# query git for year of last change
-###############################################################################
-
-
-GIT_LOG_CMD = "git log --follow --pretty=format:%%ai %s"
-
-
-def call_git_log(filename):
-    out = subprocess.check_output((GIT_LOG_CMD % filename).split(' '))
-    decoded = out.decode("utf-8")
-    if decoded == '':
-        return []
-    return decoded.split('\n')
-
-
-def get_git_change_years(filename):
-    git_log_lines = call_git_log(filename)
-    if len(git_log_lines) == 0:
-        return [datetime.date.today().year]
-    # timestamp is in ISO 8601 format. e.g. "2016-09-05 14:25:32 -0600"
-    return [line.split(' ')[0].split('-')[0] for line in git_log_lines]
-
-
-def get_most_recent_git_change_year(filename):
-    return max(get_git_change_years(filename))
-
-
-def get_git_change_year_range(filename):
-    years = get_git_change_years(filename)
-    return min(years), max(years)
-
-
-###############################################################################
-# update header years execution
-###############################################################################
-
-
-COPYRIGHT = 'Copyright \\(c\\)'
-HOLDER = 'The Bitcoin Core developers'
-UPDATEABLE_LINE_COMPILED = re.compile(' '.join([COPYRIGHT, YEAR_RANGE,
-                                                HOLDER]))
-
-
-def get_updatable_copyright_line(file_lines):
-    index = 0
-    for line in file_lines:
-        if UPDATEABLE_LINE_COMPILED.search(line) is not None:
-            return index, line
-        index = index + 1
-    return None, None
-
-
-def year_range_to_str(start_year, end_year):
-    if start_year == end_year:
-        return start_year
-    return "%s-%s" % (start_year, end_year)
-
-
-def create_updated_copyright_line(line, last_git_change_year):
-    match = YEAR_RANGE_COMPILED.search(line)
-    start_year = match.group('start_year')
-    end_year = match.group('end_year')
-    if end_year is None:
-        end_year = start_year
-    if end_year == last_git_change_year:
-        return line
-    new_range_str = year_range_to_str(start_year, last_git_change_year)
-    return YEAR_RANGE_COMPILED.sub(new_range_str, line)
-
-
-def update_copyright(file_info):
-    filename = file_info['filename']
-    file_lines = file_info['contents'].split('\n')
-    index, line = get_updatable_copyright_line(file_lines)
-    if line is None:
-        print_file_action_message(filename, "Bitcoin Core not a holder.")
-        return
-    last_git_change_year = get_most_recent_git_change_year(filename)
-    new_line = create_updated_copyright_line(line, last_git_change_year)
-    if line == new_line:
-        print_file_action_message(filename, "Copyright up-to-date.")
-        return
-    file_lines[index] = new_line
-    file_info['contents'] = '\n'.join(file_lines)
-    write_file(file_info['filename'], file_info['contents'])
-    print_file_action_message(filename,
-                              "Copyright updated! -> %s" %
-                              last_git_change_year)
-
-
-def update_updatable_copyrights(file_infos):
-    for file_info in file_infos:
-        if not file_info['has_header']:
-            print_file_action_message(file_info['filename'],
-                                      "No header to update.")
-            continue
-        update_copyright(file_info)
-
-
-def exec_update_header_year(base_directory):
-    original_cwd = os.getcwd()
-    os.chdir(base_directory)
-    full_file_list = git_ls()
-    file_infos = [gather_file_info(filename) for filename in
-                  get_filenames_to_examine(full_file_list)]
-    update_updatable_copyrights(file_infos)
-    os.chdir(original_cwd)
-
-
-###############################################################################
-# update cmd
-###############################################################################
-
-
-UPDATE_USAGE = """
-Updates all the copyright headers of "The Bitcoin Core developers" which were
-changed in a year more recent than is listed. For example:
-
-// Copyright (c) <firstYear>-<lastYear> The Bitcoin Core developers
-
-will be updated to:
-
-// Copyright (c) <firstYear>-<lastModifiedYear> The Bitcoin Core developers
-
-where <lastModifiedYear> is obtained from the 'git log' history.
-
-This subcommand also handles copyright headers that have only a single year.
-In those cases:
-
-// Copyright (c) <year> The Bitcoin Core developers
-
-will be updated to:
-
-// Copyright (c) <year>-<lastModifiedYear> The Bitcoin Core developers
-
-where the update is appropriate.
-
-Usage:
-    $ ./copyright_header.py update <base_directory>
-
-Arguments:
-    <base_directory> - The base directory of a bitcoin core source code
-    repository.
-"""
-
-
-def print_file_action_message(filename, action):
-    print("%-52s %s" % (filename, action))
-
-
-def update_cmd(argv):
-    if len(argv) != 3:
-        sys.exit(UPDATE_USAGE)
-
-    base_directory = argv[2]
-    if not os.path.exists(base_directory):
-        sys.exit("*** bad base_directory: %s" % base_directory)
-    exec_update_header_year(base_directory)
-
-
-###############################################################################
-# inserted copyright header format
-###############################################################################
+ISSUES = [ISSUE_1, ISSUE_2, ISSUE_3, ISSUE_4, NO_ISSUE]
 
 
 SCRIPT_HEADER = ("# Copyright (c) %s The Bitcoin Core developers\n"
@@ -694,137 +134,413 @@ CPP_HEADER = ("// Copyright (c) %s The Bitcoin Core developers\n// "
               "licenses/mit-license.php.\n")
 
 
-def get_cpp_header(start_year, end_year):
-    return CPP_HEADER % year_range_to_str(start_year, end_year)
+###############################################################################
+# file info
+###############################################################################
 
+class CopyrightHeaderFileInfo(FileInfo):
+    """
+    Obtains and represents the information regarding a single file.
+    """
+    def __init__(self, repository, file_path, copyright_expected,
+                 other_copyright_expected):
+        super().__init__(repository, file_path)
+        self['hdr_expected'] = copyright_expected
+        self['other_copyright_expected'] = other_copyright_expected
 
-def get_script_header(start_year, end_year):
-    return SCRIPT_HEADER % year_range_to_str(start_year, end_year)
+    def _starts_with_shebang(self):
+        if len(self['content']) < 2:
+            return False
+        return self['content'][:2] == '#!'
+
+    def _header_match_in_correct_place(self, header_match):
+        start = header_match.start(0)
+        if start == 0:
+            return not self['shebang']
+        return self['shebang'] and (self['content'][:start].count('\n') == 1)
+
+    def _has_header(self):
+        header_match = HEADER_COMPILED.search(self['content'])
+        if not header_match:
+            return False
+        return self._header_match_in_correct_place(header_match)
+
+    def _has_copyright_in_region(self, content_region):
+        return OTHER_COPYRIGHT_COMPILED.search(content_region) is not None
+
+    def _has_other_copyright(self):
+        # look for the OTHER_COPYRIGHT regex outside the normal header regex
+        # match
+        header_match = HEADER_COMPILED.search(self['content'])
+        region = (self['content'][header_match.end():] if header_match else
+                  self['content'])
+        return self._has_copyright_in_region(region)
+
+    def _evaluate(self):
+        if not self['has_header'] and self['hdr_expected']:
+            return ISSUE_1
+        if self['has_header'] and not self['hdr_expected']:
+            return ISSUE_2
+        if self['has_other'] and not self['other_copyright_expected']:
+            return ISSUE_3
+        if not self['has_other'] and self['other_copyright_expected']:
+            return ISSUE_4
+        return NO_ISSUE
+
+    def compute(self):
+        self['shebang'] = self._starts_with_shebang()
+        self['has_header'] = self._has_header()
+        self['has_other'] = self._has_other_copyright()
+        self['evaluation'] = self._evaluate()
+        self['pass'] = self['evaluation'] is NO_ISSUE
 
 
 ###############################################################################
-# insert header execution
+# cmd base class
 ###############################################################################
 
+class CopyrightHeaderCmd(FileContentCmd):
+    """
+    Common base class for the commands in this script.
+    """
+    def __init__(self, repository, jobs, target_fnmatches, json):
+        super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
+                         target_fnmatches, json)
+        self.no_copyright_filter = FileFilter()
+        self.no_copyright_filter.append_include(
+            REPO_INFO['no_copyright_header_expected'],
+            base_path=str(repository))
+        self.other_copyright_filter = FileFilter()
+        self.other_copyright_filter.append_include(
+            REPO_INFO['other_copyright_occurrences_expected'],
+            base_path=str(repository))
 
-def insert_script_header(file_info, start_year, end_year):
-    header = get_script_header(start_year, end_year)
-    if starts_with_shebang(file_info['contents']):
-        insertion_point = file_info['contents'].find('\n') + 1
-    else:
-        insertion_point = 0
-    contents = file_info['contents']
-    file_info['contents'] = (contents[:insertion_point] + header +
-                             contents[insertion_point:])
+    def _copyright_expected(self, file_path):
+        return not self.no_copyright_filter.evaluate(file_path)
+
+    def _other_copyright_expected(self, file_path):
+        return self.other_copyright_filter.evaluate(file_path)
+
+    def _file_info_list(self):
+        return [CopyrightHeaderFileInfo(self.repository, f,
+                                        self._copyright_expected(f),
+                                        self._other_copyright_expected(f))
+                for f in self.files_targeted]
 
 
-def insert_cpp_header(file_info, start_year, end_year):
-    header = get_cpp_header(start_year, end_year)
-    file_info['contents'] = header + file_info['contents']
+###############################################################################
+# report cmd
+###############################################################################
+
+class ReportCmd(CopyrightHeaderCmd):
+    """
+    'report' subcommand class.
+    """
+    def _analysis(self):
+        a = super()._analysis()
+        a['hdr_expected'] = sum(1 for f in self.file_infos if
+                                f['hdr_expected'])
+        a['no_hdr_expected'] = sum(1 for f in self.file_infos if not
+                                   f['hdr_expected'])
+        a['other_copyright_expected'] = sum(1 for f in self.file_infos if
+                                            f['other_copyright_expected'])
+        a['no_other_copyright_expected'] = sum(
+            1 for f in self.file_infos if not f['other_copyright_expected'])
+        a['passed'] = sum(1 for f in self.file_infos if f['pass'])
+        a['failed'] = sum(1 for f in self.file_infos if not f['pass'])
+        a['issues'] = {}
+        for issue in ISSUES:
+            a['issues'][issue['description']] = sum(
+                1 for f in self.file_infos if
+                f['evaluation']['description'] == issue['description'])
+        return a
+
+    def _human_print(self):
+        super()._human_print()
+        r = self.report
+        a = self.results
+        r.add("%-70s %6d\n" % ("Files expected to have header:",
+                               a['hdr_expected']))
+        r.add("%-70s %6d\n" % ("Files not expected to have header:",
+                               a['no_hdr_expected']))
+        r.add("%-70s %6d\n" %
+              ("Files expected to have 'copyright' occurrence outside header:",
+               a['other_copyright_expected']))
+        r.add("%-70s %6d\n" %
+              ("Files not expected to have 'copyright' occurrence outside "
+               "header:", a['no_other_copyright_expected']))
+        r.add("%-70s %6d\n" % ("Files passed:", a['passed']))
+        r.add("%-70s %6d\n" % ("Files failed:", a['failed']))
+        r.separator()
+        for key, value in sorted(a['issues'].items()):
+            r.add("%-70s %6d\n" % ('"' + key + '":', value))
+        r.separator()
+        r.flush()
 
 
-def exec_insert_header(filename, style):
-    file_info = gather_file_info(filename)
-    if file_info['pass']:
-        sys.exit("*** %s already passes copyright header check." % filename)
+def add_report_cmd(subparsers):
+    def exec_report_cmd(options):
+        ReportCmd(options.repository, options.jobs,
+                  options.target_fnmatches, options.json).exec_analysis()
 
-    start_year, end_year = get_git_change_year_range(filename)
-    if style == 'script':
-        insert_script_header(file_info, start_year, end_year)
-    else:
-        insert_cpp_header(file_info, start_year, end_year)
+    report_help = ("Produces a report of copyright header notices within "
+                   "selected targets to help identify files that don't meet "
+                   "expectations.")
+    parser = subparsers.add_parser('report', help=report_help)
+    parser.set_defaults(func=exec_report_cmd)
+    add_jobs_arg(parser)
+    add_json_arg(parser)
+    add_git_tracked_targets_arg(parser)
 
-    write_file(file_info['filename'], file_info['contents'])
-    file_info = gather_file_info(filename)
-    if not file_info['pass']:
-        sys.exit("*** failed to fix issue in %s by inserting header?" %
-                 filename)
+
+###############################################################################
+# check cmd
+###############################################################################
+
+class CheckCmd(CopyrightHeaderCmd):
+    """
+    'check' subcommand class.
+    """
+
+    def _analysis(self):
+        a = super()._analysis()
+        a['issues'] = [{'file_path':  f['file_path'],
+                        'evaluation': f['evaluation']} for f in
+                       self.file_infos if not f['pass']]
+        return a
+
+    def _human_print(self):
+        super()._human_print()
+        r = self.report
+        a = self.results
+        for issue in a['issues']:
+            r.add("An issue was found with ")
+            r.add_red("%s" % issue['file_path'])
+            r.add('\n\n%s\n\n' % issue['evaluation']['description'])
+            r.add('Info for resolution:\n')
+            r.add(issue['evaluation']['resolution'])
+            r.separator()
+        if len(a['issues']) == 0:
+            r.add_green("No copyright header issues found!\n")
+        r.flush()
+
+    def _json_print(self):
+        a = self.results
+        for issue in a['issues']:
+            issue['evaluation'].pop('resolution', None)
+        super()._json_print()
+
+    def _shell_exit(self):
+        return (0 if len(self.results['issues']) == 0 else
+                "*** copyright header issue found")
+
+
+def add_check_cmd(subparsers):
+    def exec_check_cmd(options):
+        CheckCmd(options.repository, options.jobs,
+                 options.target_fnmatches, options.json).exec_analysis()
+
+    check_help = ("Validates that selected targets do not have copyright "
+                  "header issues, gives a per-file report and returns a "
+                  "non-zero shell status if there are any issues discovered.")
+    parser = subparsers.add_parser('check', help=check_help)
+    parser.set_defaults(func=exec_check_cmd)
+    add_jobs_arg(parser)
+    add_json_arg(parser)
+    add_git_tracked_targets_arg(parser)
+
+
+###############################################################################
+# update cmd
+###############################################################################
+
+COPYRIGHT = 'Copyright \\(c\\)'
+HOLDER = 'The Bitcoin Core developers'
+UPDATEABLE_LINE_COMPILED = re.compile(' '.join([COPYRIGHT, YEAR_RANGE,
+                                                HOLDER]))
+
+
+class UpdateCmd(CopyrightHeaderCmd):
+    """
+    'update' subcommand class.
+    """
+    def __init__(self, repository, target_fnmatches):
+        super().__init__(repository, 1, target_fnmatches, False)
+
+    def _updatable_copyright_line(self, file_lines):
+        index = 0
+        for line in file_lines:
+            if UPDATEABLE_LINE_COMPILED.search(line) is not None:
+                return index, line
+            index = index + 1
+        return None, None
+
+    def _year_range_to_str(self, start_year, end_year):
+        if start_year == end_year:
+            return start_year
+        return "%s-%s" % (start_year, end_year)
+
+    def _updated_copyright_line(self, line, last_git_change_year):
+        match = YEAR_RANGE_COMPILED.search(line)
+        start_year = match.group('start_year')
+        end_year = match.group('end_year')
+        if end_year is None:
+            end_year = start_year
+        if end_year == last_git_change_year:
+            return line
+        new_range_str = self._year_range_to_str(start_year,
+                                                last_git_change_year)
+        return YEAR_RANGE_COMPILED.sub(new_range_str, line)
+
+    def _update_header(self, file_info):
+        file_lines = file_info['content'].split('\n')
+        index, line = self._updatable_copyright_line(file_lines)
+        if line is None:
+            return file_info['content']
+        last_git_change_year = file_info['change_years'][1]
+        new_line = self._updated_copyright_line(line, last_git_change_year)
+        if line == new_line:
+            return file_info['content']
+        file_lines[index] = new_line
+        return'\n'.join(file_lines)
+
+    def _compute_file_infos(self):
+        super()._compute_file_infos()
+        print("Querying git for file update history...")
+        for file_info in self.file_infos:
+            file_path = GitFilePath(file_info['file_path'])
+            file_info['change_years'] = file_path.change_year_range()
+            updated = self._update_header(file_info)
+            file_info['updated'] = updated != file_info['content']
+            file_info.set_write_content(updated)
+        print("Done.")
+
+    def _write_files(self):
+        self.file_infos.write_all()
+        print("Updated copyright header years in %d files." %
+              sum(1 for f in self.file_infos if f['updated']))
+
+
+def add_update_cmd(subparsers):
+    def exec_update_cmd(options):
+        UpdateCmd(options.repository, options.target_fnmatches).exec_write()
+
+    update_help = ('Updates the end year of the copyright headers of '
+                   '"The Bitcoin Core developers" in files amongst the '
+                   'selected targets which have been changed more recently '
+                   'than the year that is listed.')
+    parser = subparsers.add_parser('update', help=update_help)
+    parser.set_defaults(func=exec_update_cmd)
+    add_git_tracked_targets_arg(parser)
 
 
 ###############################################################################
 # insert cmd
 ###############################################################################
 
+ALL_EXTS = [s[1:] for s in APPLIES_TO if s[0] is '*']
 
-INSERT_USAGE = """
-Inserts a copyright header for "The Bitcoin Core developers" at the top of the
-file in either Python or C++ style as determined by the file extension. If the
-file is a Python file and it has a '#!' starting the first line, the header is
-inserted in the line below it.
+SCRIPT_HEADER = ("# Copyright (c) %s The Bitcoin Core developers\n"
+                 "# Distributed under the MIT software license, see the "
+                 "accompanying\n# file COPYING or http://www.opensource.org/"
+                 "licenses/mit-license.php.\n")
 
-The copyright dates will be set to be:
+SCRIPT_EXTS = ['.py', '.sh', '.am', '.include']
 
-"<year_introduced>-<current_year>"
+M4_HEADER = ("dnl Copyright (c) %s The Bitcoin Core developers\n"
+             "dnl Distributed under the MIT software license, see the "
+             "accompanying\ndnl file COPYING or http://www.opensource.org/"
+             "licenses/mit-license.php.\n")
 
-where <year_introduced> is according to the 'git log' history. If
-<year_introduced> is equal to <current_year>, the date will be set to be:
+M4_EXTS = ['.m4']
 
-"<current_year>"
+CPP_HEADER = ("// Copyright (c) %s The Bitcoin Core developers\n// "
+              "Distributed under the MIT software license, see the "
+              "accompanying\n// file COPYING or http://www.opensource.org/"
+              "licenses/mit-license.php.\n")
 
-If the file already has a valid copyright for "The Bitcoin Core developers",
-the script will exit. If the file is in a subdir that should have a non-default
-copyright header, the script will exit.
+CPP_EXTS = ['.h', '.cpp']
 
-Usage:
-    $ ./copyright_header.py insert <file>
-
-Arguments:
-    <file> - A source file in the bitcoin repository.
-"""
+assert set(ALL_EXTS) == set(SCRIPT_EXTS + M4_EXTS + CPP_EXTS)
 
 
-def insert_cmd(argv):
-    if len(argv) != 3:
-        sys.exit(INSERT_USAGE)
+class InsertCmd(CopyrightHeaderCmd):
+    """
+    'insert' subcommand class.
+    """
+    def __init__(self, repository, jobs, target_fnmatches):
+        super().__init__(repository, jobs, target_fnmatches, False)
 
-    filename = argv[2]
-    if not os.path.isfile(filename):
-        sys.exit("*** bad filename: %s" % filename)
-    _, extension = os.path.splitext(filename)
-    if extension not in ['.h', '.cpp', '.cc', '.c', '.py', '.sh']:
-        sys.exit("*** cannot insert for file extension %s" % extension)
+    def _year_range_string(self, start_year, end_year):
+        if start_year == end_year:
+            return start_year
+        return "%s-%s" % (start_year, end_year)
 
-    if extension in ['.py', '.sh', '*.am', '*.m4', '*.include']:
-        style = 'script'
-    else:
-        style = 'cpp'
-    exec_insert_header(filename, style)
+    def _header(self, file_path, start_year, end_year):
+        file_path.assert_extension_is_one_of(ALL_EXTS)
+        year_range = self._year_range_string(start_year, end_year)
+        if file_path.extension_is_one_of(SCRIPT_EXTS):
+            return SCRIPT_HEADER % year_range
+        if file_path.extension_is_one_of(M4_EXTS):
+            return CPP_HEADER % year_range
+        else:
+            return M4_HEADER % year_range
+
+    def _content_with_header(self, file_info):
+        file_path = GitFilePath(file_info['file_path'])
+        start_year, end_year = file_path.change_year_range()
+        header = self._header(file_path, start_year, end_year)
+        insertion_point = (file_info['content'].find('\n') + 1 if
+                           file_info['shebang'] else 0)
+        content = file_info['content']
+        return content[:insertion_point] + header + content[insertion_point:]
+
+    def _compute_file_infos(self):
+        super()._compute_file_infos()
+        for file_info in self.file_infos:
+            header_needed = (file_info['hdr_expected'] and not
+                             file_info['has_header'])
+            to_write = (self._content_with_header(file_info) if
+                        header_needed else file_info['content'])
+            file_info['hdr_added'] = header_needed
+            file_info.set_write_content(to_write)
+
+    def _write_files(self):
+        self.file_infos.write_all()
+        print("Added copyright header to %d files." %
+              sum(1 for f in self.file_infos if f['hdr_added']))
+
+
+def add_insert_cmd(subparsers):
+    def exec_insert_cmd(options):
+        InsertCmd(options.repository, options.jobs,
+                  options.target_fnmatches).exec_write()
+
+    insert_help = ('Inserts a correct MIT-licence copyright header for "The '
+                   'Bitcoin Core developers" at the top of files amongst the '
+                   'selected targets where the header is expected but not '
+                   'currently found.')
+    parser = subparsers.add_parser('insert', help=insert_help)
+    add_jobs_arg(parser)
+    parser.set_defaults(func=exec_insert_cmd)
+    add_git_tracked_targets_arg(parser)
 
 
 ###############################################################################
 # UI
 ###############################################################################
 
-
-USAGE = """
-copyright_header.py - utilities for managing copyright headers of 'The Bitcoin
-Core developers' in repository source files.
-
-Usage:
-    $ ./copyright_header.py <subcommand>
-
-Subcommands:
-    report
-    check
-    update
-    insert
-
-To see subcommand usage, run them without arguments.
-"""
-
-SUBCOMMANDS = ['report', 'check', 'update', 'insert']
-
-
 if __name__ == "__main__":
-    if len(sys.argv) == 1:
-        sys.exit(USAGE)
-    if sys.argv[1] not in SUBCOMMANDS:
-        sys.exit(USAGE)
-    if sys.argv[1] == 'report':
-        report_cmd(sys.argv)
-    elif sys.argv[1] == 'check':
-        check_cmd(sys.argv)
-    elif sys.argv[1] == 'update':
-        update_cmd(sys.argv)
-    elif sys.argv[1] == 'insert':
-        insert_cmd(sys.argv)
+    description = ("utilities for managing copyright headers of 'The Bitcoin "
+                   "Core developers' in repository source files")
+    parser = argparse.ArgumentParser(description=description)
+    subparsers = parser.add_subparsers()
+    add_report_cmd(subparsers)
+    add_check_cmd(subparsers)
+    add_update_cmd(subparsers)
+    add_insert_cmd(subparsers)
+    options = parser.parse_args()
+    if not hasattr(options, "func"):
+        parser.print_help()
+        sys.exit("*** missing argument")
+    options.func(options)

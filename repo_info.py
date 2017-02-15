@@ -13,7 +13,7 @@ REPO_INFO = {
     ],
     'clang_format_style':       'src/.clang-format',
     'clang_format_recommended': '3.9.0',
-    'no_copyright_header': [
+    'no_copyright_header_expected': [
         '*__init__.py',
         'doc/man/Makefile.am',
         'build-aux/m4/ax_boost_base.m4',
@@ -38,7 +38,7 @@ REPO_INFO = {
         'qa/rpc-tests/test_framework/authproxy.py',
         'qa/rpc-tests/test_framework/key.py',
     ],
-    'other_copyright_occurrences': [
+    'other_copyright_occurrences_expected': [
         'contrib/devtools/gen-manpages.sh',
         'share/qt/extract_strings_qt.py',
         'src/Makefile.qt.include',
