@@ -116,6 +116,12 @@ class GitRepository(object):
         return [os.path.join(self.repository_base, f) for f in
                 out.decode("utf-8").split('\n') if f != '']
 
+    def assert_has_makefile(self):
+        makefile = Path(os.path.join(self.repository_base, "Makefile"))
+        if not makefile.exists():
+            sys.exit("*** no Makefile found in %s. You must ./autogen.sh "
+                     "and/or ./configure first" % self.repository_base)
+
 
 ###############################################################################
 # getting a list of target fnmatches in a repo from args
@@ -184,12 +190,14 @@ class GitRepositoryAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not isinstance(values, str):
             sys.exit("*** %s is not a string" % values)
-        namespace.repository = GitRepository(values)
+        repository = GitRepository(values)
+        repository.assert_has_makefile()
+        namespace.repository = repository
 
 
 def add_git_repository_arg(parser):
     repo_help = ("A source code repository for which the static analysis is "
-                 "to be performed upon.") 
+                 "to be performed upon.")
     parser.add_argument("repository", type=str, action=GitRepositoryAction,
                         help=repo_help)
 

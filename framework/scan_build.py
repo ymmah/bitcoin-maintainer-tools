@@ -14,12 +14,12 @@ from framework.path import Path
 class ScanBuildPlistDirectory(Path):
     def __init__(self, directory):
         path = Path(directory)
-        self.assert_exists()
-        self.assert_is_directory()
-        self.assert_mode(os.R_OK)
+        path.assert_exists()
+        path.assert_is_directory()
+        path.assert_mode(os.R_OK)
         self.directory = directory
 
-    def _find_events(paths, files):
+    def _find_events(self, paths, files):
         for p in paths:
             if p['kind'] == 'event':
                 yield {'message': p['extended_message'],
@@ -27,7 +27,7 @@ class ScanBuildPlistDirectory(Path):
                        'col':     p['location']['col'],
                        'file':    files[p['location']['file']]}
 
-    def _plist_to_issue(plist):
+    def _plist_to_issue(self, plist):
         files = plist['files']
         for d in plist['diagnostics']:
             yield {'type':        d['type'],
@@ -35,7 +35,7 @@ class ScanBuildPlistDirectory(Path):
                    'line':        d['location']['line'],
                    'col':         d['location']['col'],
                    'file':        files[d['location']['file']],
-                   'events':      list(find_events(d['path'], files))}
+                   'events':      list(self._find_events(d['path'], files))}
 
     def issues(self):
         plist_files = (os.path.join(self.directory, f) for f in
@@ -44,17 +44,17 @@ class ScanBuildPlistDirectory(Path):
                        plist_files)
         relevant_plists = (plist for plist in read_plists if
                            len(plist['diagnostics']) > 0)
-        return list(itertools.chain(*(plist_to_issue(plist) for plist in
-                                      relevant_plists)))
+        return list(itertools.chain(*[self._plist_to_issue(plist) for plist in
+                                     relevant_plists]))
 
 
 class ScanBuildResultDirectory(Path):
     def __init__(self, directory):
         self._create_if_missing(directory)
         path = Path(directory)
-        self.assert_exists()
-        self.assert_is_directory()
-        self.assert_mode(os.R_OK, os.W_OK)
+        path.assert_exists()
+        path.assert_is_directory()
+        path.assert_mode(os.R_OK | os.W_OK)
         self.directory = directory
 
     def _create_if_missing(self, directory):

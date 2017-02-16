@@ -3,7 +3,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-# TODO move this into bitcoin repo as a .json file?
+# TODO move this into bitcoin repo as a .json file? also to better enable tools
+# in this repo to run against other repos...
 REPO_INFO = {
     'subtrees': [
         'src/secp256k1/*',

@@ -290,6 +290,7 @@ class ReportPathAction(argparse.Action):
 
 DEFAULT_REPORT_PATH = "/tmp/bitcoin-scan-build/"
 
+
 def add_clang_static_analysis_args(parser):
     b_help = ("path to the clang directory or binary to be used "
               "(default=The required clang binary installed in PATH with the "
