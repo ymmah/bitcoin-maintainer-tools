@@ -134,7 +134,6 @@ def add_report_cmd(subparsers):
 # check cmd
 ###############################################################################
 
-
 class CheckCmd(ClangStaticAnalysisCmd):
     """
     'check' subcommand class.
@@ -195,7 +194,6 @@ def add_check_cmd(subparsers):
 ###############################################################################
 # UI
 ###############################################################################
-
 
 if __name__ == "__main__":
     description = ("A utility for running clang static analysis on a codebase "
