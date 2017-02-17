@@ -147,7 +147,13 @@ class ClangDirectoryAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not isinstance(values, str):
             sys.exit("*** %s is not a string" % values)
-        namespace.clang_executables = ClangFind(values).best_binaries()
+        clang_find = ClangFind(values)
+        executables = clang_find.best_binaries()
+        for clang_binary in CLANG_BINARIES:
+            if clang_binary not in executables:
+                sys.exit("*** %s does not contain a %s binary" %
+                         (values, clang_binary))
+        namespace.clang_executables = executables
 
 
 ###############################################################################
@@ -251,18 +257,24 @@ class ClangFormat(object):
 # getting a clang format class from args
 ###############################################################################
 
-
-def add_clang_format_args(parser):
+def add_bin_path_arg(parser):
     b_help = ("path to the clang directory or binary to be used "
               "(default=The required clang binary installed in PATH with the "
               "highest version number)")
+    parser.add_argument("-b", "--bin-path", type=str,
+                        action=ClangDirectoryAction, help=b_help)
+
+def add_style_file_arg(parser):
     sf_help = ("path to the clang style file to be used (default=The "
                "src/.clang_format file of the repository which holds the "
                "targets)")
-    parser.add_argument("-b", "--bin-path", type=str,
-                        action=ClangDirectoryAction, help=b_help)
     parser.add_argument("-s", "--style-file", type=str,
                         action=ReadableFileAction, help=sf_help)
+
+
+def add_clang_format_args(parser):
+    add_bin_path_arg(parser)
+    add_style_file_arg(parser)
 
 
 def clang_format_from_options(options, style_file_default):
@@ -290,17 +302,16 @@ class ReportPathAction(argparse.Action):
 
 DEFAULT_REPORT_PATH = "/tmp/bitcoin-scan-build/"
 
-
-def add_clang_static_analysis_args(parser):
-    b_help = ("path to the clang directory or binary to be used "
-              "(default=The required clang binary installed in PATH with the "
-              "highest version number)")
-    parser.add_argument("-b", "--bin-path", type=str,
-                        action=ClangDirectoryAction, help=b_help)
+def add_report_path_arg(parser):
     r_help = ("The path for scan-build to write its report files. "
               "(default=%s)" % DEFAULT_REPORT_PATH)
     parser.add_argument("-r", "--report-path", default=DEFAULT_REPORT_PATH,
                         type=str, action=ReportPathAction, help=r_help)
+
+
+def add_clang_static_analysis_args(parser):
+    add_bin_path_arg(parser)
+    add_report_path_arg(parser)
 
 
 def scan_build_binaries_from_options(options):
@@ -312,3 +323,13 @@ def scan_build_binaries_from_options(options):
         scan_build = finder.best('scan-build')
         scan_view = finder.best('scan-view')
     return scan_build, scan_view
+
+###############################################################################
+# TODO
+###############################################################################
+
+
+def add_clang_args(parser):
+    add_bin_path_arg(parser)
+    add_report_path_arg(parser)
+    add_style_file_arg(parser)

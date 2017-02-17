@@ -7,6 +7,7 @@ import sys
 import os
 import time
 import argparse
+import json
 
 from framework.report import Report
 from framework.scan_build import ScanBuildResultDirectory
@@ -48,14 +49,21 @@ class ClangStaticAnalysisCmd(object):
 
     def _analysis(self):
         start_time = time.time()
-        print("Running command:     %s" % str(self.make_clean_step))
-        print("stderr/stdout to:    %s" % self.make_clean_output_file)
+        r = self.report
+        r.add("Running command:     %s" % str(self.make_clean_step))
+        r.add("stderr/stdout to:    %s" % self.make_clean_output_file)
+        if not self.json:
+            r.flush()
         self.make_clean_step.run()
-        print("Running command:     %s" % str(self.scan_build_step))
-        print("stderr/stdout to:    %s" % self.scan_build_output_file)
-        print("This might take a few minutes...")
+        r.add("Running command:     %s" % str(self.scan_build_step))
+        r.add("stderr/stdout to:    %s" % self.scan_build_output_file)
+        r.add("This might take a few minutes...")
+        if not self.json:
+            r.flush()
         self.scan_build_step.run()
-        print("Done.")
+        r.add("Done.")
+        if not self.json:
+            r.flush()
         elapsed_time = time.time() - start_time
         directory, issues = self.scan_build_result.most_recent_results()
         self.results = {'elapsed_time':      time.time() - start_time,

@@ -193,6 +193,7 @@ class GitRepositoryAction(argparse.Action):
         repository = GitRepository(values)
         repository.assert_has_makefile()
         namespace.repository = repository
+        namespace.target_fnmatches = [os.path.join(str(repository), '*')]
 
 
 def add_git_repository_arg(parser):
@@ -200,5 +201,3 @@ def add_git_repository_arg(parser):
                  "to be performed upon.")
     parser.add_argument("repository", type=str, action=GitRepositoryAction,
                         help=repo_help)
-
-
