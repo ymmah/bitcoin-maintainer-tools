@@ -16,6 +16,9 @@ class Report(object):
     def __init__(self):
         self.report = []
 
+    def __str__(self):
+        return ''.join(self.report)
+
     def add(self, string):
         self.report.append(string)
 
@@ -29,5 +32,5 @@ class Report(object):
         self.add('-' * 80 + '\n')
 
     def flush(self):
-        print(''.join(self.report), end="")
+        print(str(self), end='')
         self.report = []

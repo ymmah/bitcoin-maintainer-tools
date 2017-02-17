@@ -252,10 +252,9 @@ class ReportCmd(CopyrightHeaderCmd):
                 f['evaluation']['description'] == issue['description'])
         return a
 
-    def _human_print(self):
-        super()._human_print()
-        r = self.report
-        a = self.results
+    def _human_print(self, results, report):
+        r = super()._human_print(results, report)
+        a = results
         r.add("%-70s %6d\n" % ("Files expected to have header:",
                                a['hdr_expected']))
         r.add("%-70s %6d\n" % ("Files not expected to have header:",
@@ -272,13 +271,13 @@ class ReportCmd(CopyrightHeaderCmd):
         for key, value in sorted(a['issues'].items()):
             r.add("%-70s %6d\n" % ('"' + key + '":', value))
         r.separator()
-        r.flush()
+        return r
 
 
 def add_report_cmd(subparsers):
     def exec_report_cmd(options):
-        ReportCmd(options.repository, options.jobs,
-                  options.target_fnmatches, options.json).exec_analysis()
+        return ReportCmd(options.repository, options.jobs,
+                         options.target_fnmatches, options.json).run()
 
     report_help = ("Produces a report of copyright header notices within "
                    "selected targets to help identify files that don't meet "
@@ -306,10 +305,9 @@ class CheckCmd(CopyrightHeaderCmd):
                        self.file_infos if not f['pass']]
         return a
 
-    def _human_print(self):
-        super()._human_print()
-        r = self.report
-        a = self.results
+    def _human_print(self, results, report):
+        r = super()._human_print(results, report)
+        a = results
         for issue in a['issues']:
             r.add("An issue was found with ")
             r.add_red("%s" % issue['file_path'])
@@ -319,13 +317,12 @@ class CheckCmd(CopyrightHeaderCmd):
             r.separator()
         if len(a['issues']) == 0:
             r.add_green("No copyright header issues found!\n")
-        r.flush()
+        return r
 
-    def _json_print(self):
-        a = self.results
-        for issue in a['issues']:
+    def _json_print(self, results):
+        for issue in results['issues']:
             issue['evaluation'].pop('resolution', None)
-        super()._json_print()
+        return super()._json_print(results)
 
     def _shell_exit(self):
         return (0 if len(self.results['issues']) == 0 else
@@ -334,8 +331,8 @@ class CheckCmd(CopyrightHeaderCmd):
 
 def add_check_cmd(subparsers):
     def exec_check_cmd(options):
-        CheckCmd(options.repository, options.jobs,
-                 options.target_fnmatches, options.json).exec_analysis()
+        return CheckCmd(options.repository, options.jobs,
+                        options.target_fnmatches, options.json).run()
 
     check_help = ("Validates that selected targets do not have copyright "
                   "header issues, gives a per-file report and returns a "
@@ -540,4 +537,7 @@ if __name__ == "__main__":
     if not hasattr(options, "func"):
         parser.print_help()
         sys.exit("*** missing argument")
-    options.func(options)
+    exit, output = options.func(options)
+    if exit != 0:
+        sys.exit(exit)
+    print(output, end='')

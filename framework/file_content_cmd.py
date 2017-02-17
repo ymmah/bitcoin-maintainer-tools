@@ -33,7 +33,6 @@ class FileContentCmd(object):
                                                         include_fnmatches,
                                                         exclude_fnmatches,
                                                         target_fnmatches))
-        self.report = Report()
 
     def _get_tracked_files(self, repository):
         return repository.tracked_files()
@@ -88,9 +87,9 @@ class FileContentCmd(object):
         a['files_targeted'] = len(self.files_targeted)
         return a
 
-    def _human_print(self):
-        r = self.report
-        a = self.results
+    def _human_print(self, results, report):
+        r = report
+        a = results
         r.separator()
         r.add("%4d files tracked in repo\n" % a['tracked_files'])
         r.add("%4d files in scope according to script settings\n" %
@@ -98,20 +97,23 @@ class FileContentCmd(object):
         r.add("%4d files examined according to listed targets\n" %
               a['files_targeted'])
         r.separator()
+        return r
 
-    def _json_print(self):
-        print(json.dumps(self.results))
+    def _json_print(self, results):
+        return json.dumps(results)
 
-    def _shell_exit(self):
+    def _shell_exit(self, results):
         return 0
 
-    def exec_analysis(self):
-        self._read_and_compute_file_infos()
         self.results = self._analysis()
         self._json_print() if self.json else self._human_print()
-        sys.exit(self._shell_exit())
 
-    def exec_write(self):
+    def run(self, analysis=True):
         self._read_and_compute_file_infos()
+        results = self._analysis() if analysis else {}
+        report = Report()
+        output = (self._json_print(results) if self.json else
+                  self._human_print(results, report))
+        exit = self._shell_exit(results)
         self._write_files()
-        sys.exit(self._shell_exit())
+        return exit, output

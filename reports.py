@@ -51,7 +51,11 @@ if __name__ == "__main__":
                                                 options.report_path,
                                                 options.scan_view)
 
-    copyright_header.exec_analysis()
-    clang_format.exec_analysis()
-    basic_style.exec_analysis()
-    static_analyisis.exec_report()
+    exit, output = copyright_header.run()
+    print(output, end='')
+    exit, output = clang_format.run()
+    print(output, end='')
+    exit, output = basic_style.run()
+    print(output, end='')
+    exit, output = static_analysis.run()
+    print(output, end='')

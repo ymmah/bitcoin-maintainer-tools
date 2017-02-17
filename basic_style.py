@@ -197,10 +197,9 @@ class ReportCmd(BasicStyleCmd):
                  'files': file_count, 'occurrences': occurrence_count})
         return a
 
-    def _human_print(self):
-        super()._human_print()
-        r = self.report
-        a = self.results
+    def _human_print(self, results, report):
+        r = super()._human_print(results, report)
+        a = results
         r.add("Parallel jobs for diffs:   %d\n" % a['jobs'])
         r.add("Elapsed time:              %.02fs\n" % a['elapsed_time'])
         r.separator()
@@ -224,13 +223,13 @@ class ReportCmd(BasicStyleCmd):
                            a['lines_after'])
         r.add(str(score))
         r.separator()
-        r.flush()
+        return r
 
 
 def add_report_cmd(subparsers):
     def exec_report_cmd(options):
-        ReportCmd(options.repository, options.jobs,
-                  options.target_fnmatches, options.json).exec_analysis()
+        return ReportCmd(options.repository, options.jobs,
+                         options.target_fnmatches, options.json).run()
 
     report_help = ("Validates that the selected targets do not have basic "
                    "style issues, give a per-file report and returns a "
@@ -259,10 +258,10 @@ class CheckCmd(BasicStyleCmd):
             itertools.chain.from_iterable(f['issues'] for f in file_infos))
         return a
 
-    def _human_print(self):
-        super()._human_print()
-        r = self.report
-        a = self.results
+    def _human_print(self, results, report):
+        super()._human_print(results, report)
+        r = report
+        a = results
         for issue in a['issues']:
             r.separator()
             r.add("An issue was found with ")
@@ -280,13 +279,10 @@ class CheckCmd(BasicStyleCmd):
             r.add("$ contrib/devtools/basic_style.py fix [target "
                   "[target ...]]\n")
         r.separator()
-        r.flush()
 
-    def _json_print(self):
-        super()._json_print()
 
-    def _shell_exit(self):
-        return (0 if len(self.results['issues']) == 0 else
+    def _shell_exit(self, results):
+        return (0 if len(results['issues']) == 0 else
                 "*** code formatting issue found")
 
 

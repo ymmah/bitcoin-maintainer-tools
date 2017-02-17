@@ -148,10 +148,10 @@ class ReportCmd(ClangFormatCmd):
         a['files_in_ranges'] = self._files_in_ranges()
         return a
 
-    def _human_print(self):
-        super()._human_print()
-        r = self.report
-        a = self.results
+    def _human_print(self, results, report):
+        super()._human_print(results, report)
+        r = report
+        a = results
         r.add("clang-format bin:         %s\n" % a['clang_format_path'])
         r.add("clang-format version:     %s\n" % a['clang_format_version'])
         r.add("Using style in:           %s\n" % a['clang_style_path'])
@@ -185,13 +185,14 @@ class ReportCmd(ClangFormatCmd):
                            a['lines_after'])
         r.add(str(score))
         r.separator()
-        r.flush()
+        return r
 
 
 def add_report_cmd(subparsers):
     def exec_report_cmd(options):
-        ReportCmd(options.repository, options.jobs, options.target_fnmatches,
-                  options.json, options.clang_format).exec_analysis()
+        return ReportCmd(options.repository, options.jobs,
+                         options.target_fnmatches, options.json,
+                         options.clang_format).run()
 
     report_help = ("Produces a report with the analysis of the code format "
                    "adherence of the selected targets taken as a group.")
@@ -228,10 +229,10 @@ class CheckCmd(ClangFormatCmd):
                          for f in self.file_infos if not f['matching']]
         return a
 
-    def _human_print(self):
-        super()._human_print()
-        r = self.report
-        a = self.results
+    def _human_print(self, results, report):
+        super()._human_print(results, report)
+        a = results
+        r = report
         for f in a['failures']:
             r.add("A code format issue was detected in ")
             r.add_red("%s\n\n" % f['file_path'])
@@ -247,7 +248,7 @@ class CheckCmd(ClangFormatCmd):
             r.add("\t$ clang_format.py format [option [option ...]] "
                   "[file [file ...]]\n\n")
         r.separator()
-        r.flush()
+        return r
 
     def _shell_exit(self):
         return (0 if len(self.results) == 0 else
@@ -256,9 +257,9 @@ class CheckCmd(ClangFormatCmd):
 
 def add_check_cmd(subparsers):
     def exec_check_cmd(options):
-        CheckCmd(options.repository, options.jobs, options.target_fnmatches,
-                 options.json, options.clang_format,
-                 options.force).exec_analyis()
+        return CheckCmd(options.repository, options.jobs,
+                        options.target_fnmatches, options.json,
+                        options.clang_format, options.force).run()
 
     check_help = ("Validates that the selected targets match the style, gives "
                   "a per-file report and returns a non-zero shell status if "
@@ -324,4 +325,7 @@ if __name__ == "__main__":
         sys.exit("*** missing argument")
     options.clang_format = (
         clang_format_from_options(options, REPO_INFO['clang_format_style']))
-    options.func(options)
+    exit, output = options.func(options)
+    if exit != 0:
+        sys.exit(exit)
+    print(output, end='')
