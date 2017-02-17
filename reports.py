@@ -30,7 +30,6 @@ if __name__ == "__main__":
     add_clang_args(parser)
     add_git_repository_arg(parser)
     options = parser.parse_args()
-
     options.clang_format = (
         clang_format_from_options(options, REPO_INFO['clang_format_style']))
     options.scan_build, options.scan_view = (
@@ -51,11 +50,22 @@ if __name__ == "__main__":
                                                 options.report_path,
                                                 options.scan_view)
 
-    exit, output = copyright_header.run()
-    print(output, end='')
-    exit, output = clang_format.run()
-    print(output, end='')
-    exit, output = basic_style.run()
-    print(output, end='')
-    exit, output = static_analysis.run()
-    print(output, end='')
+    exit, copyright_header_out = copyright_header.run()
+    if exit != 0:
+        sys.exit(exit)
+    exit, clang_format_out = clang_format.run()
+    if exit != 0:
+        sys.exit(exit)
+    exit, basic_style_out = basic_style.run()
+    if exit != 0:
+        sys.exit(exit)
+    exit, static_analysis_out = static_analysis.run()
+    if exit != 0:
+        sys.exit(exit)
+
+    outputs = {'Copyright Header Report:':       copyright_header_out,
+               'Basic Style Report':             basic_style_out,
+               'Clang Format Report:':           clang_format_out,
+               'Clang Static Analysis Report:':  static_analysis_out}
+    if json:
+        print(json.dumps({k: json.loads(v) for k, v in outputs.items()}))

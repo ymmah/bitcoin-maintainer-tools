@@ -105,9 +105,6 @@ class FileContentCmd(object):
     def _shell_exit(self, results):
         return 0
 
-        self.results = self._analysis()
-        self._json_print() if self.json else self._human_print()
-
     def run(self, analysis=True):
         self._read_and_compute_file_infos()
         results = self._analysis() if analysis else {}

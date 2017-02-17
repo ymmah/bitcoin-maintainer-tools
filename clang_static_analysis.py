@@ -80,7 +80,7 @@ class ClangStaticAnalysisCmd(object):
         return r
 
     def _json_print(self, results):
-        return json.dumps(self.results)
+        return json.dumps(results)
 
     def _shell_exit(self, results):
         return 0
@@ -121,6 +121,7 @@ class ReportCmd(ClangStaticAnalysisCmd):
             r.add("Full details can be seen in a browser by running:\n")
             r.add("    $ %s %s\n" % (self.scan_view, a['results_directory']))
             r.separator()
+        return r
 
 
 def add_report_cmd(subparsers):
