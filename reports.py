@@ -35,37 +35,40 @@ if __name__ == "__main__":
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
 
-    copyright_header = CopyrightHeaderReport(options.repository, options.jobs,
-                                             options.target_fnmatches,
-                                             options.json)
+    reports = [
+        {'human_title': 'Copyright Header Report',
+         'json_label':  'copyright_header',
+         'runnable':    CopyrightHeaderReport(options.repository, options.jobs,
+                                              options.target_fnmatches,
+                                              options.json)},
+        {'human_title': 'Basic Style Report',
+         'json_label':  'basic_style',
+         'runnable':    BasicStyleReport(options.repository, options.jobs,
+                                         options.target_fnmatches,
+                                         options.json)},
+        {'human_title': 'Clang Format Style Report',
+         'json_label':  'clang_format',
+         'runnable':    ClangFormatReport(options.repository, options.jobs,
+                                          options.target_fnmatches,
+                                          options.json, options.clang_format)},
+        {'human title': 'Clang Static Analysis Report',
+         'json_label':  'clang_static_analysis',
+         'runnable':    ClangStaticAnalysisReport(options.repository,
+                                                  options.jobs, options.json,
+                                                  options.scan_build,
+                                                  options.report_path,
+                                                  options.scan_view)},
+    ]
 
-    clang_format = ClangFormatReport(options.repository, options.jobs,
-                                     options.target_fnmatches, options.json,
-                                     options.clang_format)
-    basic_style = BasicStyleReport(options.repository, options.jobs,
-                                   options.target_fnmatches, options.json)
-    static_analysis = ClangStaticAnalysisReport(options.repository,
-                                                options.jobs, options.json,
-                                                options.scan_build,
-                                                options.report_path,
-                                                options.scan_view)
 
-    exit, copyright_header_out = copyright_header.run()
-    if exit != 0:
-        sys.exit(exit)
-    exit, clang_format_out = clang_format.run()
-    if exit != 0:
-        sys.exit(exit)
-    exit, basic_style_out = basic_style.run()
-    if exit != 0:
-        sys.exit(exit)
-    exit, static_analysis_out = static_analysis.run()
-    if exit != 0:
-        sys.exit(exit)
+    for report in reports:
+        exit, report['output'] = report['runnable'].run()
+        if exit != 0:
+            sys.exit(exit)
+        if not json:
+            print("%s:", report['human_title'])
+            print("%s", report['output'])
 
-    outputs = {'Copyright Header Report:':       copyright_header_out,
-               'Basic Style Report':             basic_style_out,
-               'Clang Format Report:':           clang_format_out,
-               'Clang Static Analysis Report:':  static_analysis_out}
     if json:
-        print(json.dumps({k: json.loads(v) for k, v in outputs.items()}))
+        print(json.dumps({report['json_label']: json.loads(report['output'])
+                          for report in reports}))
