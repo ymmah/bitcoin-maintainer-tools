@@ -128,7 +128,6 @@ class ReportCmd(ClangFormatCmd):
         a['clang_format_version'] = str(self.clang_format.binary_version)
         a['clang_style_path'] = str(self.clang_format.style_path)
         a['rejected_parameters'] = self.clang_format.style.rejected_parameters
-        a['jobs'] = self.jobs
         a['elapsed_time'] = self.elapsed_time
         a['lines_before'] = sum(f['lines_before'] for f in file_infos)
         a['lines_added'] = sum(f['lines_added'] for f in file_infos)
@@ -163,7 +162,6 @@ class ReportCmd(ClangFormatCmd):
             for param in a['rejected_parameters']:
                 r.add("%s\n" % param)
             r.separator()
-        r.add("Parallel jobs for diffs:   %d\n" % a['jobs'])
         r.add("Elapsed time:              %.02fs\n" % a['elapsed_time'])
         if len(a['slow_diffs']) > 0:
             r.add("Slowest diffs:\n")
@@ -328,4 +326,4 @@ if __name__ == "__main__":
     exit, output = options.func(options)
     if exit != 0:
         sys.exit(exit)
-    print(output, end='')
+    print(json.dumps(output) if type(output) is dict else str(output), end='')

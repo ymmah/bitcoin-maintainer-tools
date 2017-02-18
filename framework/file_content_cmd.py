@@ -19,10 +19,9 @@ class FileContentCmd(object):
     fnmatch expressions.
     """
     def __init__(self, repository, jobs, include_fnmatches, exclude_fnmatches,
-                 target_fnmatches, json):
+                 target_fnmatches):
         self.repository = repository
         self.jobs = jobs
-        self.json = json
         self.tracked_files = self._get_tracked_files(self.repository)
         self.files_in_scope = list(self._files_in_scope(self.repository,
                                                         self.tracked_files,
@@ -85,6 +84,7 @@ class FileContentCmd(object):
         a['tracked_files'] = len(self.tracked_files)
         a['files_in_scope'] = len(self.files_in_scope)
         a['files_targeted'] = len(self.files_targeted)
+        a['jobs'] = self.jobs
         return a
 
     def _human_print(self, results, report):
@@ -96,11 +96,12 @@ class FileContentCmd(object):
               a['files_in_scope'])
         r.add("%4d files examined according to listed targets\n" %
               a['files_targeted'])
+        r.add("%4d parallel jobs for computing analysis\n" % a['jobs'])
         r.separator()
         return r
 
     def _json_print(self, results):
-        return json.dumps(results)
+        return results
 
     def _shell_exit(self, results):
         return 0

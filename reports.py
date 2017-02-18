@@ -19,6 +19,46 @@ from framework.clang import clang_format_from_options
 from framework.clang import add_clang_args
 from framework.git import add_git_repository_arg
 
+class Reports(object):
+    def __init__(self, options):
+        o = options
+        self.json = o.json
+        self.reports = [
+            {'human_title': 'Copyright Header Report',
+             'json_label':  'copyright_header',
+             'runnable':    CopyrightHeaderReport(o.repository, o.jobs,
+                                                  o.target_fnmatches, o.json)},
+            {'human_title': 'Basic Style Report',
+             'json_label':  'basic_style',
+             'runnable':    BasicStyleReport(o.repository, o.jobs,
+                                             o.target_fnmatches, o.json)},
+            {'human_title': 'Clang Format Style Report',
+             'json_label':  'clang_format',
+             'runnable':    ClangFormatReport(o.repository, o.jobs,
+                                              o.target_fnmatches, o.json,
+                                              o.clang_format)},
+            {'human_title': 'Clang Static Analysis Report',
+             'json_label':  'clang_static_analysis',
+             'runnable':    ClangStaticAnalysisReport(o.repository, o.jobs,
+                                                      o.json, o.scan_build,
+                                                      o.report_path,
+                                                      o.scan_view)},
+        ]
+
+    def run(self):
+        for report in self.reports:
+            if not options.json:
+                print("Computing %s..." % report['human_title'])
+            exit, report['output'] = report['runnable'].run()
+            if exit != 0:
+                sys.exit(exit)
+            if not options.json:
+                print("Done.")
+                print("%s:" % report['human_title'])
+                print("%s" % report['output'])
+        if options.json:
+            print(json.dumps({report['json_label']: report['output']
+                              for report in reports}))
 
 
 if __name__ == "__main__":
@@ -34,41 +74,5 @@ if __name__ == "__main__":
         clang_format_from_options(options, REPO_INFO['clang_format_style']))
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
-
-    reports = [
-        {'human_title': 'Copyright Header Report',
-         'json_label':  'copyright_header',
-         'runnable':    CopyrightHeaderReport(options.repository, options.jobs,
-                                              options.target_fnmatches,
-                                              options.json)},
-        {'human_title': 'Basic Style Report',
-         'json_label':  'basic_style',
-         'runnable':    BasicStyleReport(options.repository, options.jobs,
-                                         options.target_fnmatches,
-                                         options.json)},
-        {'human_title': 'Clang Format Style Report',
-         'json_label':  'clang_format',
-         'runnable':    ClangFormatReport(options.repository, options.jobs,
-                                          options.target_fnmatches,
-                                          options.json, options.clang_format)},
-        {'human title': 'Clang Static Analysis Report',
-         'json_label':  'clang_static_analysis',
-         'runnable':    ClangStaticAnalysisReport(options.repository,
-                                                  options.jobs, options.json,
-                                                  options.scan_build,
-                                                  options.report_path,
-                                                  options.scan_view)},
-    ]
-
-
-    for report in reports:
-        exit, report['output'] = report['runnable'].run()
-        if exit != 0:
-            sys.exit(exit)
-        if not json:
-            print("%s:", report['human_title'])
-            print("%s", report['output'])
-
-    if json:
-        print(json.dumps({report['json_label']: json.loads(report['output'])
-                          for report in reports}))
+    reports = Reports(options)
+    reports.run()
