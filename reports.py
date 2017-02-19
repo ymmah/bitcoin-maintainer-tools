@@ -21,6 +21,9 @@ from framework.clang import add_clang_args
 from framework.git import add_git_repository_arg
 
 class Reports(object):
+    """
+    Represents an aggregation of underlying run that can be run in one step.
+    """
     def __init__(self, options):
         o = options
         self.json = o.json
@@ -38,12 +41,12 @@ class Reports(object):
              'report':      ClangFormatReport(o.repository, o.jobs,
                                               o.target_fnmatches,
                                               o.clang_format)},
-#            {'human_title': 'Clang Static Analysis Report',
-#             'json_label':  'clang_static_analysis',
-#             'report':      ClangStaticAnalysisReport(o.repository, o.jobs,
-#                                                      o.scan_build,
-#                                                      o.report_path,
-#                                                      o.scan_view)},
+            {'human_title': 'Clang Static Analysis Report',
+             'json_label':  'clang_static_analysis',
+             'report':      ClangStaticAnalysisReport(o.repository, o.jobs,
+                                                      o.scan_build,
+                                                      o.report_path,
+                                                      o.scan_view)},
         ]
 
     def run(self):
@@ -69,7 +72,7 @@ class Reports(object):
 
 if __name__ == "__main__":
     description = ("Wrapper to invoke a collection of scripts that produce "
-                   "data from analizing a repository.")
+                   "data from analyzing a repository.")
     parser = argparse.ArgumentParser(description=description)
     add_jobs_arg(parser)
     add_json_arg(parser)
