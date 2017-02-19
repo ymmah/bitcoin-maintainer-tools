@@ -6,6 +6,7 @@
 import re
 import sys
 import argparse
+import json
 
 from framework.report import Report
 from framework.file_filter import FileFilter
@@ -330,7 +331,7 @@ class CheckCmd(CopyrightHeaderCmd):
 def add_check_cmd(subparsers):
     def check_cmd(options):
         return CheckCmd(options.repository, options.jobs,
-                        options.target_fnmatches, options.json)
+                        options.target_fnmatches)
 
     check_help = ("Validates that selected targets do not have copyright "
                   "header issues, gives a per-file report and returns a "
@@ -537,5 +538,6 @@ if __name__ == "__main__":
         sys.exit("*** missing argument")
     cmd = options.get_cmd(options)
     results = cmd.analysis()
-    print(json.dumps(results) if options.json else results, end='')
-    sys.exit(cmd.exit_status(results))
+    print(json.dumps(results) if options.json else cmd.human_print(results),
+          end='')
+    sys.exit(cmd.shell_exit(results))

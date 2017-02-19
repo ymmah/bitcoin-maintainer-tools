@@ -6,6 +6,7 @@
 import sys
 import argparse
 import hashlib
+import json
 
 from repo_info import REPO_INFO
 from framework.report import Report
@@ -187,14 +188,14 @@ class ReportCmd(ClangFormatCmd):
 
 
 def add_report_cmd(subparsers):
-    def exec_report_cmd(options):
+    def report_cmd(options):
         return ReportCmd(options.repository, options.jobs,
-                         options.target_fnmatches, options.clang_format).run()
+                         options.target_fnmatches, options.clang_format)
 
     report_help = ("Produces a report with the analysis of the code format "
                    "adherence of the selected targets taken as a group.")
     parser = subparsers.add_parser('report', help=report_help)
-    parser.set_defaults(func=exec_report_cmd)
+    parser.set_defaults(get_cmd=report_cmd)
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_format_args(parser)
@@ -321,7 +322,7 @@ if __name__ == "__main__":
         sys.exit("*** missing argument")
     options.clang_format = (
         clang_format_from_options(options, REPO_INFO['clang_format_style']))
-    cmd = options.get_cmd()
+    cmd = options.get_cmd(options)
     results = cmd.analysis()
     print(json.dumps(results) if options.json else cmd.human_print(results),
           end='')

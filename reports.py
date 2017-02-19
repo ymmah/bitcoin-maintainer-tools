@@ -7,6 +7,7 @@ import sys
 import argparse
 import json
 
+from framework.report import Report
 from repo_info import REPO_INFO
 from clang_static_analysis import ReportCmd as ClangStaticAnalysisReport
 from basic_style import ReportCmd as BasicStyleReport
@@ -37,18 +38,19 @@ class Reports(object):
              'report':      ClangFormatReport(o.repository, o.jobs,
                                               o.target_fnmatches,
                                               o.clang_format)},
-            {'human_title': 'Clang Static Analysis Report',
-             'json_label':  'clang_static_analysis',
-             'report':      ClangStaticAnalysisReport(o.repository, o.jobs,
-                                                      o.scan_build,
-                                                      o.report_path,
-                                                      o.scan_view)},
+#            {'human_title': 'Clang Static Analysis Report',
+#             'json_label':  'clang_static_analysis',
+#             'report':      ClangStaticAnalysisReport(o.repository, o.jobs,
+#                                                      o.scan_build,
+#                                                      o.report_path,
+#                                                      o.scan_view)},
         ]
 
     def run(self):
+        o = Report()
         for r in self.reports:
             if not options.json:
-                print("Computing %s..." % r['human_title'])
+                o.add("Computing %s...\n" % r['human_title'])
             r['results'] = r['report'].analysis()
             r['output'] = (r['results'] if options.json else
                            r['report'].human_print(r['results']))
@@ -56,12 +58,13 @@ class Reports(object):
             if exit != 0:
                 sys.exit(exit)
             if not options.json:
-                print("Done.")
-                print("%s:" % r['human_title'])
-                print("%s" % r['output'])
+                o.add("Done.\n")
+                o.add("%s:\n" % r['human_title'])
+                o.add("%s\n" % r['output'])
         if options.json:
-            print(json.dumps({r['json_label']: r['output'] for r in
+            o.add(json.dumps({r['json_label']: r['output'] for r in
                               self.reports}))
+        return str(o)
 
 
 if __name__ == "__main__":
@@ -78,4 +81,5 @@ if __name__ == "__main__":
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
     reports = Reports(options)
-    reports.run()
+    output = reports.run()
+    print(output)

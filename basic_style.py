@@ -7,6 +7,7 @@ import re
 import sys
 import itertools
 import argparse
+import json
 
 from repo_info import REPO_INFO
 from framework.report import Report
@@ -290,7 +291,7 @@ class CheckCmd(BasicStyleCmd):
 def add_check_cmd(subparsers):
     def check_cmd(options):
         return CheckCmd(options.repository, options.jobs,
-                        options.target_fnmatches, options.json)
+                        options.target_fnmatches)
 
     check_help = ("Validates that the selected targets do not have basic style "
                   "issues, give a per-file report and returns a non-zero "
@@ -349,7 +350,7 @@ if __name__ == "__main__":
     if not hasattr(options, "get_cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    cmd = options.get_cmd()
+    cmd = options.get_cmd(options)
     results = cmd.analysis()
     print(json.dumps(results) if options.json else cmd.human_print(results),
           end='')

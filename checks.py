@@ -7,6 +7,7 @@ import sys
 import argparse
 import json
 
+from framework.report import Report
 from repo_info import REPO_INFO
 from clang_static_analysis import CheckCmd as ClangStaticAnalysisCheck
 from basic_style import CheckCmd as BasicStyleCheck
@@ -50,20 +51,22 @@ class Checks(object):
         return iter(self.checks)
 
     def run(self):
+        r = Report()
         for c in self.checks:
             if not options.json:
-                print("Computing %s..." % c['human_title'])
+                r.add("Computing %s...\n" % c['human_title'])
             c['results'] = c['check'].analysis()
             c['output'] = (c['results'] if options.json else
                            c['check'].human_print(c['results']))
             c['exit'] = c['check'].shell_exit(c['results'])
             if not options.json:
-                print("Done.")
-                print("%s:" % c['human_title'])
-                print("%s" % c['output'])
+                r.add("Done.\n")
+                r.add("%s:\n" % c['human_title'])
+                r.add("%s\n" % c['output'])
         if options.json:
-            print(json.dumps({c['json_label']: c['output'] for c in
-                              self.checks}), end='')
+            r.add(json.dumps({c['json_label']: c['output'] for c in
+                              self.checks}))
+        return str(r)
 
 
 if __name__ == "__main__":
@@ -81,7 +84,8 @@ if __name__ == "__main__":
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
     checks = Checks(options)
-    checks.run()
+    output = checks.run()
+    print(output)
     errors = [c['exit'] for c in checks if c['exit'] != 0]
     if not options.json:
         print('\n'.join(e))
