@@ -7,6 +7,7 @@ import re
 import sys
 import argparse
 
+from framework.report import Report
 from framework.file_filter import FileFilter
 from framework.file_info import FileInfo
 from framework.file_content_cmd import FileContentCmd
@@ -200,9 +201,9 @@ class CopyrightHeaderCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, repository, jobs, target_fnmatches, json):
+    def __init__(self, repository, jobs, target_fnmatches):
         super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
-                         target_fnmatches, json)
+                         target_fnmatches)
         self.no_copyright_filter = FileFilter()
         self.no_copyright_filter.append_include(
             REPO_INFO['no_copyright_header_expected'],
@@ -233,8 +234,8 @@ class ReportCmd(CopyrightHeaderCmd):
     """
     'report' subcommand class.
     """
-    def _analysis(self):
-        a = super()._analysis()
+    def analysis(self):
+        a = super().analysis()
         a['hdr_expected'] = sum(1 for f in self.file_infos if
                                 f['hdr_expected'])
         a['no_hdr_expected'] = sum(1 for f in self.file_infos if not
@@ -252,8 +253,9 @@ class ReportCmd(CopyrightHeaderCmd):
                 f['evaluation']['description'] == issue['description'])
         return a
 
-    def _human_print(self, results, report):
-        r = super()._human_print(results, report)
+    def human_print(self, results):
+        r = Report()
+        r.add(super().human_print(results))
         a = results
         r.add("%-70s %6d\n" % ("Files expected to have header:",
                                a['hdr_expected']))
@@ -271,19 +273,19 @@ class ReportCmd(CopyrightHeaderCmd):
         for key, value in sorted(a['issues'].items()):
             r.add("%-70s %6d\n" % ('"' + key + '":', value))
         r.separator()
-        return r
+        return str(r)
 
 
 def add_report_cmd(subparsers):
-    def exec_report_cmd(options):
+    def report_cmd(options):
         return ReportCmd(options.repository, options.jobs,
-                         options.target_fnmatches, options.json).run()
+                         options.target_fnmatches)
 
     report_help = ("Produces a report of copyright header notices within "
                    "selected targets to help identify files that don't meet "
                    "expectations.")
     parser = subparsers.add_parser('report', help=report_help)
-    parser.set_defaults(func=exec_report_cmd)
+    parser.set_defaults(get_cmd=report_cmd)
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_git_tracked_targets_arg(parser)
@@ -298,15 +300,16 @@ class CheckCmd(CopyrightHeaderCmd):
     'check' subcommand class.
     """
 
-    def _analysis(self):
-        a = super()._analysis()
+    def analysis(self):
+        a = super().analysis()
         a['issues'] = [{'file_path':  f['file_path'],
                         'evaluation': f['evaluation']} for f in
                        self.file_infos if not f['pass']]
         return a
 
-    def _human_print(self, results, report):
-        r = super()._human_print(results, report)
+    def human_print(self, results):
+        r = Report()
+        r.add(super().human_print(results))
         a = results
         for issue in a['issues']:
             r.add("An issue was found with ")
@@ -317,28 +320,23 @@ class CheckCmd(CopyrightHeaderCmd):
             r.separator()
         if len(a['issues']) == 0:
             r.add_green("No copyright header issues found!\n")
-        return r
+        return str(r)
 
-    def _json_print(self, results):
-        for issue in results['issues']:
-            issue['evaluation'].pop('resolution', None)
-        return super()._json_print(results)
-
-    def _shell_exit(self):
-        return (0 if len(self.results['issues']) == 0 else
+    def shell_exit(self, results):
+        return (0 if len(results['issues']) == 0 else
                 "*** copyright header issue found")
 
 
 def add_check_cmd(subparsers):
-    def exec_check_cmd(options):
+    def check_cmd(options):
         return CheckCmd(options.repository, options.jobs,
-                        options.target_fnmatches, options.json).run()
+                        options.target_fnmatches, options.json)
 
     check_help = ("Validates that selected targets do not have copyright "
                   "header issues, gives a per-file report and returns a "
                   "non-zero shell status if there are any issues discovered.")
     parser = subparsers.add_parser('check', help=check_help)
-    parser.set_defaults(func=exec_check_cmd)
+    parser.set_defaults(get_cmd=check_cmd)
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_git_tracked_targets_arg(parser)
@@ -534,10 +532,10 @@ if __name__ == "__main__":
     add_update_cmd(subparsers)
     add_insert_cmd(subparsers)
     options = parser.parse_args()
-    if not hasattr(options, "func"):
+    if not hasattr(options, "get_cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    exit, output = options.func(options)
-    if exit != 0:
-        sys.exit(exit)
-    print(output, end='')
+    cmd = options.get_cmd(options)
+    results = cmd.analysis()
+    print(json.dumps(results) if options.json else results, end='')
+    sys.exit(cmd.exit_status(results))

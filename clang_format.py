@@ -79,10 +79,10 @@ class ClangFormatCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, repository, jobs, target_fnmatches, json, clang_format,
+    def __init__(self, repository, jobs, target_fnmatches, clang_format,
                  force):
         super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
-                         target_fnmatches, json)
+                         target_fnmatches)
         self.clang_format = clang_format
         self.force = force
 
@@ -100,9 +100,9 @@ class ReportCmd(ClangFormatCmd):
     """
     'report' subcommand class.
     """
-    def __init__(self, repository, jobs, target_fnmatches, json, clang_format):
-        super().__init__(repository, jobs, target_fnmatches, json,
-                         clang_format, True)
+    def __init__(self, repository, jobs, target_fnmatches, clang_format):
+        super().__init__(repository, jobs, target_fnmatches, clang_format,
+                         True)
 
     def _cumulative_md5(self):
         # nothing fancy, just hash all the hashes
@@ -121,8 +121,8 @@ class ReportCmd(ClangFormatCmd):
                     f['score'].in_range(lower, upper)))
         return files_in_ranges
 
-    def _analysis(self):
-        a = super()._analysis()
+    def analysis(self):
+        a = super().analysis()
         file_infos = self.file_infos
         a['clang_format_path'] = self.clang_format.binary_path
         a['clang_format_version'] = str(self.clang_format.binary_version)
@@ -147,9 +147,9 @@ class ReportCmd(ClangFormatCmd):
         a['files_in_ranges'] = self._files_in_ranges()
         return a
 
-    def _human_print(self, results, report):
-        super()._human_print(results, report)
-        r = report
+    def human_print(self, results):
+        r = Report()
+        r.add(super().human_print(results))
         a = results
         r.add("clang-format bin:         %s\n" % a['clang_format_path'])
         r.add("clang-format version:     %s\n" % a['clang_format_version'])
@@ -183,14 +183,13 @@ class ReportCmd(ClangFormatCmd):
                            a['lines_after'])
         r.add(str(score))
         r.separator()
-        return r
+        return str(r)
 
 
 def add_report_cmd(subparsers):
     def exec_report_cmd(options):
         return ReportCmd(options.repository, options.jobs,
-                         options.target_fnmatches, options.json,
-                         options.clang_format).run()
+                         options.target_fnmatches, options.clang_format).run()
 
     report_help = ("Produces a report with the analysis of the code format "
                    "adherence of the selected targets taken as a group.")
@@ -210,13 +209,13 @@ class CheckCmd(ClangFormatCmd):
     """
     'check' subcommand class.
     """
-    def __init__(self, repository, jobs, target_fnmatches, json, clang_format,
+    def __init__(self, repository, jobs, target_fnmatches, clang_format,
                  force):
-        super().__init__(repository, jobs, target_fnmatches, json,
-                         clang_format, force)
+        super().__init__(repository, jobs, target_fnmatches, clang_format,
+                         force)
 
-    def _analysis(self):
-        a = super()._analysis()
+    def analysis(self):
+        a = super().analysis()
         a['failures'] = [{'file_path':       f['file_path'],
                           'style_score':     float(f['score']),
                           'lines_before':    f['lines_before'],
@@ -227,10 +226,10 @@ class CheckCmd(ClangFormatCmd):
                          for f in self.file_infos if not f['matching']]
         return a
 
-    def _human_print(self, results, report):
-        super()._human_print(results, report)
+    def human_print(self, results):
+        r = Report()
+        r.add(super().human_print(results))
         a = results
-        r = report
         for f in a['failures']:
             r.add("A code format issue was detected in ")
             r.add_red("%s\n\n" % f['file_path'])
@@ -242,28 +241,27 @@ class CheckCmd(ClangFormatCmd):
         if len(a['failures']) == 0:
             r.add_green("No format issues found!\n")
         else:
-            r.add_red("These files can be formatted by running:\n\n")
-            r.add("\t$ clang_format.py format [option [option ...]] "
-                  "[file [file ...]]\n\n")
+            r.add_red("These files can be formatted by running:\n")
+            r.add("$ clang_format.py format [option [option ...]] "
+                  "[target [target ...]]\n")
         r.separator()
-        return r
+        return str(r)
 
-    def _shell_exit(self):
-        return (0 if len(self.results) == 0 else
-                "*** code formatting issue found")
+    def shell_exit(self, results):
+        return (0 if len(results) == 0 else "*** code format issue found")
 
 
 def add_check_cmd(subparsers):
-    def exec_check_cmd(options):
+    def check_cmd(options):
         return CheckCmd(options.repository, options.jobs,
-                        options.target_fnmatches, options.json,
-                        options.clang_format, options.force).run()
+                        options.target_fnmatches, options.clang_format,
+                        options.force)
 
     check_help = ("Validates that the selected targets match the style, gives "
                   "a per-file report and returns a non-zero shell status if "
                   "there are any format issues discovered.")
     parser = subparsers.add_parser('check', help=check_help)
-    parser.set_defaults(func=exec_check_cmd)
+    parser.set_defaults(get_cmd=check_cmd)
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_force_arg(parser)
@@ -318,12 +316,13 @@ if __name__ == "__main__":
     add_check_cmd(subparsers)
     add_format_cmd(subparsers)
     options = parser.parse_args()
-    if not hasattr(options, "func"):
+    if not hasattr(options, "get_cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
     options.clang_format = (
         clang_format_from_options(options, REPO_INFO['clang_format_style']))
-    exit, output = options.func(options)
-    if exit != 0:
-        sys.exit(exit)
-    print(json.dumps(output) if type(output) is dict else str(output), end='')
+    cmd = options.get_cmd()
+    results = cmd.analysis()
+    print(json.dumps(results) if options.json else cmd.human_print(results),
+          end='')
+    sys.exit(cmd.shell_exit(results))

@@ -26,39 +26,42 @@ class Reports(object):
         self.reports = [
             {'human_title': 'Copyright Header Report',
              'json_label':  'copyright_header',
-             'runnable':    CopyrightHeaderReport(o.repository, o.jobs,
-                                                  o.target_fnmatches, o.json)},
+             'report':      CopyrightHeaderReport(o.repository, o.jobs,
+                                                  o.target_fnmatches)},
             {'human_title': 'Basic Style Report',
              'json_label':  'basic_style',
-             'runnable':    BasicStyleReport(o.repository, o.jobs,
-                                             o.target_fnmatches, o.json)},
+             'report':      BasicStyleReport(o.repository, o.jobs,
+                                             o.target_fnmatches)},
             {'human_title': 'Clang Format Style Report',
              'json_label':  'clang_format',
-             'runnable':    ClangFormatReport(o.repository, o.jobs,
-                                              o.target_fnmatches, o.json,
+             'report':      ClangFormatReport(o.repository, o.jobs,
+                                              o.target_fnmatches,
                                               o.clang_format)},
             {'human_title': 'Clang Static Analysis Report',
              'json_label':  'clang_static_analysis',
-             'runnable':    ClangStaticAnalysisReport(o.repository, o.jobs,
-                                                      o.json, o.scan_build,
+             'report':      ClangStaticAnalysisReport(o.repository, o.jobs,
+                                                      o.scan_build,
                                                       o.report_path,
                                                       o.scan_view)},
         ]
 
     def run(self):
-        for report in self.reports:
+        for r in self.reports:
             if not options.json:
-                print("Computing %s..." % report['human_title'])
-            exit, report['output'] = report['runnable'].run()
+                print("Computing %s..." % r['human_title'])
+            r['results'] = r['report'].analysis()
+            r['output'] = (r['results'] if options.json else
+                           r['report'].human_print(r['results']))
+            exit = r['report'].shell_exit(r['results'])
             if exit != 0:
                 sys.exit(exit)
             if not options.json:
                 print("Done.")
-                print("%s:" % report['human_title'])
-                print("%s" % report['output'])
+                print("%s:" % r['human_title'])
+                print("%s" % r['output'])
         if options.json:
-            print(json.dumps({report['json_label']: report['output']
-                              for report in reports}))
+            print(json.dumps({r['json_label']: r['output'] for r in
+                              self.reports}))
 
 
 if __name__ == "__main__":

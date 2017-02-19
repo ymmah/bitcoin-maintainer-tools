@@ -9,6 +9,7 @@ import itertools
 import argparse
 
 from repo_info import REPO_INFO
+from framework.report import Report
 from framework.file_filter import FileFilter
 from framework.file_info import FileInfo
 from framework.file_content_cmd import FileContentCmd
@@ -146,9 +147,9 @@ class BasicStyleCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, repository, jobs, target_fnmatches, json):
+    def __init__(self, repository, jobs, target_fnmatches):
         super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
-                         target_fnmatches, json)
+                         target_fnmatches)
         self.rules = BasicStyleRules(repository)
 
     def _file_info_list(self):
@@ -164,8 +165,8 @@ class ReportCmd(BasicStyleCmd):
     """
     'report' subcommand class.
     """
-    def _analysis(self):
-        a = super()._analysis()
+    def analysis(self):
+        a = super().analysis()
         file_infos = self.file_infos
         a['jobs'] = self.jobs
         a['elapsed_time'] = self.elapsed_time
@@ -197,8 +198,9 @@ class ReportCmd(BasicStyleCmd):
                  'files': file_count, 'occurrences': occurrence_count})
         return a
 
-    def _human_print(self, results, report):
-        r = super()._human_print(results, report)
+    def human_print(self, results):
+        r = Report()
+        r.add(super().human_print(results))
         a = results
         r.add("Parallel jobs for diffs:   %d\n" % a['jobs'])
         r.add("Elapsed time:              %.02fs\n" % a['elapsed_time'])
@@ -223,20 +225,20 @@ class ReportCmd(BasicStyleCmd):
                            a['lines_after'])
         r.add(str(score))
         r.separator()
-        return r
+        return str(r)
 
 
 def add_report_cmd(subparsers):
-    def exec_report_cmd(options):
+    def report_cmd(options):
         return ReportCmd(options.repository, options.jobs,
-                         options.target_fnmatches, options.json).run()
+                         options.target_fnmatches)
 
     report_help = ("Validates that the selected targets do not have basic "
                    "style issues, give a per-file report and returns a "
                    "non-zero shell status if there are any basic style issues "
                    "discovered.")
     parser = subparsers.add_parser('report', help=report_help)
-    parser.set_defaults(func=exec_report_cmd)
+    parser.set_defaults(get_cmd=report_cmd)
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_git_tracked_targets_arg(parser)
@@ -251,16 +253,16 @@ class CheckCmd(BasicStyleCmd):
     'check' subcommand class.
     """
 
-    def _analysis(self):
-        a = super()._analysis()
+    def analysis(self):
+        a = super().analysis()
         file_infos = self.file_infos
         a['issues'] = list(
             itertools.chain.from_iterable(f['issues'] for f in file_infos))
         return a
 
-    def _human_print(self, results, report):
-        super()._human_print(results, report)
-        r = report
+    def human_print(self, results):
+        r = Report()
+        r.add(super().human_print(results))
         a = results
         for issue in a['issues']:
             r.separator()
@@ -276,27 +278,26 @@ class CheckCmd(BasicStyleCmd):
             r.add_green("No style issues found!\n")
         else:
             r.add_red("These issues can be fixed automatically by running:\n")
-            r.add("$ contrib/devtools/basic_style.py fix [target "
-                  "[target ...]]\n")
+            r.add("$ basic_style.py fix [target [target ...]]\n")
         r.separator()
+        return str(r)
 
 
-    def _shell_exit(self, results):
-        return (0 if len(results['issues']) == 0 else
-                "*** code formatting issue found")
+    def shell_exit(self, results):
+        return (0 if len(results['issues']) == 0 else "*** style issue found")
 
 
 def add_check_cmd(subparsers):
-    def exec_check_cmd(options):
-        CheckCmd(options.repository, options.jobs,
-                 options.target_fnmatches, options.json).exec_analysis()
+    def check_cmd(options):
+        return CheckCmd(options.repository, options.jobs,
+                        options.target_fnmatches, options.json)
 
     check_help = ("Validates that the selected targets do not have basic style "
                   "issues, give a per-file report and returns a non-zero "
                   "shell status if there are any basic style issues "
                   "discovered.")
     parser = subparsers.add_parser('check', help=check_help)
-    parser.set_defaults(func=exec_check_cmd)
+    parser.set_defaults(get_cmd=check_cmd)
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_git_tracked_targets_arg(parser)
@@ -345,7 +346,11 @@ if __name__ == "__main__":
     add_check_cmd(subparsers)
     add_fix_cmd(subparsers)
     options = parser.parse_args()
-    if not hasattr(options, "func"):
+    if not hasattr(options, "get_cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    options.func(options)
+    cmd = options.get_cmd()
+    results = cmd.analysis()
+    print(json.dumps(results) if options.json else cmd.human_print(results),
+          end='')
+    sys.exit(cmd.shell_exit(results))

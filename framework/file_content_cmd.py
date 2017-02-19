@@ -79,7 +79,8 @@ class FileContentCmd(object):
     def _write_files(self):
         pass
 
-    def _analysis(self):
+    def analysis(self):
+        self._read_and_compute_file_infos()
         a = {}
         a['tracked_files'] = len(self.tracked_files)
         a['files_in_scope'] = len(self.files_in_scope)
@@ -87,8 +88,8 @@ class FileContentCmd(object):
         a['jobs'] = self.jobs
         return a
 
-    def _human_print(self, results, report):
-        r = report
+    def human_print(self, results):
+        r = Report()
         a = results
         r.separator()
         r.add("%4d files tracked in repo\n" % a['tracked_files'])
@@ -98,20 +99,7 @@ class FileContentCmd(object):
               a['files_targeted'])
         r.add("%4d parallel jobs for computing analysis\n" % a['jobs'])
         r.separator()
-        return r
+        return str(r)
 
-    def _json_print(self, results):
-        return results
-
-    def _shell_exit(self, results):
+    def shell_exit(self, results):
         return 0
-
-    def run(self, analysis=True):
-        self._read_and_compute_file_infos()
-        results = self._analysis() if analysis else {}
-        report = Report()
-        output = (self._json_print(results) if self.json else
-                  self._human_print(results, report))
-        exit = self._shell_exit(results)
-        self._write_files()
-        return exit, output
