@@ -9,12 +9,22 @@ import os
 import json
 
 h = """
-Invoke as $ ./regression.py <repo>
+Performs a basic smoke test of the tools with some variety of options.
+This isn't intended to be comprehensive, but it is useful for not breaking
+things while developing.
 
-The expectations of results from command make assumptions about the state of
-the bitcoin repository for whether some commands are successful or not.
+Invoke as:
 
-Tested with release x.x.x checked out with a normal ./configure
+$ test/regression.py <bitcoin repo>
+
+from the base repo of bitcoin-maintainer-tools
+
+This script makes assumptions about the state of the bitcoin repository for
+whether some commands are successful or not, so a failure might be due to
+the target repo as opposed to the script.
+
+It should fully pass agianst a target repo of release x.x.x checked out with a
+normal ./configure already performed.
 """
 # TODO test with well-known release
 
@@ -66,45 +76,45 @@ def test_check_json(cmd):
 ###############################################################################
 
 test_cmds = [
-    {'cmd':  './basic_style.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/basic_style.py report -j8 %s' % sys.argv[1],
      'test': test_report},
-    {'cmd':  './copyright_header.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/copyright_header.py report -j8 %s' % sys.argv[1],
      'test': test_report},
-    {'cmd':  './clang_format.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/clang_format.py report -j8 %s' % sys.argv[1],
      'test': test_report},
-    {'cmd':  './clang_static_analysis.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/clang_static_analysis.py report -j8 %s' % sys.argv[1],
      'test': test_report},
-    {'cmd':  './reports.py -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/reports.py -j8 %s' % sys.argv[1],
      'test': test_report},
-    {'cmd': './basic_style.py report --json %s' % sys.argv[1],
+    {'cmd': 'bin/basic_style.py report --json %s' % sys.argv[1],
      'test': test_report_json},
-    {'cmd': './copyright_header.py report --json %s' % sys.argv[1],
+    {'cmd': 'bin/copyright_header.py report --json %s' % sys.argv[1],
      'test': test_report_json},
-    {'cmd': './clang_format.py report --json %s' % sys.argv[1],
+    {'cmd': 'bin/clang_format.py report --json %s' % sys.argv[1],
      'test': test_report_json},
-    {'cmd': './clang_static_analysis.py report --json %s' % sys.argv[1],
+    {'cmd': 'bin/clang_static_analysis.py report --json %s' % sys.argv[1],
      'test': test_report_json},
-    {'cmd':  './reports.py --json %s' % sys.argv[1],
+    {'cmd':  'bin/reports.py --json %s' % sys.argv[1],
      'test': test_report_json},
-    {'cmd': './basic_style.py check -j8 %s' % sys.argv[1],
+    {'cmd': 'bin/basic_style.py check -j8 %s' % sys.argv[1],
      'test': test_check},
-    {'cmd': './copyright_header.py check -j8 %s' % sys.argv[1],
+    {'cmd': 'bin/copyright_header.py check -j8 %s' % sys.argv[1],
      'test': test_check},
-    {'cmd': './clang_format.py check --force -j8 %s' % sys.argv[1],
+    {'cmd': 'bin/clang_format.py check --force -j8 %s' % sys.argv[1],
      'test': test_check},
-    {'cmd': './clang_static_analysis.py check -j8 %s' % sys.argv[1],
+    {'cmd': 'bin/clang_static_analysis.py check -j8 %s' % sys.argv[1],
      'test': test_check},
-    {'cmd':  './checks.py -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/checks.py -j8 %s' % sys.argv[1],
      'test': test_check},
-    {'cmd': './basic_style.py check --json %s' % sys.argv[1],
+    {'cmd': 'bin/basic_style.py check --json %s' % sys.argv[1],
      'test': test_check_json},
-    {'cmd': './copyright_header.py check --json %s' % sys.argv[1],
+    {'cmd': 'bin/copyright_header.py check --json %s' % sys.argv[1],
      'test': test_check_json},
-    {'cmd': './clang_format.py check --force --json %s' % sys.argv[1],
+    {'cmd': 'bin/clang_format.py check --force --json %s' % sys.argv[1],
      'test': test_check_json},
-    {'cmd': './clang_static_analysis.py check --json %s' % sys.argv[1],
+    {'cmd': 'bin/clang_static_analysis.py check --json %s' % sys.argv[1],
      'test': test_check_json},
-    {'cmd':  './checks.py --force --json %s' % sys.argv[1],
+    {'cmd':  'bin/checks.py --force --json %s' % sys.argv[1],
      'test': test_check_json},
 ]
 
