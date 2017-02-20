@@ -72,10 +72,10 @@ def test_check_json(cmd):
 
 
 ###############################################################################
-# report cmd
+# test single commands
 ###############################################################################
 
-test_cmds = [
+test_single_cmds = [
     {'cmd':  'bin/basic_style.py report -j8 %s' % sys.argv[1],
      'test': test_report},
     {'cmd':  'bin/copyright_header.py report -j8 %s' % sys.argv[1],
@@ -123,6 +123,6 @@ test_cmds = [
 # run tests
 ###############################################################################
 
-for cmd in test_cmds:
+for cmd in test_single_cmds:
     print("testing '%s'" % cmd['cmd'])
     cmd['test'](cmd['cmd'])
