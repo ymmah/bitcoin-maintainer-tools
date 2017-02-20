@@ -334,3 +334,9 @@ def add_clang_args(parser):
     add_bin_path_arg(parser)
     add_report_path_arg(parser)
     add_style_file_arg(parser)
+
+
+def add_force_arg(parser):
+    f_help = ("force proceeding with if clang-format doesn't support all "
+              "parameters in the style file (default=False)")
+    parser.add_argument("-f", "--force", action='store_true', help=f_help)

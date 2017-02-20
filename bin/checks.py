@@ -14,7 +14,7 @@ from copyright_header import CheckCmd as CopyrightHeaderCheck
 from clang_format import CheckCmd as ClangFormatCheck
 from framework.args import add_jobs_arg
 from framework.args import add_json_arg
-from framework.args import add_force_arg
+from framework.clang import add_force_arg
 from framework.clang import scan_build_binaries_from_options
 from framework.clang import clang_format_from_options
 from framework.clang import add_clang_args

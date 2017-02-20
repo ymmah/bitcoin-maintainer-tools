@@ -9,12 +9,6 @@ def add_jobs_arg(parser):
     parser.add_argument("-j", "--jobs", type=int, default=4, help=j_help)
 
 
-def add_force_arg(parser):
-    f_help = ("force proceeding with if clang-format doesn't support all "
-              "parameters in the style file (default=False)")
-    parser.add_argument("-f", "--force", action='store_true', help=f_help)
-
-
 def add_json_arg(parser):
     j_help = "print output in json format (default=False)"
     parser.add_argument("--json", action='store_true', help=j_help)
