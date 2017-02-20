@@ -16,7 +16,6 @@ from framework.args import add_jobs_arg
 from framework.args import add_json_arg
 from framework.git import add_git_tracked_targets_arg
 from framework.git import GitFilePath
-from repo_info import REPO_INFO
 
 
 APPLIES_TO = ['*.h', '*.cpp', '*.py', '*.sh', '*.am', '*.m4', '*.include']
@@ -203,15 +202,15 @@ class CopyrightHeaderCmd(FileContentCmd):
     Common base class for the commands in this script.
     """
     def __init__(self, repository, jobs, target_fnmatches):
-        super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
-                         target_fnmatches)
+        super().__init__(repository, jobs, APPLIES_TO,target_fnmatches)
         self.no_copyright_filter = FileFilter()
+        repo_info = repository.repo_info
         self.no_copyright_filter.append_include(
-            REPO_INFO['no_copyright_header_expected'],
+            repo_info['no_copyright_header_expected']['fnmatches'],
             base_path=str(repository))
         self.other_copyright_filter = FileFilter()
         self.other_copyright_filter.append_include(
-            REPO_INFO['other_copyright_occurrences_expected'],
+            repo_info['other_copyright_occurrences_expected']['fnmatches'],
             base_path=str(repository))
 
     def _copyright_expected(self, file_path):

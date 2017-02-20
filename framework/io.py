@@ -6,12 +6,12 @@
 
 def read_file(file_path):
     file = open(file_path, 'r')
-    contents = file.read()
+    content = file.read()
     file.close()
-    return contents
+    return content
 
 
-def write_file(file_path, contents):
+def write_file(file_path, content):
     file = open(file_path, 'w')
-    file.write(contents)
+    file.write(content)
     file.close()

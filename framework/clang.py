@@ -277,12 +277,13 @@ def add_clang_format_args(parser):
     add_style_file_arg(parser)
 
 
-def clang_format_from_options(options, style_file_default):
+def clang_format_from_options(options):
     binary = (options.clang_executables['clang-format'] if
               hasattr(options, 'clang_executables') else
               ClangFind().best('clang-format'))
     style_path = (options.style_file if options.style_file else
-                  os.path.join(str(options.repository), style_file_default))
+                  os.path.join(str(options.repository),
+                  options.repository.repo_info['clang_format_style']['value']))
     return ClangFormat(binary, style_path)
 
 

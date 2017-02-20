@@ -18,11 +18,11 @@ class FileContentCmd(object):
     a subset of files that the operation is to apply to via lists of
     fnmatch expressions.
     """
-    def __init__(self, repository, jobs, include_fnmatches, exclude_fnmatches,
-                 target_fnmatches):
+    def __init__(self, repository, jobs, include_fnmatches, target_fnmatches):
         self.repository = repository
         self.jobs = jobs
         self.tracked_files = self._get_tracked_files(self.repository)
+        exclude_fnmatches = repository.repo_info['subtrees']['fnmatches']
         self.files_in_scope = list(self._files_in_scope(self.repository,
                                                         self.tracked_files,
                                                         include_fnmatches,

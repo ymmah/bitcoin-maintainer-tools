@@ -9,7 +9,6 @@ import itertools
 import argparse
 import json
 
-from repo_info import REPO_INFO
 from framework.report import Report
 from framework.file_filter import FileFilter
 from framework.file_info import FileInfo
@@ -149,8 +148,7 @@ class BasicStyleCmd(FileContentCmd):
     Common base class for the commands in this script.
     """
     def __init__(self, repository, jobs, target_fnmatches):
-        super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
-                         target_fnmatches)
+        super().__init__(repository, jobs, APPLIES_TO, target_fnmatches)
         self.rules = BasicStyleRules(repository)
 
     def _file_info_list(self):

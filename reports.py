@@ -8,7 +8,6 @@ import argparse
 import json
 
 from framework.report import Report
-from repo_info import REPO_INFO
 from clang_static_analysis import ReportCmd as ClangStaticAnalysisReport
 from basic_style import ReportCmd as BasicStyleReport
 from copyright_header import ReportCmd as CopyrightHeaderReport
@@ -79,8 +78,7 @@ if __name__ == "__main__":
     add_clang_args(parser)
     add_git_repository_arg(parser)
     options = parser.parse_args()
-    options.clang_format = (
-        clang_format_from_options(options, REPO_INFO['clang_format_style']))
+    options.clang_format = clang_format_from_options(options)
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
     reports = Reports(options)

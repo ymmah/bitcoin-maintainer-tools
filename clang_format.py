@@ -8,7 +8,6 @@ import argparse
 import hashlib
 import json
 
-from repo_info import REPO_INFO
 from framework.report import Report
 from framework.clang import add_clang_format_args, clang_format_from_options
 from framework.file_info import FileInfo
@@ -59,8 +58,9 @@ class ClangFormatFileInfo(FileInfo):
             # The applied formating has subtle differences that vary between
             # major releases of clang-format. The recommendation should
             # probably follow the latest widely-available stable release.
+            repo_info = self.repository.repo_info
             r.add("\nUsing clang-format version %s or higher is recommended\n"
-                  % REPO_INFO['clang_format_recommended'])
+                  % repo_info['clang_format_recommended']['min_version'])
             r.add("Use the --force option to override and proceed anyway.\n\n")
             r.flush()
             sys.exit("*** missing clang-format support.")
@@ -82,8 +82,7 @@ class ClangFormatCmd(FileContentCmd):
     """
     def __init__(self, repository, jobs, target_fnmatches, clang_format,
                  force):
-        super().__init__(repository, jobs, APPLIES_TO, REPO_INFO['subtrees'],
-                         target_fnmatches)
+        super().__init__(repository, jobs, APPLIES_TO, target_fnmatches)
         self.clang_format = clang_format
         self.force = force
 
@@ -320,8 +319,7 @@ if __name__ == "__main__":
     if not hasattr(options, "get_cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    options.clang_format = (
-        clang_format_from_options(options, REPO_INFO['clang_format_style']))
+    options.clang_format = clang_format_from_options(options)
     cmd = options.get_cmd(options)
     results = cmd.analysis()
     print(json.dumps(results) if options.json else cmd.human_print(results),

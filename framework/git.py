@@ -9,6 +9,7 @@ import subprocess
 import argparse
 import datetime
 from framework.path import Path
+from framework.repo_info import RepoInfo
 
 
 ###############################################################################
@@ -104,6 +105,7 @@ class GitRepository(object):
         if str(self.repository_base) != str(git_path.repository_base()):
             sys.exit("*** %s is not the base of its repository" %
                      self.repository_base)
+        self.repo_info = RepoInfo(self.repository_base)
 
     def __str__(self):
         return self.repository_base
