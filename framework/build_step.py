@@ -7,7 +7,7 @@ import os
 import sys
 import subprocess
 
-from framework.path import Path
+from framework.utl.path import Path
 
 ###############################################################################
 # base class

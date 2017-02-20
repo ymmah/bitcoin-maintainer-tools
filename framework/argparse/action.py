@@ -6,7 +6,8 @@
 import os
 import sys
 import argparse
-from framework.path import Path
+
+from framework.utl.path import Path
 
 
 class ReadableFileAction(argparse.Action):

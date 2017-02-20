@@ -8,9 +8,9 @@ import os
 import sys
 import subprocess
 import argparse
-from framework.path import Path
-from framework.action import ExecutableBinaryAction
-from framework.action import ReadableFileAction
+from framework.utl.path import Path
+from framework.argparse.action import ExecutableBinaryAction
+from framework.argparse.action import ReadableFileAction
 from framework.utl.io import read_file, write_file
 
 ###############################################################################

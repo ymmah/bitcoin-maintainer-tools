@@ -12,8 +12,8 @@ from clang_static_analysis import ReportCmd as ClangStaticAnalysisReport
 from basic_style import ReportCmd as BasicStyleReport
 from copyright_header import ReportCmd as CopyrightHeaderReport
 from clang_format import ReportCmd as ClangFormatReport
-from framework.utl.parser import add_jobs_arg
-from framework.utl.parser import add_json_arg
+from framework.argparse.args import add_jobs_arg
+from framework.argparse.args import add_json_arg
 from framework.clang import scan_build_binaries_from_options
 from framework.clang import clang_format_from_options
 from framework.clang import add_clang_args

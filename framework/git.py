@@ -8,7 +8,7 @@ import sys
 import subprocess
 import argparse
 import datetime
-from framework.path import Path
+from framework.utl.path import Path
 from framework.repo_info import RepoInfo
 
 

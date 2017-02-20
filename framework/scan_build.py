@@ -8,7 +8,7 @@ import subprocess
 import plistlib
 import itertools
 
-from framework.path import Path
+from framework.utl.path import Path
 
 
 class ScanBuildPlistDirectory(Path):
