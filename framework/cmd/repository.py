@@ -9,7 +9,7 @@ import json
 class RepositoryCmd(object):
     """
     Superclass for a command or subcommand that is targeted at a git repository.
-    'silent=True' means to only print what is produced by the _output()
+    'silent=True' instructs to only print what is produced by the _output()
     function.
     """
     def __init__(self, options, silent=False):
@@ -17,6 +17,7 @@ class RepositoryCmd(object):
         self.options = options
         self.repository = options.repository
         self.silent = silent
+        self.title = "RepositoryCmd superclass"
 
     def _analysis(self):
         return {}
@@ -35,6 +36,4 @@ class RepositoryCmd(object):
 
     def run(self):
         results = self._analysis()
-        output = self._output(results)
-        exit = self._shell_exit(results)
-        self._print(output, exit)
+        self._print(self._output(results), self._shell_exit(results))

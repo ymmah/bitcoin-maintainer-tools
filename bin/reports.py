@@ -7,6 +7,8 @@ import sys
 import argparse
 import json
 
+
+from framework.cmd import RepositoryCmd
 from framework.utl.report import Report
 from clang_static_analysis import ReportCmd as ClangStaticAnalysisReport
 from basic_style import ReportCmd as BasicStyleReport
@@ -19,54 +21,47 @@ from framework.clang import clang_format_from_options
 from framework.clang import add_clang_args
 from framework.git import add_git_repository_arg
 
-class Reports(object):
+class Reports(RepositoryCmd):
     """
-    Represents an aggregation of underlying run that can be run in one step.
+    A RepositoryCmd that collects options and invokes several underlying
+    RepositoryCmds and and aggregates the report that result.
     """
     def __init__(self, options):
-        o = options
-        self.json = o.json
-        self.reports = [
-            {'human_title': 'Copyright Header Report',
-             'json_label':  'copyright_header',
-             'report':      CopyrightHeaderReport(o.repository, o.jobs,
-                                                  o.target_fnmatches)},
-            {'human_title': 'Basic Style Report',
-             'json_label':  'basic_style',
-             'report':      BasicStyleReport(o.repository, o.jobs,
-                                             o.target_fnmatches)},
-            {'human_title': 'Clang Format Style Report',
-             'json_label':  'clang_format',
-             'report':      ClangFormatReport(o.repository, o.jobs,
-                                              o.target_fnmatches,
-                                              o.clang_format)},
-            {'human_title': 'Clang Static Analysis Report',
-             'json_label':  'clang_static_analysis',
-             'report':      ClangStaticAnalysisReport(o.repository, o.jobs,
-                                                      o.scan_build,
-                                                      o.report_path,
-                                                      o.scan_view)},
-        ]
+        super().__init__(options, silent=options.json)
+        self.json = options.json
+        self.reports = {
+            'copyright_header':      CopyrightHeaderReport(options)},
+#            'basic_style':           BasicStyleReport(options)},
+#            'clang_format':          ClangFormatReport(options)},
+#            'clang_static_analysis': ClangStaticAnalysisReport(options)},
+        }
 
-    def run(self):
-        o = Report()
-        for r in self.reports:
-            if not options.json:
-                o.add("Computing %s...\n" % r['human_title'])
-            r['results'] = r['report'].analysis()
-            r['output'] = (r['results'] if options.json else
-                           r['report'].human_print(r['results']))
-            exit = r['report'].shell_exit(r['results'])
-            if exit != 0:
-                sys.exit(exit)
-            if not options.json:
-                o.add("Done.\n")
-                o.add("%s:\n" % r['human_title'])
-                o.add("%s\n" % r['output'])
-        if options.json:
-            o.add(json.dumps({r['json_label']: r['output'] for r in
-                              self.reports}))
-        return str(o)
+    def _analysis(self):
+        results = super()._analysis()
+        for l, r in self.reports.items():
+            if not self.silent:
+                print("Computing %s..." % r.title)
+            results[l] = r._analysis()
+            if not self.silent:
+                print("Done." % r.title)
+        return results
+
+    def _output(self, results)
+        if self.json:
+            return super()._output(results)
+        return [self.reports[l]._output(r)
+                for l, r in results.items()].join('\n')
+
+    def _shell_exit(self, results):
+        exits = [l: r._shell_exit(results[l]) for l, r in
+                 self.reports.items()]
+        if all(e == 0 for e in exits):
+            return 0
+        non_zero_ints = [e for e in exit if type(e) is int and not e == 0]
+        strings = [e for e in exits if type(e) is str]
+        if len(strings) == 0:
+            return max(non_zero_ints)
+        return strings.join('\n')
 
 
 if __name__ == "__main__":
@@ -81,6 +76,6 @@ if __name__ == "__main__":
     options.clang_format = clang_format_from_options(options)
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
+
     reports = Reports(options)
     output = reports.run()
-    print(output)
