@@ -11,8 +11,8 @@ import json
 
 from framework.utl.report import Report
 from framework.scan_build import ScanBuildResultDirectory
-from framework.args import add_jobs_arg
-from framework.args import add_json_arg
+from framework.utl.parser import add_jobs_arg
+from framework.utl.parser import add_json_arg
 from framework.clang import add_clang_static_analysis_args
 from framework.clang import scan_build_binaries_from_options
 from framework.git import add_git_repository_arg

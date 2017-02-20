@@ -13,8 +13,8 @@ from framework.utl.report import Report
 from framework.file_filter import FileFilter
 from framework.file_info import FileInfo
 from framework.file_content_cmd import FileContentCmd
-from framework.args import add_jobs_arg
-from framework.args import add_json_arg
+from framework.utl.parser import add_jobs_arg
+from framework.utl.parser  import add_json_arg
 from framework.git import add_git_tracked_targets_arg
 from framework.style import StyleDiff, StyleScore
 
