@@ -7,7 +7,7 @@ import sys
 import argparse
 import json
 
-from framework.report import Report
+from framework.utl.report import Report
 from clang_static_analysis import CheckCmd as ClangStaticAnalysisCheck
 from basic_style import CheckCmd as BasicStyleCheck
 from copyright_header import CheckCmd as CopyrightHeaderCheck

@@ -11,7 +11,7 @@ import argparse
 from framework.path import Path
 from framework.action import ExecutableBinaryAction
 from framework.action import ReadableFileAction
-from framework.io import read_file, write_file
+from framework.utl.io import read_file, write_file
 
 ###############################################################################
 # The clang binaries of interest to this framework

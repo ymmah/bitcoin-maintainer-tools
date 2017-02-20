@@ -6,7 +6,8 @@
 import sys
 import os
 from multiprocessing import Pool
-from framework.io import read_file, write_file
+
+from framework.utl.io import read_file, write_file
 
 ###############################################################################
 # single file

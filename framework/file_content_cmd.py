@@ -6,7 +6,7 @@
 import time
 import json
 import sys
-from framework.report import Report
+from framework.utl.report import Report
 from framework.file_filter import FileFilter
 from framework.file_info import FileInfos
 

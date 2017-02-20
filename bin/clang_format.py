@@ -8,7 +8,7 @@ import argparse
 import hashlib
 import json
 
-from framework.report import Report
+from framework.utl.report import Report
 from framework.clang import add_clang_format_args, clang_format_from_options
 from framework.file_info import FileInfo
 from framework.file_content_cmd import FileContentCmd

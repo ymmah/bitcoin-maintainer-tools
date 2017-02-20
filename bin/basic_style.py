@@ -9,7 +9,7 @@ import itertools
 import argparse
 import json
 
-from framework.report import Report
+from framework.utl.report import Report
 from framework.file_filter import FileFilter
 from framework.file_info import FileInfo
 from framework.file_content_cmd import FileContentCmd

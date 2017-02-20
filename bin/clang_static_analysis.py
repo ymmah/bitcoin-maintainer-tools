@@ -9,7 +9,7 @@ import time
 import argparse
 import json
 
-from framework.report import Report
+from framework.utl.report import Report
 from framework.scan_build import ScanBuildResultDirectory
 from framework.args import add_jobs_arg
 from framework.args import add_json_arg
