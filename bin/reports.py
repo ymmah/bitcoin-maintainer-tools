@@ -8,7 +8,7 @@ import argparse
 import json
 
 
-from framework.cmd import RepositoryCmd
+from framework.cmd.repository import RepositoryCmd
 from framework.utl.report import Report
 from clang_static_analysis import ReportCmd as ClangStaticAnalysisReport
 from basic_style import ReportCmd as BasicStyleReport
@@ -30,30 +30,30 @@ class Reports(RepositoryCmd):
         super().__init__(options, silent=options.json)
         self.json = options.json
         self.reports = {
-            'copyright_header':      CopyrightHeaderReport(options)},
-#            'basic_style':           BasicStyleReport(options)},
-#            'clang_format':          ClangFormatReport(options)},
-#            'clang_static_analysis': ClangStaticAnalysisReport(options)},
+            'copyright_header':      CopyrightHeaderReport(options),
+#            'basic_style':           BasicStyleReport(options),
+#            'clang_format':          ClangFormatReport(options),
+#            'clang_static_analysis': ClangStaticAnalysisReport(options),
         }
 
     def _analysis(self):
         results = super()._analysis()
         for l, r in self.reports.items():
             if not self.silent:
-                print("Computing %s..." % r.title)
+                print("Computing analysis of '%s'..." % r.title)
             results[l] = r._analysis()
             if not self.silent:
-                print("Done." % r.title)
+                print("Done.")
         return results
 
-    def _output(self, results)
+    def _output(self, results):
         if self.json:
             return super()._output(results)
-        return [self.reports[l]._output(r)
-                for l, r in results.items()].join('\n')
+        return '\n'.join([self.reports[l]._output(r)
+                          for l, r in results.items()])
 
     def _shell_exit(self, results):
-        exits = [l: r._shell_exit(results[l]) for l, r in
+        exits = [r._shell_exit(results[l]) for l, r in
                  self.reports.items()]
         if all(e == 0 for e in exits):
             return 0
@@ -61,7 +61,7 @@ class Reports(RepositoryCmd):
         strings = [e for e in exits if type(e) is str]
         if len(strings) == 0:
             return max(non_zero_ints)
-        return strings.join('\n')
+        return '\n'.join(strings)
 
 
 if __name__ == "__main__":

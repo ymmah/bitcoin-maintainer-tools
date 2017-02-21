@@ -201,17 +201,18 @@ class CopyrightHeaderCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, repository, jobs, target_fnmatches):
-        super().__init__(repository, jobs, APPLIES_TO,target_fnmatches)
+    def __init__(self, options):
+        options.include_fnmatches = APPLIES_TO
+        super().__init__(options)
         self.no_copyright_filter = FileFilter()
-        repo_info = repository.repo_info
+        repo_info = self.repository.repo_info
         self.no_copyright_filter.append_include(
             repo_info['no_copyright_header_expected']['fnmatches'],
-            base_path=str(repository))
+            base_path=str(self.repository))
         self.other_copyright_filter = FileFilter()
         self.other_copyright_filter.append_include(
             repo_info['other_copyright_occurrences_expected']['fnmatches'],
-            base_path=str(repository))
+            base_path=str(self.repository))
 
     def _copyright_expected(self, file_path):
         return not self.no_copyright_filter.evaluate(file_path)
@@ -234,8 +235,8 @@ class ReportCmd(CopyrightHeaderCmd):
     """
     'report' subcommand class.
     """
-    def analysis(self):
-        a = super().analysis()
+    def _analysis(self):
+        a = super()._analysis()
         a['hdr_expected'] = sum(1 for f in self.file_infos if
                                 f['hdr_expected'])
         a['no_hdr_expected'] = sum(1 for f in self.file_infos if not
@@ -253,9 +254,11 @@ class ReportCmd(CopyrightHeaderCmd):
                 f['evaluation']['description'] == issue['description'])
         return a
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
-        r.add(super().human_print(results))
+        r.add(super()._output(results))
         a = results
         r.add("%-70s %6d\n" % ("Files expected to have header:",
                                a['hdr_expected']))
@@ -278,8 +281,7 @@ class ReportCmd(CopyrightHeaderCmd):
 
 def add_report_cmd(subparsers):
     def report_cmd(options):
-        return ReportCmd(options.repository, options.jobs,
-                         options.target_fnmatches)
+        return ReportCmd(options)
 
     report_help = ("Produces a report of copyright header notices within "
                    "selected targets to help identify files that don't meet "
@@ -307,9 +309,11 @@ class CheckCmd(CopyrightHeaderCmd):
                        self.file_infos if not f['pass']]
         return a
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
-        r.add(super().human_print(results))
+        r.add(super()._output(results))
         a = results
         for issue in a['issues']:
             r.add("An issue was found with ")
@@ -322,7 +326,7 @@ class CheckCmd(CopyrightHeaderCmd):
             r.add_green("No copyright header issues found!\n")
         return str(r)
 
-    def shell_exit(self, results):
+    def _shell_exit(self, results):
         return (0 if len(results['issues']) == 0 else
                 "*** copyright header issue found")
 

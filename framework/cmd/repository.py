@@ -29,7 +29,7 @@ class RepositoryCmd(object):
         return 0
 
     def _print(self, output, exit):
-        print(output, end='')
+        print(output)
         if self.silent and type(exit) is str:
             sys.exit(1)
         sys.exit(exit)
