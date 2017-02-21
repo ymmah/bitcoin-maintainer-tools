@@ -80,11 +80,13 @@ class ClangFormatCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, repository, jobs, target_fnmatches, clang_format,
-                 force):
-        super().__init__(repository, jobs, APPLIES_TO, target_fnmatches)
-        self.clang_format = clang_format
-        self.force = force
+    def __init__(self, options):
+        assert hasattr(options, 'force')
+        assert hasattr(options, 'clang_format')
+        options.include_fnmatches = APPLIES_TO
+        super().__init__(options)
+        self.force = options.force
+        self.clang_format = options.clang_format
 
     def _file_info_list(self):
         return [ClangFormatFileInfo(self.repository, f, self.clang_format,
@@ -100,9 +102,10 @@ class ReportCmd(ClangFormatCmd):
     """
     'report' subcommand class.
     """
-    def __init__(self, repository, jobs, target_fnmatches, clang_format):
-        super().__init__(repository, jobs, target_fnmatches, clang_format,
-                         True)
+    def __init__(self, options):
+        options.force = True
+        super().__init__(options)
+        self.title = "Clang Format Report"
 
     def _cumulative_md5(self):
         # nothing fancy, just hash all the hashes
@@ -121,8 +124,8 @@ class ReportCmd(ClangFormatCmd):
                     f['score'].in_range(lower, upper)))
         return files_in_ranges
 
-    def analysis(self):
-        a = super().analysis()
+    def _analysis(self):
+        a = super()._analysis()
         file_infos = self.file_infos
         a['clang_format_path'] = self.clang_format.binary_path
         a['clang_format_version'] = str(self.clang_format.binary_version)
@@ -147,9 +150,11 @@ class ReportCmd(ClangFormatCmd):
         a['files_in_ranges'] = self._files_in_ranges()
         return a
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
-        r.add(super().human_print(results))
+        r.add(super()._output(results))
         a = results
         r.add("clang-format bin:         %s\n" % a['clang_format_path'])
         r.add("clang-format version:     %s\n" % a['clang_format_version'])
@@ -188,8 +193,7 @@ class ReportCmd(ClangFormatCmd):
 
 def add_report_cmd(subparsers):
     def report_cmd(options):
-        return ReportCmd(options.repository, options.jobs,
-                         options.target_fnmatches, options.clang_format)
+        return ReportCmd(options)
 
     report_help = ("Produces a report with the analysis of the code format "
                    "adherence of the selected targets taken as a group.")

@@ -31,30 +31,34 @@ class Reports(RepositoryCmd):
         self.json = options.json
         self.reports = {
             'copyright_header':      CopyrightHeaderReport(options),
-#            'basic_style':           BasicStyleReport(options),
-#            'clang_format':          ClangFormatReport(options),
-#            'clang_static_analysis': ClangStaticAnalysisReport(options),
+            'basic_style':           BasicStyleReport(options),
+            'clang_format':          ClangFormatReport(options),
+            'clang_static_analysis': ClangStaticAnalysisReport(options),
         }
 
     def _analysis(self):
         results = super()._analysis()
-        for l, r in self.reports.items():
+        for l, r in sorted(self.reports.items()):
             if not self.silent:
                 print("Computing analysis of '%s'..." % r.title)
             results[l] = r._analysis()
             if not self.silent:
                 print("Done.")
+        if not self.silent:
+            print("")
         return results
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        return '\n'.join([self.reports[l]._output(r)
-                          for l, r in results.items()])
+        reports = [self.reports[l].title + ":\n" + self.reports[l]._output(r)
+                   for l, r in sorted(results.items())]
+        return '\n'.join(reports)
+
 
     def _shell_exit(self, results):
         exits = [r._shell_exit(results[l]) for l, r in
-                 self.reports.items()]
+                 sorted(self.reports.items())]
         if all(e == 0 for e in exits):
             return 0
         non_zero_ints = [e for e in exit if type(e) is int and not e == 0]

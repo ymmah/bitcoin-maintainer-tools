@@ -18,35 +18,39 @@ from framework.clang import scan_build_binaries_from_options
 from framework.git import add_git_repository_arg
 from framework.build_step import MakeClean
 from framework.build_step import ScanBuild
+from framework.cmd.repository import RepositoryCmd
 
 ###############################################################################
 # cmd base class
 ###############################################################################
 
-class ClangStaticAnalysisCmd(object):
+class ClangStaticAnalysisCmd(RepositoryCmd):
     """
-    Common base class for the commands in this script.
+    Superclass for a command that runs clang static analysis.
     """
-    def __init__(self, repository, jobs, scan_build,
-                 scan_build_report_path, scan_view):
-        self.repository = str(repository)
-        self.jobs = jobs
-        self.json = json
-        self.scan_build = scan_build['path']
+    def __init__(self, options):
+        assert hasattr(options, 'scan_build')
+        assert hasattr(options, 'report_path')
+        assert hasattr(options, 'scan_view')
+        super().__init__(options)
+        self.jobs = options.jobs
+        self.json = options.json
+        self.scan_build = options.scan_build['path']
+        self.scan_build_report_path = options.report_path
         self.scan_build_result = ScanBuildResultDirectory(
-            scan_build_report_path)
-        self.scan_view = scan_view['path']
-        self.make_clean_output_file = os.path.join(scan_build_report_path,
-                                                   'make_clean.log')
-        self.make_clean_step = MakeClean(self.repository,
+            self.scan_build_report_path)
+        self.scan_view = options.scan_view['path']
+        self.make_clean_output_file = (
+            os.path.join(self.scan_build_report_path, 'make_clean.log'))
+        self.make_clean_step = MakeClean(str(self.repository),
                                          self.make_clean_output_file)
-        self.scan_build_output_file = os.path.join(scan_build_report_path,
-                                                   'scan_build.log')
+        self.scan_build_output_file = (
+            os.path.join(self.scan_build_report_path, 'scan_build.log'))
         self.scan_build_step = ScanBuild(
-            self.scan_build, scan_build_report_path, self.repository,
-            self.scan_build_output_file, self.jobs)
+            self.scan_build, self.scan_build_report_path,
+            str(self.repository), self.scan_build_output_file, self.jobs)
 
-    def analysis(self):
+    def _analysis(self):
         start_time = time.time()
         r = Report()
         r.add("Running command:     %s\n" % str(self.make_clean_step))
@@ -69,7 +73,9 @@ class ClangStaticAnalysisCmd(object):
                 'results_directory': directory,
                 'issues':            issues}
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
         a = results
         r.separator()
@@ -79,7 +85,7 @@ class ClangStaticAnalysisCmd(object):
         r.separator()
         return str(r)
 
-    def shell_exit(self, results):
+    def _shell_exit(self, results):
         return 0
 
 
@@ -91,14 +97,15 @@ class ReportCmd(ClangStaticAnalysisCmd):
     """
     'report' subcommand class.
     """
-    def __init__(self, repository, jobs, scan_build, scan_build_report_path,
-                 scan_view):
-        super().__init__(repository, jobs, scan_build, scan_build_report_path,
-                         scan_view)
+    def __init__(self, options):
+        super().__init__(options)
+        self.title = "Clang Static Analysis Report"
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
-        r.add(super().human_print(results))
+        r.add(super()._output(results))
         a = results
         issue_no = 0
         for issue in a['issues']:
@@ -116,8 +123,7 @@ class ReportCmd(ClangStaticAnalysisCmd):
 
 def add_report_cmd(subparsers):
     def report_cmd(options):
-        return ReportCmd(options.repository, options.jobs, options.scan_build,
-                         options.report_path, options.scan_view)
+        return ReportCmd(options)
 
     report_help = ("Runs clang static analysis and produces a summary report "
                    "of the findings.")

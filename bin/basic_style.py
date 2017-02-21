@@ -147,9 +147,10 @@ class BasicStyleCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, repository, jobs, target_fnmatches):
-        super().__init__(repository, jobs, APPLIES_TO, target_fnmatches)
-        self.rules = BasicStyleRules(repository)
+    def __init__(self, options):
+        options.include_fnmatches = APPLIES_TO
+        super().__init__(options)
+        self.rules = BasicStyleRules(self.repository)
 
     def _file_info_list(self):
         return [BasicStyleFileInfo(self.repository, f, self.rules) for f in
@@ -164,8 +165,12 @@ class ReportCmd(BasicStyleCmd):
     """
     'report' subcommand class.
     """
-    def analysis(self):
-        a = super().analysis()
+    def __init__(self, options):
+        super().__init__(options)
+        self.title = "Basic Style Report"
+
+    def _analysis(self):
+        a = super()._analysis()
         file_infos = self.file_infos
         a['jobs'] = self.jobs
         a['elapsed_time'] = self.elapsed_time
@@ -197,9 +202,11 @@ class ReportCmd(BasicStyleCmd):
                  'files': file_count, 'occurrences': occurrence_count})
         return a
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
-        r.add(super().human_print(results))
+        r.add(super()._output(results))
         a = results
         r.add("Parallel jobs for diffs:   %d\n" % a['jobs'])
         r.add("Elapsed time:              %.02fs\n" % a['elapsed_time'])
@@ -229,8 +236,7 @@ class ReportCmd(BasicStyleCmd):
 
 def add_report_cmd(subparsers):
     def report_cmd(options):
-        return ReportCmd(options.repository, options.jobs,
-                         options.target_fnmatches)
+        return ReportCmd(options)
 
     report_help = ("Validates that the selected targets do not have basic "
                    "style issues, give a per-file report and returns a "

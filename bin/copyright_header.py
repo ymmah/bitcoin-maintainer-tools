@@ -235,6 +235,10 @@ class ReportCmd(CopyrightHeaderCmd):
     """
     'report' subcommand class.
     """
+    def __init__(self, options):
+        super().__init__(options)
+        self.title = "Copyright Header Report"
+
     def _analysis(self):
         a = super()._analysis()
         a['hdr_expected'] = sum(1 for f in self.file_infos if
