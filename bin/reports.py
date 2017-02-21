@@ -3,13 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import sys
 import argparse
-import json
 
-
-from framework.cmd.repository import RepositoryCmd
-from framework.utl.report import Report
+from framework.cmd.repository import RepositoryCmds
 from clang_static_analysis import ReportCmd as ClangStaticAnalysisReport
 from basic_style import ReportCmd as BasicStyleReport
 from copyright_header import ReportCmd as CopyrightHeaderReport
@@ -21,51 +17,29 @@ from framework.clang import clang_format_from_options
 from framework.clang import add_clang_args
 from framework.git import add_git_repository_arg
 
-class Reports(RepositoryCmd):
+
+class Reports(RepositoryCmds):
     """
-    A RepositoryCmd that collects options and invokes several underlying
-    RepositoryCmds and and aggregates the report that result.
+    Invokes several underlying RepositoryCmd report command instances and and
+    aggregates them into a single report.
     """
     def __init__(self, options):
-        super().__init__(options, silent=options.json)
-        self.json = options.json
-        self.reports = {
+        report_cmds = {
             'copyright_header':      CopyrightHeaderReport(options),
             'basic_style':           BasicStyleReport(options),
             'clang_format':          ClangFormatReport(options),
             'clang_static_analysis': ClangStaticAnalysisReport(options),
         }
-
-    def _analysis(self):
-        results = super()._analysis()
-        for l, r in sorted(self.reports.items()):
-            if not self.silent:
-                print("Computing analysis of '%s'..." % r.title)
-            results[l] = r._analysis()
-            if not self.silent:
-                print("Done.")
-        if not self.silent:
-            print("")
-        return results
+        self.json = options.json
+        super().__init__(options, report_cmds, silent=options.json)
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        reports = [self.reports[l].title + ":\n" + self.reports[l]._output(r)
-                   for l, r in sorted(results.items())]
+        reports = [(self.report_cmds[l].title + ":\n" +
+                    self.report_cmds[l]._output(r)) for l, r in
+                   sorted(results.items())]
         return '\n'.join(reports)
-
-
-    def _shell_exit(self, results):
-        exits = [r._shell_exit(results[l]) for l, r in
-                 sorted(self.reports.items())]
-        if all(e == 0 for e in exits):
-            return 0
-        non_zero_ints = [e for e in exit if type(e) is int and not e == 0]
-        strings = [e for e in exits if type(e) is str]
-        if len(strings) == 0:
-            return max(non_zero_ints)
-        return '\n'.join(strings)
 
 
 if __name__ == "__main__":
@@ -80,6 +54,5 @@ if __name__ == "__main__":
     options.clang_format = clang_format_from_options(options)
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
-
     reports = Reports(options)
     output = reports.run()

@@ -37,3 +37,42 @@ class RepositoryCmd(object):
     def run(self):
         results = self._analysis()
         self._print(self._output(results), self._shell_exit(results))
+
+
+class RepositoryCmds(RepositoryCmd):
+    """
+    Superclass for aggregating several RepositoryCmd instances together for
+    a single invocation. The individual instances are passed in as a
+    dictionary.
+    """
+    def __init__(self, options, report_cmds, silent=False):
+        super().__init__(options, silent=silent)
+        assert type(report_cmds) is dict
+        for k, v in report_cmds.items():
+            assert type(k) is str
+            assert issubclass(type(v), RepositoryCmd)
+        self.report_cmds = report_cmds
+        self.title = "RepositoryCmds superclass"
+
+    def _analysis(self):
+        results = super()._analysis()
+        for key, cmd in sorted(self.report_cmds.items()):
+            if not self.silent:
+                print("Computing analysis of '%s'..." % cmd.title)
+            results[key] = cmd._analysis()
+            if not self.silent:
+                print("Done.")
+        if not self.silent:
+            print("")
+        return results
+
+    def _shell_exit(self, results):
+        exits = [r._shell_exit(results[l]) for l, r in
+                 sorted(self.report_cmds.items())]
+        if all(e == 0 for e in exits):
+            return 0
+        non_zero_ints = [e for e in exit if type(e) is int and not e == 0]
+        strings = [e for e in exits if type(e) is str]
+        if len(strings) == 0:
+            return max(non_zero_ints)
+        return '\n'.join(strings)
