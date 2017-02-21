@@ -284,14 +284,11 @@ class ReportCmd(CopyrightHeaderCmd):
 
 
 def add_report_cmd(subparsers):
-    def report_cmd(options):
-        return ReportCmd(options)
-
     report_help = ("Produces a report of copyright header notices within "
                    "selected targets to help identify files that don't meet "
                    "expectations.")
     parser = subparsers.add_parser('report', help=report_help)
-    parser.set_defaults(get_cmd=report_cmd)
+    parser.set_defaults(cmd=lambda o: ReportCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_git_tracked_targets_arg(parser)
@@ -305,9 +302,12 @@ class CheckCmd(CopyrightHeaderCmd):
     """
     'check' subcommand class.
     """
+    def __init__(self, options):
+        super().__init__(options)
+        self.title = "Copyright Header Check"
 
-    def analysis(self):
-        a = super().analysis()
+    def _analysis(self):
+        a = super()._analysis()
         a['issues'] = [{'file_path':  f['file_path'],
                         'evaluation': f['evaluation']} for f in
                        self.file_infos if not f['pass']]
@@ -336,15 +336,11 @@ class CheckCmd(CopyrightHeaderCmd):
 
 
 def add_check_cmd(subparsers):
-    def check_cmd(options):
-        return CheckCmd(options.repository, options.jobs,
-                        options.target_fnmatches)
-
     check_help = ("Validates that selected targets do not have copyright "
                   "header issues, gives a per-file report and returns a "
                   "non-zero shell status if there are any issues discovered.")
     parser = subparsers.add_parser('check', help=check_help)
-    parser.set_defaults(get_cmd=check_cmd)
+    parser.set_defaults(cmd=lambda o: CheckCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_git_tracked_targets_arg(parser)
@@ -430,7 +426,7 @@ def add_update_cmd(subparsers):
                    'selected targets which have been changed more recently '
                    'than the year that is listed.')
     parser = subparsers.add_parser('update', help=update_help)
-    parser.set_defaults(func=exec_update_cmd)
+    parser.set_defaults(cmd=exec_update_cmd)
     add_git_tracked_targets_arg(parser)
 
 
@@ -522,7 +518,7 @@ def add_insert_cmd(subparsers):
                    'currently found.')
     parser = subparsers.add_parser('insert', help=insert_help)
     add_jobs_arg(parser)
-    parser.set_defaults(func=exec_insert_cmd)
+    parser.set_defaults(cmd=exec_insert_cmd)
     add_git_tracked_targets_arg(parser)
 
 
@@ -540,11 +536,7 @@ if __name__ == "__main__":
     add_update_cmd(subparsers)
     add_insert_cmd(subparsers)
     options = parser.parse_args()
-    if not hasattr(options, "get_cmd"):
+    if not hasattr(options, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    cmd = options.get_cmd(options)
-    results = cmd.analysis()
-    print(json.dumps(results) if options.json else cmd.human_print(results),
-          end='')
-    sys.exit(cmd.shell_exit(results))
+    options.cmd(options).run()

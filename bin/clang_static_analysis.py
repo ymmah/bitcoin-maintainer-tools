@@ -122,13 +122,10 @@ class ReportCmd(ClangStaticAnalysisCmd):
 
 
 def add_report_cmd(subparsers):
-    def report_cmd(options):
-        return ReportCmd(options)
-
     report_help = ("Runs clang static analysis and produces a summary report "
                    "of the findings.")
     parser = subparsers.add_parser('report', help=report_help)
-    parser.set_defaults(get_cmd=report_cmd)
+    parser.set_defaults(cmd=lambda o: ReportCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_static_analysis_args(parser)
@@ -143,14 +140,15 @@ class CheckCmd(ClangStaticAnalysisCmd):
     """
     'check' subcommand class.
     """
-    def __init__(self, repository, jobs, scan_build, scan_build_report_path,
-                 scan_view):
-        super().__init__(repository, jobs, scan_build, scan_build_report_path,
-                         scan_view)
+    def __init__(self, options):
+        super().__init__(options)
+        self.title = "Clang Static Analysis Check"
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
-        r.add(super().human_print(results))
+        r.add(super()._output(results))
         a = results
         for issue in a['issues']:
             r.add("An issue has been found in ")
@@ -175,20 +173,16 @@ class CheckCmd(ClangStaticAnalysisCmd):
             r.separator()
         return str(r)
 
-    def shell_exit(self, results):
+    def _shell_exit(self, results):
         return (0 if len(results['issues']) == 0 else
                 "*** static analysis issues found.")
 
 def add_check_cmd(subparsers):
-    def check_cmd(options):
-        return CheckCmd(options.repository, options.jobs, options.scan_build,
-                        options.report_path, options.scan_view)
-
     check_help = ("Runs clang static analysis and output details for each "
                   "discovered issue. Returns a non-zero shell status if any "
                   "issues are found.")
     parser = subparsers.add_parser('check', help=check_help)
-    parser.set_defaults(get_cmd=check_cmd)
+    parser.set_defaults(cmd=lambda o: CheckCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_static_analysis_args(parser)
@@ -207,13 +201,9 @@ if __name__ == "__main__":
     add_report_cmd(subparsers)
     add_check_cmd(subparsers)
     options = parser.parse_args()
-    if not hasattr(options, "get_cmd"):
+    if not hasattr(options, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
     options.scan_build, options.scan_view = (
         scan_build_binaries_from_options(options))
-    cmd = options.get_cmd(options)
-    results = cmd.analysis()
-    print(json.dumps(results) if options.json else cmd.human_print(results),
-          end='')
-    sys.exit(cmd.shell_exit(results))
+    options.cmd(options).run()

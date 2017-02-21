@@ -3,11 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import sys
 import argparse
-import json
 
-from framework.utl.report import Report
+from framework.cmd.repository import RepositoryCmds
 from clang_static_analysis import CheckCmd as ClangStaticAnalysisCheck
 from basic_style import CheckCmd as BasicStyleCheck
 from copyright_header import CheckCmd as CopyrightHeaderCheck
@@ -20,65 +18,39 @@ from framework.clang import clang_format_from_options
 from framework.clang import add_clang_args
 from framework.git import add_git_repository_arg
 
-class Checks(object):
+
+class Checks(RepositoryCmds):
     """
-    Represents an aggregation of underlying checks that can be run in one step.
+    Invokes several underlying RepositoryCmd check command instances and and
+    aggregates the results.
     """
     def __init__(self, options):
-        o = options
-        self.json = o.json
-        self.checks = [
-            {'human_title': 'Copyright Header Check',
-             'json_label':  'copyright_header',
-             'check':       CopyrightHeaderCheck(o.repository, o.jobs,
-                                                 o.target_fnmatches)},
-            {'human_title': 'Basic Style Check',
-             'json_label':  'basic_style',
-             'check':       BasicStyleCheck(o.repository, o.jobs,
-                                            o.target_fnmatches)},
-            {'human_title': 'Clang Format Style Check',
-             'json_label':  'clang_format',
-             'check':       ClangFormatCheck(o.repository, o.jobs,
-                                             o.target_fnmatches,
-                                             o.clang_format, o.force)},
-            {'human_title': 'Clang Static Analysis Check',
-             'json_label':  'clang_static_analysis',
-             'check':       ClangStaticAnalysisCheck(o.repository, o.jobs,
-                                                     o.scan_build,
-                                                     o.report_path,
-                                                     o.scan_view)},
-        ]
+        repository_cmds = {
+            'copyright_header':      CopyrightHeaderCheck(options),
+            'basic_style':           BasicStyleCheck(options),
+            'clang_format':          ClangFormatCheck(options),
+            'clang_static_analysis': ClangStaticAnalysisCheck(options),
+        }
+        self.json = options.json
+        super().__init__(options, repository_cmds, silent=options.json)
 
-    def __iter__(self):
-        return iter(self.checks)
-
-    def run(self):
-        r = Report()
-        for c in self.checks:
-            if not options.json:
-                r.add("Computing %s...\n" % c['human_title'])
-            c['results'] = c['check'].analysis()
-            c['output'] = (c['results'] if options.json else
-                           c['check'].human_print(c['results']))
-            c['exit'] = c['check'].shell_exit(c['results'])
-            if not options.json:
-                r.add("Done.\n")
-                r.add("%s:\n" % c['human_title'])
-                r.add("%s\n" % c['output'])
-        if options.json:
-            r.add(json.dumps({c['json_label']: c['output'] for c in
-                              self.checks}))
-        return str(r)
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
+        reports = [(self.repository_cmds[l].title + ":\n" +
+                    self.repository_cmds[l]._output(r)) for l, r in
+                   sorted(results.items())]
+        return '\n'.join(reports)
 
 
 if __name__ == "__main__":
-    description = ("Wrapper to invoke a collection of scripts that produce "
-                   "data from analysing a repository.")
+    description = ("Wrapper to invoke a collection of scripts that check on "
+                   "the state of the repository.")
     parser = argparse.ArgumentParser(description=description)
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_clang_args(parser)
     add_force_arg(parser)
+    add_clang_args(parser)
     add_git_repository_arg(parser)
     options = parser.parse_args()
     options.clang_format = clang_format_from_options(options)
@@ -86,8 +58,3 @@ if __name__ == "__main__":
         scan_build_binaries_from_options(options))
     checks = Checks(options)
     output = checks.run()
-    print(output)
-    errors = [c['exit'] for c in checks if c['exit'] != 0]
-    if not options.json:
-        print('\n'.join(e))
-    sys.exit(len(errors) > 1)

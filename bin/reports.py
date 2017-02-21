@@ -24,20 +24,20 @@ class Reports(RepositoryCmds):
     aggregates them into a single report.
     """
     def __init__(self, options):
-        report_cmds = {
+        repository_cmds = {
             'copyright_header':      CopyrightHeaderReport(options),
             'basic_style':           BasicStyleReport(options),
             'clang_format':          ClangFormatReport(options),
             'clang_static_analysis': ClangStaticAnalysisReport(options),
         }
         self.json = options.json
-        super().__init__(options, report_cmds, silent=options.json)
+        super().__init__(options, repository_cmds, silent=options.json)
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        reports = [(self.report_cmds[l].title + ":\n" +
-                    self.report_cmds[l]._output(r)) for l, r in
+        reports = [(self.repository_cmds[l].title + ":\n" +
+                    self.repository_cmds[l]._output(r)) for l, r in
                    sorted(results.items())]
         return '\n'.join(reports)
 

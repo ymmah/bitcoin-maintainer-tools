@@ -45,18 +45,18 @@ class RepositoryCmds(RepositoryCmd):
     a single invocation. The individual instances are passed in as a
     dictionary.
     """
-    def __init__(self, options, report_cmds, silent=False):
+    def __init__(self, options, repository_cmds, silent=False):
         super().__init__(options, silent=silent)
-        assert type(report_cmds) is dict
-        for k, v in report_cmds.items():
+        assert type(repository_cmds) is dict
+        for k, v in repository_cmds.items():
             assert type(k) is str
             assert issubclass(type(v), RepositoryCmd)
-        self.report_cmds = report_cmds
+        self.repository_cmds = repository_cmds
         self.title = "RepositoryCmds superclass"
 
     def _analysis(self):
         results = super()._analysis()
-        for key, cmd in sorted(self.report_cmds.items()):
+        for key, cmd in sorted(self.repository_cmds.items()):
             if not self.silent:
                 print("Computing analysis of '%s'..." % cmd.title)
             results[key] = cmd._analysis()
@@ -68,10 +68,10 @@ class RepositoryCmds(RepositoryCmd):
 
     def _shell_exit(self, results):
         exits = [r._shell_exit(results[l]) for l, r in
-                 sorted(self.report_cmds.items())]
+                 sorted(self.repository_cmds.items())]
         if all(e == 0 for e in exits):
             return 0
-        non_zero_ints = [e for e in exit if type(e) is int and not e == 0]
+        non_zero_ints = [e for e in exits if type(e) is int and not e == 0]
         strings = [e for e in exits if type(e) is str]
         if len(strings) == 0:
             return max(non_zero_ints)

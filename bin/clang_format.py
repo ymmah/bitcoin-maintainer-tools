@@ -58,7 +58,7 @@ class ClangFormatFileInfo(FileInfo):
             # The applied formating has subtle differences that vary between
             # major releases of clang-format. The recommendation should
             # probably follow the latest widely-available stable release.
-            repo_info = self.repository.repo_info
+            repo_info = self['repository'].repo_info
             r.add("\nUsing clang-format version %s or higher is recommended\n"
                   % repo_info['clang_format_recommended']['min_version'])
             r.add("Use the --force option to override and proceed anyway.\n\n")
@@ -192,13 +192,10 @@ class ReportCmd(ClangFormatCmd):
 
 
 def add_report_cmd(subparsers):
-    def report_cmd(options):
-        return ReportCmd(options)
-
     report_help = ("Produces a report with the analysis of the code format "
                    "adherence of the selected targets taken as a group.")
     parser = subparsers.add_parser('report', help=report_help)
-    parser.set_defaults(get_cmd=report_cmd)
+    parser.set_defaults(cmd=lambda o: ReportCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_format_args(parser)
@@ -213,13 +210,12 @@ class CheckCmd(ClangFormatCmd):
     """
     'check' subcommand class.
     """
-    def __init__(self, repository, jobs, target_fnmatches, clang_format,
-                 force):
-        super().__init__(repository, jobs, target_fnmatches, clang_format,
-                         force)
+    def __init__(self, options):
+        super().__init__(options)
+        self.title = "Clang Format Check"
 
-    def analysis(self):
-        a = super().analysis()
+    def _analysis(self):
+        a = super()._analysis()
         a['failures'] = [{'file_path':       f['file_path'],
                           'style_score':     float(f['score']),
                           'lines_before':    f['lines_before'],
@@ -230,9 +226,11 @@ class CheckCmd(ClangFormatCmd):
                          for f in self.file_infos if not f['matching']]
         return a
 
-    def human_print(self, results):
+    def _output(self, results):
+        if self.json:
+            return super()._output(results)
         r = Report()
-        r.add(super().human_print(results))
+        r.add(super()._output(results))
         a = results
         for f in a['failures']:
             r.add("A code format issue was detected in ")
@@ -251,21 +249,16 @@ class CheckCmd(ClangFormatCmd):
         r.separator()
         return str(r)
 
-    def shell_exit(self, results):
+    def _shell_exit(self, results):
         return (0 if len(results) == 0 else "*** code format issue found")
 
 
 def add_check_cmd(subparsers):
-    def check_cmd(options):
-        return CheckCmd(options.repository, options.jobs,
-                        options.target_fnmatches, options.clang_format,
-                        options.force)
-
     check_help = ("Validates that the selected targets match the style, gives "
                   "a per-file report and returns a non-zero shell status if "
                   "there are any format issues discovered.")
     parser = subparsers.add_parser('check', help=check_help)
-    parser.set_defaults(get_cmd=check_cmd)
+    parser.set_defaults(cmd=lambda o: CheckCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_force_arg(parser)
@@ -320,12 +313,8 @@ if __name__ == "__main__":
     add_check_cmd(subparsers)
     add_format_cmd(subparsers)
     options = parser.parse_args()
-    if not hasattr(options, "get_cmd"):
+    if not hasattr(options, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
     options.clang_format = clang_format_from_options(options)
-    cmd = options.get_cmd(options)
-    results = cmd.analysis()
-    print(json.dumps(results) if options.json else cmd.human_print(results),
-          end='')
-    sys.exit(cmd.shell_exit(results))
+    options.cmd(options).run()
