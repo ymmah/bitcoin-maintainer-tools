@@ -14,8 +14,8 @@ from framework.file_info import FileInfo
 from framework.cmd.file_content import FileContentCmd
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
-from framework.git import add_git_tracked_targets_arg
-from framework.git import GitFilePath
+from framework.git.targets import add_git_tracked_targets_arg
+from framework.git.path import GitFilePath
 
 
 APPLIES_TO = ['*.h', '*.cpp', '*.py', '*.sh', '*.am', '*.m4', '*.include']

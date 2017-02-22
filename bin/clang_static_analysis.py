@@ -15,7 +15,7 @@ from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
 from framework.clang import add_clang_static_analysis_args
 from framework.clang import scan_build_binaries_from_options
-from framework.git import add_git_repository_arg
+from framework.git.repository import add_git_repository_arg
 from framework.build_step import MakeClean
 from framework.build_step import ScanBuild
 from framework.cmd.repository import RepositoryCmd

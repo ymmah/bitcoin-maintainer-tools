@@ -3,36 +3,14 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+import argparse
 import subprocess
 import sys
 import os
 import json
 
-h = """
-Performs a basic smoke test of the tools with some variety of options.
-This isn't intended to be comprehensive, but it is useful for not breaking
-things while developing.
-
-Invoke as:
-
-$ test/regression.py <bitcoin repo>
-
-from the base repo of bitcoin-maintainer-tools
-
-This script makes assumptions about the state of the bitcoin repository for
-whether some commands are successful or not, so a failure might be due to
-the target repo as opposed to the script.
-
-It should fully pass agianst a target repo of release x.x.x checked out with a
-normal ./configure already performed.
-"""
-# TODO test with well-known release
-
-if not len(sys.argv) == 2:
-    sys.exit(h)
-if not os.path.isdir(sys.argv[1]):
-    sys.exit(h)
-
+from framework.cmd.repository import RepositoryCmd
+from framework.git.repository import add_git_repository_arg
 
 ###############################################################################
 # cmd test functions
@@ -76,53 +54,85 @@ def test_check_json(cmd):
 ###############################################################################
 
 test_single_cmds = [
-    {'cmd':  'bin/basic_style.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/basic_style.py report -j8 %s',
      'test': test_report},
-    {'cmd':  'bin/copyright_header.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/copyright_header.py report -j8 %s',
      'test': test_report},
-    {'cmd':  'bin/clang_format.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/clang_format.py report -j8 %s',
      'test': test_report},
-    {'cmd':  'bin/clang_static_analysis.py report -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/clang_static_analysis.py report -j8 %s',
      'test': test_report},
-    {'cmd':  'bin/reports.py -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/reports.py -j8 %s',
      'test': test_report},
-    {'cmd': 'bin/basic_style.py report --json %s' % sys.argv[1],
+    {'cmd':  'bin/basic_style.py report --json %s',
      'test': test_report_json},
-    {'cmd': 'bin/copyright_header.py report --json %s' % sys.argv[1],
+    {'cmd':  'bin/copyright_header.py report --json %s',
      'test': test_report_json},
-    {'cmd': 'bin/clang_format.py report --json %s' % sys.argv[1],
+    {'cmd':  'bin/clang_format.py report --json %s',
      'test': test_report_json},
-    {'cmd': 'bin/clang_static_analysis.py report --json %s' % sys.argv[1],
+    {'cmd':  'bin/clang_static_analysis.py report --json %s',
      'test': test_report_json},
-    {'cmd':  'bin/reports.py --json %s' % sys.argv[1],
+    {'cmd':  'bin/reports.py --json %s',
      'test': test_report_json},
-    {'cmd': 'bin/basic_style.py check -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/basic_style.py check -j8 %s',
      'test': test_check},
-    {'cmd': 'bin/copyright_header.py check -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/copyright_header.py check -j8 %s',
      'test': test_check},
-    {'cmd': 'bin/clang_format.py check --force -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/clang_format.py check --force -j8 %s',
      'test': test_check},
-    {'cmd': 'bin/clang_static_analysis.py check -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/clang_static_analysis.py check -j8 %s',
      'test': test_check},
-    {'cmd':  'bin/checks.py -j8 %s' % sys.argv[1],
+    {'cmd':  'bin/checks.py -j8 %s',
      'test': test_check},
-    {'cmd': 'bin/basic_style.py check --json %s' % sys.argv[1],
+    {'cmd':  'bin/basic_style.py check --json %s',
      'test': test_check_json},
-    {'cmd': 'bin/copyright_header.py check --json %s' % sys.argv[1],
+    {'cmd':  'bin/copyright_header.py check --json %s',
      'test': test_check_json},
-    {'cmd': 'bin/clang_format.py check --force --json %s' % sys.argv[1],
+    {'cmd':  'bin/clang_format.py check --force --json %s',
      'test': test_check_json},
-    {'cmd': 'bin/clang_static_analysis.py check --json %s' % sys.argv[1],
+    {'cmd':  'bin/clang_static_analysis.py check --json %s',
      'test': test_check_json},
-    {'cmd':  'bin/checks.py --force --json %s' % sys.argv[1],
+    {'cmd':  'bin/checks.py --force --json %s',
      'test': test_check_json},
 ]
 
+###############################################################################
+# test
+###############################################################################
+
+class RegressionCmd(RepositoryCmd):
+    def __init__(self, options):
+        super().__init__(options)
+        self.title = "Regression test command"
+
+    def _exec(self):
+        for cmd in test_single_cmds:
+            if not self.silent:
+                cmd_string = cmd['cmd'] % self.repository
+                print("testing '%s'" % cmd_string)
+            cmd['test'](cmd_string)
+
 
 ###############################################################################
-# run tests
+# UI
 ###############################################################################
 
-for cmd in test_single_cmds:
-    print("testing '%s'" % cmd['cmd'])
-    cmd['test'](cmd['cmd'])
+description = """
+Performs a basic smoke test of the tools with some variety of options.
+This isn't intended to be comprehensive, but it is useful for not breaking
+things while developing.
+
+This script has hard-coded assumptions about the state of the bitcoin repository
+for whether some commands are successful or not, so a failure might be due to
+the target repo as opposed to the script.
+
+It should fully pass agianst a target repo of release x.x.x checked out with a
+normal ./configure already performed.
+"""
+# TODO test with well-known release
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=description)
+    add_git_repository_arg(parser)
+    options = parser.parse_args()
+    RegressionCmd(options).run()
