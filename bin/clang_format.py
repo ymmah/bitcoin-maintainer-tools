@@ -274,25 +274,24 @@ class FormatCmd(ClangFormatCmd):
     """
     'format' subcommand class.
     """
-    def __init__(self, repository, target_fnmatches, clang_format, force):
-        super().__init__(repository, 1, target_fnmatches, False, clang_format,
-                         force)
+    def __init__(self, options):
+        options.json = False
+        options.jobs = 1
+        super().__init__(options)
+        self.title = "Clang Format"
 
-    def _compute_file_infos(self):
-        pass
-
-    def _write_files(self):
+    def _exec(self):
+        super()._exec()
         self.file_infos.write_all()
+
+    def _output(self, results):
+        return None
 
 
 def add_format_cmd(subparsers):
-    def exec_format_cmd(options):
-        FormatCmd(options.repository, options.target_fnmatches,
-                  options.clang_format, options.force).exec_write()
-
     format_help = ("Applies the style formatting to the target files.")
     parser = subparsers.add_parser('format', help=format_help)
-    parser.set_defaults(func=exec_format_cmd)
+    parser.set_defaults(cmd=lambda o: FormatCmd(o))
     add_force_arg(parser)
     add_clang_format_args(parser)
     add_git_tracked_targets_arg(parser)
