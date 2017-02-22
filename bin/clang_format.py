@@ -9,13 +9,14 @@ import hashlib
 import json
 
 from framework.utl.report import Report
-from framework.clang import add_clang_format_args, clang_format_from_options
+from framework.clang.clang import add_clang_format_args
+from framework.clang.clang import clang_format_from_options
+from framework.clang.clang import add_force_arg
 from framework.file_info import FileInfo
 from framework.cmd.file_content import FileContentCmd
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
 from framework.git.targets import add_git_tracked_targets_arg
-from framework.clang import add_force_arg
 from framework.style import StyleDiff, StyleScore
 
 
@@ -156,9 +157,10 @@ class ReportCmd(ClangFormatCmd):
         r = Report()
         r.add(super()._output(results))
         a = results
-        r.add("clang-format bin:         %s\n" % a['clang_format_path'])
-        r.add("clang-format version:     %s\n" % a['clang_format_version'])
-        r.add("Using style in:           %s\n" % a['clang_style_path'])
+        r.add("%-30s %s\n" % ("clang-format bin:", a['clang_format_path']))
+        r.add("%-30s %s\n" % ("clang-format version:",
+                              a['clang_format_version']))
+        r.add("%-30s %s\n" % ("Using style in:", a['clang_style_path']))
         r.separator()
         if len(a['rejected_parameters']) > 0:
             r.add_red("WARNING")
@@ -167,20 +169,20 @@ class ReportCmd(ClangFormatCmd):
             for param in a['rejected_parameters']:
                 r.add("%s\n" % param)
             r.separator()
-        r.add("Elapsed time:              %.02fs\n" % a['elapsed_time'])
+        r.add("%-30s %.02fs\n" % ("Elapsed time:", a['elapsed_time']))
         if len(a['slow_diffs']) > 0:
             r.add("Slowest diffs:\n")
             for slow in a['slow_diffs']:
                 r.add("%6.02fs for %s\n" % (slow['diff_time'],
                                             slow['file_path']))
         r.separator()
-        r.add("Files scoring 100%%:        %8d\n" % a['matching'])
-        r.add("Files scoring <100%%:       %8d\n" % a['not_matching'])
-        r.add("Formatted content MD5:      %s\n" % a['formatted_md5'])
+        r.add("%-30s %4d\n" % ("Files scoreing 100%:", a['matching']))
+        r.add("%-30s %4d\n" % ("Files scoring <100%:", a['not_matching']))
+        r.add("%-30s %s\n" % ("Formatted Content MD5:", a['formatted_md5']))
         r.separator()
         for score_range in reversed(sorted(a['files_in_ranges'].keys())):
-            r.add("Files scoring %s:        %4d\n" % (
-                score_range, a['files_in_ranges'][score_range]))
+            r.add("%-30s %4d\n" % ("Files scoring %s:" % score_range,
+                                   a['files_in_ranges'][score_range]))
         r.separator()
         r.add("Overall scoring:\n\n")
         score = StyleScore(a['lines_before'], a['lines_added'],

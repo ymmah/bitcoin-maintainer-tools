@@ -208,22 +208,20 @@ class ReportCmd(BasicStyleCmd):
         r = Report()
         r.add(super()._output(results))
         a = results
-        r.add("Parallel jobs for diffs:   %d\n" % a['jobs'])
-        r.add("Elapsed time:              %.02fs\n" % a['elapsed_time'])
+        r.add("%-32s %8.02fs\n" % ("Elapsed time:", a['elapsed_time']))
         r.separator()
         for title, evaluation in sorted(a['rule_evaluation'].items()):
             r.add('"%s":\n' % title)
-            r.add('    Applies to:               %s\n' %
-                  evaluation['extensions'])
-            r.add('    Files examined:           %8d\n' %
-                  evaluation['examined'])
-            r.add('    Occurrences of issue:     %8d\n' %
-                  evaluation['occurrences'])
-            r.add('    Files with issue:         %8d\n\n' %
-                  evaluation['files'])
+            r.add('  %-30s %s\n' % ("Applies to:", evaluation['extensions']))
+            r.add('  %-30s %8d\n' % ("Files examined:",
+                                     evaluation['examined']))
+            r.add('  %-30s %8d\n' % ("Occurrences of issue:",
+                                     evaluation['occurrences']))
+            r.add('  %-30s %8d\n\n' % ("Files with issue:",
+                                       evaluation['files']))
         r.separator()
-        r.add("Files scoring 100%%:        %8d\n" % a['matching'])
-        r.add("Files scoring <100%%:       %8d\n" % a['not_matching'])
+        r.add("%-32s %8d\n" % ("Files scoring 100%", a['matching']))
+        r.add("%-32s %8d\n" % ("Files scoring <100%", a['not_matching']))
         r.separator()
         r.add("Overall scoring:\n\n")
         score = StyleScore(a['lines_before'], a['lines_added'],

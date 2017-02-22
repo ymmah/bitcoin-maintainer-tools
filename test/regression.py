@@ -111,6 +111,10 @@ class RegressionCmd(RepositoryCmd):
                 cmd_string = cmd['cmd'] % self.repository
                 print("testing '%s'" % cmd_string)
             cmd['test'](cmd_string)
+        return {}
+
+    def _output(self):
+        pass
 
 
 ###############################################################################
