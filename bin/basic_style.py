@@ -313,21 +313,23 @@ class FixCmd(BasicStyleCmd):
     """
     'fix' subcommand class.
     """
-    def __init__(self, repository, jobs, target_fnmatches):
-        super().__init__(repository, jobs, target_fnmatches, False)
+    def __init__(self, options):
+        options.json = False
+        super().__init__(options)
+        self.title = "Basic Style Fix"
 
-    def _write_files(self):
+    def _exec(self):
+        super()._exec()
         self.file_infos.write_all()
+
+    def _output(self, results):
+        return None
 
 
 def add_fix_cmd(subparsers):
-    def exec_fix_cmd(options):
-        FixCmd(options.repository, options.jobs,
-               options.target_fnmatches).exec_write()
-
     fix_help = ("Applies basic style fixes to the target files.")
     parser = subparsers.add_parser('fix', help=fix_help)
-    parser.set_defaults(func=exec_fix_cmd)
+    parser.set_defaults(cmd=lambda o: FixCmd(o))
     add_jobs_arg(parser)
     add_git_tracked_targets_arg(parser)
 

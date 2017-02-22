@@ -78,9 +78,6 @@ class FileContentCmd(RepositoryCmd):
         self._compute_file_infos()
         self.elapsed_time = time.time() - start_time
 
-    def _write_files(self):
-        pass
-
     def _exec(self):
         self._read_and_compute_file_infos()
         a = super()._exec()
