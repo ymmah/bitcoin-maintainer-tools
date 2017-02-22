@@ -239,8 +239,8 @@ class ReportCmd(CopyrightHeaderCmd):
         super().__init__(options)
         self.title = "Copyright Header Report"
 
-    def _analysis(self):
-        a = super()._analysis()
+    def _exec(self):
+        a = super()._exec()
         a['hdr_expected'] = sum(1 for f in self.file_infos if
                                 f['hdr_expected'])
         a['no_hdr_expected'] = sum(1 for f in self.file_infos if not
@@ -306,8 +306,8 @@ class CheckCmd(CopyrightHeaderCmd):
         super().__init__(options)
         self.title = "Copyright Header Check"
 
-    def _analysis(self):
-        a = super()._analysis()
+    def _exec(self):
+        a = super()._exec()
         a['issues'] = [{'file_path':  f['file_path'],
                         'evaluation': f['evaluation']} for f in
                        self.file_infos if not f['pass']]

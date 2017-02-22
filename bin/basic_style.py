@@ -169,8 +169,8 @@ class ReportCmd(BasicStyleCmd):
         super().__init__(options)
         self.title = "Basic Style Report"
 
-    def _analysis(self):
-        a = super()._analysis()
+    def _exec(self):
+        a = super()._exec()
         file_infos = self.file_infos
         a['jobs'] = self.jobs
         a['elapsed_time'] = self.elapsed_time
@@ -258,8 +258,8 @@ class CheckCmd(BasicStyleCmd):
         super().__init__(options)
         self.title = "Basic Style Check"
 
-    def _analysis(self):
-        a = super()._analysis()
+    def _exec(self):
+        a = super()._exec()
         file_infos = self.file_infos
         a['issues'] = list(
             itertools.chain.from_iterable(f['issues'] for f in file_infos))

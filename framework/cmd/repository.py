@@ -19,7 +19,7 @@ class RepositoryCmd(object):
         self.silent = silent
         self.title = "RepositoryCmd superclass"
 
-    def _analysis(self):
+    def _exec(self):
         return {}
 
     def _output(self, results):
@@ -35,7 +35,7 @@ class RepositoryCmd(object):
         sys.exit(exit)
 
     def run(self):
-        results = self._analysis()
+        results = self._exec()
         self._print(self._output(results), self._shell_exit(results))
 
 
@@ -54,12 +54,12 @@ class RepositoryCmds(RepositoryCmd):
         self.repository_cmds = repository_cmds
         self.title = "RepositoryCmds superclass"
 
-    def _analysis(self):
-        results = super()._analysis()
+    def _exec(self):
+        results = super()._exec()
         for key, cmd in sorted(self.repository_cmds.items()):
             if not self.silent:
                 print("Computing analysis of '%s'..." % cmd.title)
-            results[key] = cmd._analysis()
+            results[key] = cmd._exec()
             if not self.silent:
                 print("Done.")
         if not self.silent:

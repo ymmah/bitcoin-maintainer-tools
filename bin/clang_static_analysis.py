@@ -50,7 +50,7 @@ class ClangStaticAnalysisCmd(RepositoryCmd):
             self.scan_build, self.scan_build_report_path,
             str(self.repository), self.scan_build_output_file, self.jobs)
 
-    def _analysis(self):
+    def _exec(self):
         start_time = time.time()
         r = Report()
         r.add("Running command:     %s\n" % str(self.make_clean_step))

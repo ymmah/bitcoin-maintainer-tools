@@ -81,9 +81,9 @@ class FileContentCmd(RepositoryCmd):
     def _write_files(self):
         pass
 
-    def _analysis(self):
+    def _exec(self):
         self._read_and_compute_file_infos()
-        a = super()._analysis()
+        a = super()._exec()
         a['tracked_files'] = len(self.tracked_files)
         a['files_in_scope'] = len(self.files_in_scope)
         a['files_targeted'] = len(self.files_targeted)

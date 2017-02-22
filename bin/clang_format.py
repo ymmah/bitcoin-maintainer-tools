@@ -124,8 +124,8 @@ class ReportCmd(ClangFormatCmd):
                     f['score'].in_range(lower, upper)))
         return files_in_ranges
 
-    def _analysis(self):
-        a = super()._analysis()
+    def _exec(self):
+        a = super()._exec()
         file_infos = self.file_infos
         a['clang_format_path'] = self.clang_format.binary_path
         a['clang_format_version'] = str(self.clang_format.binary_version)
@@ -214,8 +214,8 @@ class CheckCmd(ClangFormatCmd):
         super().__init__(options)
         self.title = "Clang Format Check"
 
-    def _analysis(self):
-        a = super()._analysis()
+    def _exec(self):
+        a = super()._exec()
         a['failures'] = [{'file_path':       f['file_path'],
                           'style_score':     float(f['score']),
                           'lines_before':    f['lines_before'],
