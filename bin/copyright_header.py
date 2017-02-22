@@ -360,8 +360,11 @@ class UpdateCmd(CopyrightHeaderCmd):
     """
     'update' subcommand class.
     """
-    def __init__(self, repository, target_fnmatches):
-        super().__init__(repository, 1, target_fnmatches, False)
+    def __init__(self, options):
+        options.json = False
+        options.jobs = 1
+        super().__init__(options)
+        self.title = "Copyright Header Update"
 
     def _updatable_copyright_line(self, file_lines):
         index = 0
@@ -402,31 +405,35 @@ class UpdateCmd(CopyrightHeaderCmd):
 
     def _compute_file_infos(self):
         super()._compute_file_infos()
-        print("Querying git for file update history...")
+        if not self.silent:
+            print("Querying git for file update history...")
         for file_info in self.file_infos:
             file_path = GitFilePath(file_info['file_path'])
             file_info['change_years'] = file_path.change_year_range()
             updated = self._update_header(file_info)
             file_info['updated'] = updated != file_info['content']
             file_info.set_write_content(updated)
-        print("Done.")
+        if not self.silent:
+            print("Done.")
 
-    def _write_files(self):
+    def _exec(self):
+        super()._exec()
         self.file_infos.write_all()
-        print("Updated copyright header years in %d files." %
-              sum(1 for f in self.file_infos if f['updated']))
+        if not self.silent:
+            print("Updated copyright header years in %d files." %
+                  sum(1 for f in self.file_infos if f['updated']))
+
+    def _output(self, results):
+        return None
 
 
 def add_update_cmd(subparsers):
-    def exec_update_cmd(options):
-        UpdateCmd(options.repository, options.target_fnmatches).exec_write()
-
     update_help = ('Updates the end year of the copyright headers of '
                    '"The Bitcoin Core developers" in files amongst the '
                    'selected targets which have been changed more recently '
                    'than the year that is listed.')
     parser = subparsers.add_parser('update', help=update_help)
-    parser.set_defaults(cmd=exec_update_cmd)
+    parser.set_defaults(cmd=lambda o: UpdateCmd(o))
     add_git_tracked_targets_arg(parser)
 
 
@@ -464,8 +471,11 @@ class InsertCmd(CopyrightHeaderCmd):
     """
     'insert' subcommand class.
     """
-    def __init__(self, repository, jobs, target_fnmatches):
-        super().__init__(repository, jobs, target_fnmatches, False)
+    def __init__(self, options):
+        options.json = False
+        options.jobs = 1
+        super().__init__(options)
+        self.title = "Copyright Header Insert"
 
     def _year_range_string(self, start_year, end_year):
         if start_year == end_year:
@@ -501,24 +511,24 @@ class InsertCmd(CopyrightHeaderCmd):
             file_info['hdr_added'] = header_needed
             file_info.set_write_content(to_write)
 
-    def _write_files(self):
+    def _exec(self):
+        super()._exec()
         self.file_infos.write_all()
-        print("Added copyright header to %d files." %
-              sum(1 for f in self.file_infos if f['hdr_added']))
+        if not self.silent:
+            print("Added copyright header to %d files." %
+                  sum(1 for f in self.file_infos if f['hdr_added']))
+
+    def _output(self, results):
+        return None
 
 
 def add_insert_cmd(subparsers):
-    def exec_insert_cmd(options):
-        InsertCmd(options.repository, options.jobs,
-                  options.target_fnmatches).exec_write()
-
     insert_help = ('Inserts a correct MIT-licence copyright header for "The '
                    'Bitcoin Core developers" at the top of files amongst the '
                    'selected targets where the header is expected but not '
                    'currently found.')
     parser = subparsers.add_parser('insert', help=insert_help)
-    add_jobs_arg(parser)
-    parser.set_defaults(cmd=exec_insert_cmd)
+    parser.set_defaults(cmd=lambda o: InsertCmd(o))
     add_git_tracked_targets_arg(parser)
 
 
