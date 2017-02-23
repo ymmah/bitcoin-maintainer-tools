@@ -8,8 +8,25 @@ import sys
 import subprocess
 import argparse
 
-from framework.git.path import GitPath
+from framework.git.repository import GitPath
 from framework.git.repository import GitRepository
+
+
+###############################################################################
+# actions
+###############################################################################
+
+class GitRepositoryAction(argparse.Action):
+    """
+    Checks taht the string points to a valid git repository.
+    """
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not isinstance(values, str):
+            sys.exit("*** %s is not a string" % values)
+        repository = GitRepository(values)
+        repository.assert_has_makefile()
+        namespace.repository = repository
+        namespace.target_fnmatches = [os.path.join(str(repository), '*')]
 
 
 class GitTrackedTargetsAction(argparse.Action):
@@ -54,6 +71,18 @@ class GitTrackedTargetsAction(argparse.Action):
         namespace.target_fnmatches = (target_files +
                                       [os.path.join(d, '*') for d in
                                        target_directories])
+
+
+###############################################################################
+# add args
+###############################################################################
+
+
+def add_git_repository_arg(parser):
+    repo_help = ("A source code repository for which the static analysis is "
+                 "to be performed upon.")
+    parser.add_argument("repository", type=str, action=GitRepositoryAction,
+                        help=repo_help)
 
 
 def add_git_tracked_targets_arg(parser):

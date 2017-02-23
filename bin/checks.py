@@ -16,7 +16,7 @@ from framework.clang.args import add_force_arg
 from framework.clang.args import scan_build_binaries_from_options
 from framework.clang.args import clang_format_from_options
 from framework.clang.args import add_clang_args
-from framework.git.repository import add_git_repository_arg
+from framework.git.args import add_git_repository_arg
 
 
 class Checks(RepositoryCmds):

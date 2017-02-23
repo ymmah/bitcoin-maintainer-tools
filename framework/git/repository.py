@@ -9,7 +9,7 @@ import subprocess
 import argparse
 
 from framework.utl.path import Path
-from framework.repo_info import RepoInfo
+from framework.repo.info import RepoInfo
 from framework.git.path import GitPath
 
 

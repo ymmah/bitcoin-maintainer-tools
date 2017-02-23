@@ -17,7 +17,7 @@ from framework.clang.args import add_force_arg
 from framework.file.info import FileInfo
 from framework.file.style import StyleDiff, StyleScore
 from framework.cmd.file_content import FileContentCmd
-from framework.git.targets import add_git_tracked_targets_arg
+from framework.git.args import add_git_tracked_targets_arg
 
 
 APPLIES_TO = ['*.cpp', '*.h']
