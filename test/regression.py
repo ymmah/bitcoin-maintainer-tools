@@ -113,7 +113,7 @@ class RegressionCmd(RepositoryCmd):
             cmd['test'](cmd_string)
         return {}
 
-    def _output(self):
+    def _output(self, results):
         pass
 
 
