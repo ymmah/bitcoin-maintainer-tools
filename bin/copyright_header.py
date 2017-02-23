@@ -8,7 +8,7 @@ import sys
 import argparse
 import json
 
-from framework.utl.report import Report
+from framework.print.buffer import PrintBuffer
 from framework.file.filter import FileFilter
 from framework.file.info import FileInfo
 from framework.cmd.file_content import FileContentCmd
@@ -240,47 +240,47 @@ class ReportCmd(CopyrightHeaderCmd):
         self.title = "Copyright Header Report"
 
     def _exec(self):
-        a = super()._exec()
-        a['hdr_expected'] = sum(1 for f in self.file_infos if
+        r = super()._exec()
+        r['hdr_expected'] = sum(1 for f in self.file_infos if
                                 f['hdr_expected'])
-        a['no_hdr_expected'] = sum(1 for f in self.file_infos if not
+        r['no_hdr_expected'] = sum(1 for f in self.file_infos if not
                                    f['hdr_expected'])
-        a['other_copyright_expected'] = sum(1 for f in self.file_infos if
+        r['other_copyright_expected'] = sum(1 for f in self.file_infos if
                                             f['other_copyright_expected'])
-        a['no_other_copyright_expected'] = sum(
+        r['no_other_copyright_expected'] = sum(
             1 for f in self.file_infos if not f['other_copyright_expected'])
-        a['passed'] = sum(1 for f in self.file_infos if f['pass'])
-        a['failed'] = sum(1 for f in self.file_infos if not f['pass'])
-        a['issues'] = {}
+        r['passed'] = sum(1 for f in self.file_infos if f['pass'])
+        r['failed'] = sum(1 for f in self.file_infos if not f['pass'])
+        r['issues'] = {}
         for issue in ISSUES:
-            a['issues'][issue['description']] = sum(
+            r['issues'][issue['description']] = sum(
                 1 for f in self.file_infos if
                 f['evaluation']['description'] == issue['description'])
-        return a
+        return r
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        r.add(super()._output(results))
-        a = results
-        r.add("%-70s %6d\n" % ("Files expected to have header:",
-                               a['hdr_expected']))
-        r.add("%-70s %6d\n" % ("Files not expected to have header:",
-                               a['no_hdr_expected']))
-        r.add("%-70s %6d\n" %
+        b = PrintBuffer()
+        r = results
+        b.add(super()._output(results))
+        b.add("%-70s %6d\n" % ("Files expected to have header:",
+                               r['hdr_expected']))
+        b.add("%-70s %6d\n" % ("Files not expected to have header:",
+                               r['no_hdr_expected']))
+        b.add("%-70s %6d\n" %
               ("Files expected to have 'copyright' occurrence outside header:",
-               a['other_copyright_expected']))
-        r.add("%-70s %6d\n" %
+               r['other_copyright_expected']))
+        b.add("%-70s %6d\n" %
               ("Files not expected to have 'copyright' occurrence outside "
-               "header:", a['no_other_copyright_expected']))
-        r.add("%-70s %6d\n" % ("Files passed:", a['passed']))
-        r.add("%-70s %6d\n" % ("Files failed:", a['failed']))
-        r.separator()
-        for key, value in sorted(a['issues'].items()):
-            r.add("%-70s %6d\n" % ('"' + key + '":', value))
-        r.separator()
-        return str(r)
+               "header:", r['no_other_copyright_expected']))
+        b.add("%-70s %6d\n" % ("Files passed:", r['passed']))
+        b.add("%-70s %6d\n" % ("Files failed:", r['failed']))
+        b.separator()
+        for key, value in sorted(r['issues'].items()):
+            b.add("%-70s %6d\n" % ('"' + key + '":', value))
+        b.separator()
+        return str(b)
 
 
 def add_report_cmd(subparsers):
@@ -307,28 +307,28 @@ class CheckCmd(CopyrightHeaderCmd):
         self.title = "Copyright Header Check"
 
     def _exec(self):
-        a = super()._exec()
-        a['issues'] = [{'file_path':  f['file_path'],
+        r = super()._exec()
+        r['issues'] = [{'file_path':  f['file_path'],
                         'evaluation': f['evaluation']} for f in
                        self.file_infos if not f['pass']]
-        return a
+        return r
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        r.add(super()._output(results))
-        a = results
-        for issue in a['issues']:
-            r.add("An issue was found with ")
-            r.add_red("%s" % issue['file_path'])
-            r.add('\n\n%s\n\n' % issue['evaluation']['description'])
-            r.add('Info for resolution:\n')
-            r.add(issue['evaluation']['resolution'])
-            r.separator()
-        if len(a['issues']) == 0:
-            r.add_green("No copyright header issues found!\n")
-        return str(r)
+        b = PrintBuffer()
+        b.add(super()._output(results))
+        r = results
+        for issue in r['issues']:
+            b.add("An issue was found with ")
+            b.add_red("%s" % issue['file_path'])
+            b.add('\n\n%s\n\n' % issue['evaluation']['description'])
+            b.add('Info for resolution:\n')
+            b.add(issue['evaluation']['resolution'])
+            b.separator()
+        if len(r['issues']) == 0:
+            b.add_green("No copyright header issues found!\n")
+        return str(b)
 
     def _shell_exit(self, results):
         return (0 if len(results['issues']) == 0 else

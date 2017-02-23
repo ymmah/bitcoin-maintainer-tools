@@ -8,7 +8,7 @@ import sys
 import subprocess
 import argparse
 
-from framework.utl.path import Path
+from framework.path.path import Path
 from framework.repository.info import RepositoryInfo
 from framework.git.path import GitPath
 

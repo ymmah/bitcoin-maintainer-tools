@@ -8,10 +8,10 @@ RED = '\033[91m'
 ENDC = '\033[0m'
 
 
-class Report(object):
+class PrintBuffer(object):
     '''
-    A class for appending to a report string without printing it yet. Helps
-    parallel threads print without interleaving output.
+    A class for appending to a string without printing it yet. Also provides
+    a few amenities for constructing report output.
     '''
     def __init__(self):
         self.report = []

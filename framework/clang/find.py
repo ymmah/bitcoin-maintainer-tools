@@ -7,7 +7,7 @@ import re
 import os
 import subprocess
 
-from framework.utl.path import Path
+from framework.path.path import Path
 
 
 # The clang binaries of interest to this framework

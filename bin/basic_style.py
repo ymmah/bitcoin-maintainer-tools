@@ -9,7 +9,7 @@ import itertools
 import argparse
 import json
 
-from framework.utl.report import Report
+from framework.print.buffer import PrintBuffer
 from framework.file.filter import FileFilter
 from framework.file.info import FileInfo
 from framework.file.style import StyleDiff, StyleScore
@@ -170,26 +170,26 @@ class ReportCmd(BasicStyleCmd):
         self.title = "Basic Style Report"
 
     def _exec(self):
-        a = super()._exec()
+        r = super()._exec()
         file_infos = self.file_infos
-        a['jobs'] = self.jobs
-        a['elapsed_time'] = self.elapsed_time
-        a['lines_before'] = sum(f['lines_before'] for f in file_infos)
-        a['lines_added'] = sum(f['lines_added'] for f in file_infos)
-        a['lines_removed'] = sum(f['lines_removed'] for f in file_infos)
-        a['lines_unchanged'] = sum(f['lines_unchanged'] for f in file_infos)
-        a['lines_after'] = sum(f['lines_after'] for f in file_infos)
-        score = StyleScore(a['lines_before'], a['lines_added'],
-                           a['lines_removed'], a['lines_unchanged'],
-                           a['lines_after'])
-        a['style_score'] = float(score)
-        a['matching'] = sum(1 for f in file_infos if f['matching'])
-        a['not_matching'] = sum(1 for f in file_infos if not f['matching'])
+        r['jobs'] = self.jobs
+        r['elapsed_time'] = self.elapsed_time
+        r['lines_before'] = sum(f['lines_before'] for f in file_infos)
+        r['lines_added'] = sum(f['lines_added'] for f in file_infos)
+        r['lines_removed'] = sum(f['lines_removed'] for f in file_infos)
+        r['lines_unchanged'] = sum(f['lines_unchanged'] for f in file_infos)
+        r['lines_after'] = sum(f['lines_after'] for f in file_infos)
+        score = StyleScore(r['lines_before'], r['lines_added'],
+                           r['lines_removed'], r['lines_unchanged'],
+                           r['lines_after'])
+        r['style_score'] = float(score)
+        r['matching'] = sum(1 for f in file_infos if f['matching'])
+        r['not_matching'] = sum(1 for f in file_infos if not f['matching'])
 
         all_issues = list(itertools.chain.from_iterable(
             file_info['issues'] for file_info in file_infos))
 
-        a['rule_evaluation'] = {}
+        r['rule_evaluation'] = {}
         for rule in self.rules:
             examined = sum(1 for f in file_infos if
                            rule['filter'].evaluate(f['file_path']))
@@ -197,39 +197,39 @@ class ReportCmd(BasicStyleCmd):
                                     f['rule_title'] == rule['title']])
             file_count = len(set([f['file_path'] for f in all_issues if
                                   f['rule_title'] == rule['title']]))
-            a['rule_evaluation'][rule['title']] = (
+            r['rule_evaluation'][rule['title']] = (
                 {'extensions': rule['applies'], 'examined': examined,
                  'files': file_count, 'occurrences': occurrence_count})
-        return a
+        return r
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        r.add(super()._output(results))
-        a = results
-        r.add("%-32s %8.02fs\n" % ("Elapsed time:", a['elapsed_time']))
-        r.separator()
-        for title, evaluation in sorted(a['rule_evaluation'].items()):
-            r.add('"%s":\n' % title)
-            r.add('  %-30s %s\n' % ("Applies to:", evaluation['extensions']))
-            r.add('  %-30s %8d\n' % ("Files examined:",
+        b = PrintBuffer()
+        b.add(super()._output(results))
+        r = results
+        b.add("%-32s %8.02fs\n" % ("Elapsed time:", r['elapsed_time']))
+        b.separator()
+        for title, evaluation in sorted(r['rule_evaluation'].items()):
+            b.add('"%s":\n' % title)
+            b.add('  %-30s %s\n' % ("Applies to:", evaluation['extensions']))
+            b.add('  %-30s %8d\n' % ("Files examined:",
                                      evaluation['examined']))
-            r.add('  %-30s %8d\n' % ("Occurrences of issue:",
+            b.add('  %-30s %8d\n' % ("Occurrences of issue:",
                                      evaluation['occurrences']))
-            r.add('  %-30s %8d\n\n' % ("Files with issue:",
+            b.add('  %-30s %8d\n\n' % ("Files with issue:",
                                        evaluation['files']))
-        r.separator()
-        r.add("%-32s %8d\n" % ("Files scoring 100%", a['matching']))
-        r.add("%-32s %8d\n" % ("Files scoring <100%", a['not_matching']))
-        r.separator()
-        r.add("Overall scoring:\n\n")
-        score = StyleScore(a['lines_before'], a['lines_added'],
-                           a['lines_removed'], a['lines_unchanged'],
-                           a['lines_after'])
-        r.add(str(score))
-        r.separator()
-        return str(r)
+        b.separator()
+        b.add("%-32s %8d\n" % ("Files scoring 100%", r['matching']))
+        b.add("%-32s %8d\n" % ("Files scoring <100%", r['not_matching']))
+        b.separator()
+        b.add("Overall scoring:\n\n")
+        score = StyleScore(r['lines_before'], r['lines_added'],
+                           r['lines_removed'], r['lines_unchanged'],
+                           r['lines_after'])
+        b.add(str(score))
+        b.separator()
+        return str(b)
 
 
 def add_report_cmd(subparsers):
@@ -257,34 +257,34 @@ class CheckCmd(BasicStyleCmd):
         self.title = "Basic Style Check"
 
     def _exec(self):
-        a = super()._exec()
+        r = super()._exec()
         file_infos = self.file_infos
-        a['issues'] = list(
+        r['issues'] = list(
             itertools.chain.from_iterable(f['issues'] for f in file_infos))
-        return a
+        return r
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        r.add(super()._output(results))
-        a = results
-        for issue in a['issues']:
-            r.separator()
-            r.add("An issue was found with ")
-            r.add_red("%s\n" % issue['file_path'])
-            r.add('Rule: "%s"\n\n' % issue['rule_title'])
-            r.add('line %d:\n' % issue['line']['number'])
-            r.add("%s" % issue['line']['context'])
-            r.add(' ' * (issue['line']['character'] - 1))
-            r.add_red("^\n")
-        r.separator()
-        if len(a['issues']) == 0:
-            r.add_green("No style issues found!\n")
+        b = PrintBuffer()
+        b.add(super()._output(results))
+        b = results
+        for issue in b['issues']:
+            b.separator()
+            b.add("An issue was found with ")
+            b.add_red("%s\n" % issue['file_path'])
+            b.add('Rule: "%s"\n\n' % issue['rule_title'])
+            b.add('line %d:\n' % issue['line']['number'])
+            b.add("%s" % issue['line']['context'])
+            b.add(' ' * (issue['line']['character'] - 1))
+            b.add_red("^\n")
+        b.separator()
+        if len(b['issues']) == 0:
+            b.add_green("No style issues found!\n")
         else:
-            r.add_red("These issues can be fixed automatically by running:\n")
-            r.add("$ basic_style.py fix [target [target ...]]\n")
-        r.separator()
+            b.add_red("These issues can be fixed automatically by running:\n")
+            b.add("$ basic_style.py fix [target [target ...]]\n")
+        b.separator()
         return str(r)
 
     def _shell_exit(self, results):

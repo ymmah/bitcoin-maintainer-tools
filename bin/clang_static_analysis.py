@@ -9,7 +9,7 @@ import time
 import argparse
 import json
 
-from framework.utl.report import Report
+from framework.print.buffer import PrintBuffer
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
 from framework.clang.args import add_clang_static_analysis_args
@@ -52,21 +52,21 @@ class ClangStaticAnalysisCmd(RepositoryCmd):
 
     def _exec(self):
         start_time = time.time()
-        r = Report()
-        r.add("Running command:     %s\n" % str(self.make_clean_step))
-        r.add("stderr/stdout to:    %s\n" % self.make_clean_output_file)
+        b = PrintBuffer()
+        b.add("Running command:     %s\n" % str(self.make_clean_step))
+        b.add("stderr/stdout to:    %s\n" % self.make_clean_output_file)
         if not self.json:
-            r.flush()
+            b.flush()
         self.make_clean_step.run()
-        r.add("Running command:     %s\n" % str(self.scan_build_step))
-        r.add("stderr/stdout to:    %s\n" % self.scan_build_output_file)
-        r.add("This might take a few minutes...")
+        b.add("Running command:     %s\n" % str(self.scan_build_step))
+        b.add("stderr/stdout to:    %s\n" % self.scan_build_output_file)
+        b.add("This might take a few minutes...")
         if not self.json:
-            r.flush()
+            b.flush()
         self.scan_build_step.run()
-        r.add("Done.\n")
+        b.add("Done.\n")
         if not self.json:
-            r.flush()
+            b.flush()
         elapsed_time = time.time() - start_time
         directory, issues = self.scan_build_result.most_recent_results()
         return {'elapsed_time':      time.time() - start_time,
@@ -76,14 +76,14 @@ class ClangStaticAnalysisCmd(RepositoryCmd):
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        a = results
-        r.separator()
-        r.add("Took %.2f seconds to analyze with scan-build\n" %
-              a['elapsed_time'])
-        r.add("Found %d issues:\n" % len(a['issues']))
-        r.separator()
-        return str(r)
+        b = PrintBuffer()
+        r = results
+        b.separator()
+        b.add("Took %.2f seconds to analyze with scan-build\n" %
+              r['elapsed_time'])
+        b.add("Found %d issues:\n" % len(r['issues']))
+        b.separator()
+        return str(b)
 
     def _shell_exit(self, results):
         return 0
@@ -104,21 +104,21 @@ class ReportCmd(ClangStaticAnalysisCmd):
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        r.add(super()._output(results))
-        a = results
+        b = PrintBuffer()
+        b.add(super()._output(results))
+        r = results
         issue_no = 0
-        for issue in a['issues']:
-            r.add("%d: %s:%d:%d - %s\n" % (issue_no, issue['file'],
+        for issue in r['issues']:
+            b.add("%d: %s:%d:%d - %s\n" % (issue_no, issue['file'],
                                            issue['line'], issue['col'],
                                            issue['description']))
             issue_no = issue_no + 1
-        if len(a['issues']) > 0:
-            r.separator()
-            r.add("Full details can be seen in a browser by running:\n")
-            r.add("    $ %s %s\n" % (self.scan_view, a['results_directory']))
-            r.separator()
-        return str(r)
+        if len(r['issues']) > 0:
+            b.separator()
+            b.add("Full details can be seen in a browser by running:\n")
+            b.add("    $ %s %s\n" % (self.scan_view, r['results_directory']))
+            b.separator()
+        return str(b)
 
 
 def add_report_cmd(subparsers):
@@ -147,31 +147,31 @@ class CheckCmd(ClangStaticAnalysisCmd):
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        r.add(super()._output(results))
-        a = results
-        for issue in a['issues']:
-            r.add("An issue has been found in ")
-            r.add_red("%s:%d:%d\n" % (issue['file'], issue['line'],
+        b = PrintBuffer()
+        b.add(super()._output(results))
+        r = results
+        for issue in r['issues']:
+            b.add("An issue has been found in ")
+            b.add_red("%s:%d:%d\n" % (issue['file'], issue['line'],
                                       issue['col']))
-            r.add("Type:         %s\n" % issue['type'])
-            r.add("Description:  %s\n\n" % issue['description'])
+            b.add("Type:         %s\n" % issue['type'])
+            b.add("Description:  %s\n\n" % issue['description'])
             event_no = 0
             for event in issue['events']:
-                r.add("%d: " % event_no)
-                r.add("%s:%d:%d - " % (event['file'], event['line'],
+                b.add("%d: " % event_no)
+                b.add("%s:%d:%d - " % (event['file'], event['line'],
                                        event['col']))
-                r.add("%s\n" % event['message'])
+                b.add("%s\n" % event['message'])
                 event_no = event_no + 1
-            r.separator()
-        if len(a['issues']) == 0:
-            r.add_green("No static analysis issues found!\n")
-            r.separator()
+            b.separator()
+        if len(r['issues']) == 0:
+            b.add_green("No static analysis issues found!\n")
+            b.separator()
         else:
-            r.add_red("Full details can be seen in a browser by running:\n")
-            r.add("    $ %s %s\n" % (self.scan_view, a['results_directory']))
-            r.separator()
-        return str(r)
+            b.add_red("Full details can be seen in a browser by running:\n")
+            b.add("    $ %s %s\n" % (self.scan_view, r['results_directory']))
+            b.separator()
+        return str(b)
 
     def _shell_exit(self, results):
         return (0 if len(results['issues']) == 0 else

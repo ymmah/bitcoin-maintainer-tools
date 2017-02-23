@@ -6,7 +6,7 @@
 import time
 import json
 import sys
-from framework.utl.report import Report
+from framework.print.buffer import PrintBuffer
 from framework.file.filter import FileFilter
 from framework.file.info import FileInfos
 from framework.cmd.repository import RepositoryCmd
@@ -80,27 +80,27 @@ class FileContentCmd(RepositoryCmd):
 
     def _exec(self):
         self._read_and_compute_file_infos()
-        a = super()._exec()
-        a['tracked_files'] = len(self.tracked_files)
-        a['files_in_scope'] = len(self.files_in_scope)
-        a['files_targeted'] = len(self.files_targeted)
-        a['jobs'] = self.jobs
-        return a
+        r = super()._exec()
+        r['tracked_files'] = len(self.tracked_files)
+        r['files_in_scope'] = len(self.files_in_scope)
+        r['files_targeted'] = len(self.files_targeted)
+        r['jobs'] = self.jobs
+        return r
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        a = results
-        r.separator()
-        r.add("%4d files tracked in repo\n" % a['tracked_files'])
-        r.add("%4d files in scope according to script settings\n" %
-              a['files_in_scope'])
-        r.add("%4d files examined according to listed targets\n" %
-              a['files_targeted'])
-        r.add("%4d parallel jobs for computing analysis\n" % a['jobs'])
-        r.separator()
-        return str(r)
+        b = PrintBuffer()
+        r = results
+        b.separator()
+        b.add("%4d files tracked in repo\n" % r['tracked_files'])
+        b.add("%4d files in scope according to script settings\n" %
+              r['files_in_scope'])
+        b.add("%4d files examined according to listed targets\n" %
+              r['files_targeted'])
+        b.add("%4d parallel jobs for computing analysis\n" % r['jobs'])
+        b.separator()
+        return str(b)
 
     def _shell_exit(self, results):
         return 0

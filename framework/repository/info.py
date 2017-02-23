@@ -6,7 +6,7 @@
 import json
 import os
 
-from framework.utl.path import Path
+from framework.path.path import Path
 from framework.file.io import read_file
 
 REPO_INFO_FILENAME = ".bitcoin-maintainer-tools.json"

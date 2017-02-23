@@ -8,7 +8,7 @@ import argparse
 import hashlib
 import json
 
-from framework.utl.report import Report
+from framework.print.buffer import PrintBuffer
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
 from framework.clang.args import add_clang_format_args
@@ -48,22 +48,22 @@ class ClangFormatFileInfo(FileInfo):
             return
         rejected_parameters = self.clang_format.style.rejected_parameters
         if len(rejected_parameters) > 0:
-            r = Report()
-            r.add_red("\nERROR: ")
-            r.add("clang-format version %s does not support all parameters "
+            b = PrintBuffer()
+            b.add_red("\nERROR: ")
+            b.add("clang-format version %s does not support all parameters "
                   "given in\n%s\n\n" % (self.clang_format.binary_version,
                                         self.clang_format.style))
-            r.add("Unsupported parameters:\n")
+            b.add("Unsupported parameters:\n")
             for parameter in rejected_parameters:
-                r.add("\t%s\n" % parameter)
+                b.add("\t%s\n" % parameter)
             # The applied formating has subtle differences that vary between
             # major releases of clang-format. The recommendation should
             # probably follow the latest widely-available stable release.
             repo_info = self['repository'].repo_info
-            r.add("\nUsing clang-format version %s or higher is recommended\n"
+            rbadd("\nUsing clang-format version %s or higher is recommended\n"
                   % repo_info['clang_format_recommended']['min_version'])
-            r.add("Use the --force option to override and proceed anyway.\n\n")
-            r.flush()
+            b.add("Use the --force option to override and proceed anyway.\n\n")
+            b.flush()
             sys.exit("*** missing clang-format support.")
 
     def compute(self):
@@ -126,71 +126,71 @@ class ReportCmd(ClangFormatCmd):
         return files_in_ranges
 
     def _exec(self):
-        a = super()._exec()
+        r = super()._exec()
         file_infos = self.file_infos
-        a['clang_format_path'] = self.clang_format.binary_path
-        a['clang_format_version'] = str(self.clang_format.binary_version)
-        a['clang_style_path'] = str(self.clang_format.style_path)
-        a['rejected_parameters'] = self.clang_format.style.rejected_parameters
-        a['elapsed_time'] = self.elapsed_time
-        a['lines_before'] = sum(f['lines_before'] for f in file_infos)
-        a['lines_added'] = sum(f['lines_added'] for f in file_infos)
-        a['lines_removed'] = sum(f['lines_removed'] for f in file_infos)
-        a['lines_unchanged'] = sum(f['lines_unchanged'] for f in file_infos)
-        a['lines_after'] = sum(f['lines_after'] for f in file_infos)
-        score = StyleScore(a['lines_before'], a['lines_added'],
-                           a['lines_removed'], a['lines_unchanged'],
-                           a['lines_after'])
-        a['style_score'] = float(score)
-        a['slow_diffs'] = [{'file_path': f['file_path'],
+        r['clang_format_path'] = self.clang_format.binary_path
+        r['clang_format_version'] = str(self.clang_format.binary_version)
+        r['clang_style_path'] = str(self.clang_format.style_path)
+        r['rejected_parameters'] = self.clang_format.style.rejected_parameters
+        r['elapsed_time'] = self.elapsed_time
+        r['lines_before'] = sum(f['lines_before'] for f in file_infos)
+        r['lines_added'] = sum(f['lines_added'] for f in file_infos)
+        r['lines_removed'] = sum(f['lines_removed'] for f in file_infos)
+        r['lines_unchanged'] = sum(f['lines_unchanged'] for f in file_infos)
+        r['lines_after'] = sum(f['lines_after'] for f in file_infos)
+        score = StyleScore(r['lines_before'], r['lines_added'],
+                           r['lines_removed'], r['lines_unchanged'],
+                           r['lines_after'])
+        r['style_score'] = float(score)
+        r['slow_diffs'] = [{'file_path': f['file_path'],
                             'diff_time': f['diff_time']} for f in
                             file_infos if f['diff_time'] > 1.0]
-        a['matching'] = sum(1 for f in file_infos if f['matching'])
-        a['not_matching'] = sum(1 for f in file_infos if not f['matching'])
-        a['formatted_md5'] = self._cumulative_md5()
-        a['files_in_ranges'] = self._files_in_ranges()
-        return a
+        r['matching'] = sum(1 for f in file_infos if f['matching'])
+        r['not_matching'] = sum(1 for f in file_infos if not f['matching'])
+        r['formatted_md5'] = self._cumulative_md5()
+        r['files_in_ranges'] = self._files_in_ranges()
+        return r
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
-        r.add(super()._output(results))
-        a = results
-        r.add("%-30s %s\n" % ("clang-format bin:", a['clang_format_path']))
-        r.add("%-30s %s\n" % ("clang-format version:",
-                              a['clang_format_version']))
-        r.add("%-30s %s\n" % ("Using style in:", a['clang_style_path']))
-        r.separator()
-        if len(a['rejected_parameters']) > 0:
-            r.add_red("WARNING")
-            r.add(" - This version of clang-format does not support the "
+        b = PrintBuffer()
+        b.add(super()._output(results))
+        r = results
+        b.add("%-30s %s\n" % ("clang-format bin:", r['clang_format_path']))
+        b.add("%-30s %s\n" % ("clang-format version:",
+                              r['clang_format_version']))
+        b.add("%-30s %s\n" % ("Using style in:", r['clang_style_path']))
+        b.separator()
+        if len(r['rejected_parameters']) > 0:
+            b.add_red("WARNING")
+            b.add(" - This version of clang-format does not support the "
                   "following style\nparameters, so they were not used:\n\n")
-            for param in a['rejected_parameters']:
-                r.add("%s\n" % param)
-            r.separator()
-        r.add("%-30s %.02fs\n" % ("Elapsed time:", a['elapsed_time']))
-        if len(a['slow_diffs']) > 0:
-            r.add("Slowest diffs:\n")
-            for slow in a['slow_diffs']:
-                r.add("%6.02fs for %s\n" % (slow['diff_time'],
+            for param in r['rejected_parameters']:
+                b.add("%s\n" % param)
+            b.separator()
+        b.add("%-30s %.02fs\n" % ("Elapsed time:", r['elapsed_time']))
+        if len(r['slow_diffs']) > 0:
+            b.add("Slowest diffs:\n")
+            for slow in r['slow_diffs']:
+                b.add("%6.02fs for %s\n" % (slow['diff_time'],
                                             slow['file_path']))
-        r.separator()
-        r.add("%-30s %4d\n" % ("Files scoreing 100%:", a['matching']))
-        r.add("%-30s %4d\n" % ("Files scoring <100%:", a['not_matching']))
-        r.add("%-30s %s\n" % ("Formatted Content MD5:", a['formatted_md5']))
-        r.separator()
-        for score_range in reversed(sorted(a['files_in_ranges'].keys())):
-            r.add("%-30s %4d\n" % ("Files scoring %s:" % score_range,
-                                   a['files_in_ranges'][score_range]))
-        r.separator()
-        r.add("Overall scoring:\n\n")
-        score = StyleScore(a['lines_before'], a['lines_added'],
-                           a['lines_removed'], a['lines_unchanged'],
-                           a['lines_after'])
-        r.add(str(score))
-        r.separator()
-        return str(r)
+        b.separator()
+        b.add("%-30s %4d\n" % ("Files scoring 100%:", r['matching']))
+        b.add("%-30s %4d\n" % ("Files scoring <100%:", r['not_matching']))
+        b.add("%-30s %s\n" % ("Formatted Content MD5:", r['formatted_md5']))
+        b.separator()
+        for score_range in reversed(sorted(r['files_in_ranges'].keys())):
+            b.add("%-30s %4d\n" % ("Files scoring %s:" % score_range,
+                                   r['files_in_ranges'][score_range]))
+        b.separator()
+        b.add("Overall scoring:\n\n")
+        score = StyleScore(r['lines_before'], r['lines_added'],
+                           r['lines_removed'], r['lines_unchanged'],
+                           r['lines_after'])
+        b.add(str(score))
+        b.separator()
+        return str(b)
 
 
 def add_report_cmd(subparsers):
@@ -217,8 +217,8 @@ class CheckCmd(ClangFormatCmd):
         self.title = "Clang Format Check"
 
     def _exec(self):
-        a = super()._exec()
-        a['failures'] = [{'file_path':       f['file_path'],
+        r = super()._exec()
+        r['failures'] = [{'file_path':       f['file_path'],
                           'style_score':     float(f['score']),
                           'lines_before':    f['lines_before'],
                           'lines_added':     f['lines_added'],
@@ -226,30 +226,30 @@ class CheckCmd(ClangFormatCmd):
                           'lines_unchanged': f['lines_unchanged'],
                           'lines_after':     f['lines_after']}
                          for f in self.file_infos if not f['matching']]
-        return a
+        return r
 
     def _output(self, results):
         if self.json:
             return super()._output(results)
-        r = Report()
+        b = PrintBuffer()
         r.add(super()._output(results))
-        a = results
-        for f in a['failures']:
-            r.add("A code format issue was detected in ")
-            r.add_red("%s\n\n" % f['file_path'])
+        r = results
+        for f in r['failures']:
+            b.add("A code format issue was detected in ")
+            b.add_red("%s\n\n" % f['file_path'])
             score = StyleScore(f['lines_before'], f['lines_added'],
                                f['lines_removed'], f['lines_unchanged'],
                                f['lines_after'])
-            r.add(str(score))
-            r.separator()
-        if len(a['failures']) == 0:
-            r.add_green("No format issues found!\n")
+            b.add(str(score))
+            b.separator()
+        if len(r['failures']) == 0:
+            b.add_green("No format issues found!\n")
         else:
-            r.add_red("These files can be formatted by running:\n")
-            r.add("$ clang_format.py format [option [option ...]] "
+            b.add_red("These files can be formatted by running:\n")
+            b.add("$ clang_format.py format [option [option ...]] "
                   "[target [target ...]]\n")
-        r.separator()
-        return str(r)
+        b.separator()
+        return str(b)
 
     def _shell_exit(self, results):
         return (0 if len(results) == 0 else "*** code format issue found")
