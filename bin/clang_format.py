@@ -14,10 +14,10 @@ from framework.argparse.args import add_json_arg
 from framework.clang.args import add_clang_format_args
 from framework.clang.args import clang_format_from_options
 from framework.clang.args import add_force_arg
-from framework.file_info import FileInfo
+from framework.file.info import FileInfo
+from framework.file.style import StyleDiff, StyleScore
 from framework.cmd.file_content import FileContentCmd
 from framework.git.targets import add_git_tracked_targets_arg
-from framework.style import StyleDiff, StyleScore
 
 
 APPLIES_TO = ['*.cpp', '*.h']

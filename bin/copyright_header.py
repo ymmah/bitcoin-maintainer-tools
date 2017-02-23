@@ -9,8 +9,8 @@ import argparse
 import json
 
 from framework.utl.report import Report
-from framework.file_filter import FileFilter
-from framework.file_info import FileInfo
+from framework.file.filter import FileFilter
+from framework.file.info import FileInfo
 from framework.cmd.file_content import FileContentCmd
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg

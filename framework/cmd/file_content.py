@@ -7,8 +7,8 @@ import time
 import json
 import sys
 from framework.utl.report import Report
-from framework.file_filter import FileFilter
-from framework.file_info import FileInfos
+from framework.file.filter import FileFilter
+from framework.file.info import FileInfos
 from framework.cmd.repository import RepositoryCmd
 
 

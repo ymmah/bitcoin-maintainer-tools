@@ -9,7 +9,7 @@ import sys
 import subprocess
 
 from framework.utl.path import Path
-from framework.utl.io import read_file, write_file
+from framework.file.io import read_file, write_file
 
 
 class ClangFormatStyle(object):
