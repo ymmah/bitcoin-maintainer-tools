@@ -13,7 +13,7 @@ REPO_INFO_FILENAME = ".bitcoin-maintainer-tools.json"
 
 FAILBACK_REPO_INFO_FILENAME = ".failback-bitcoin-maintainer-tools.json"
 
-class RepoInfo(dict):
+class RepositoryInfo(dict):
     """
     Dictionary that is sourced from a json file in the targeet repsitory.
     If the file doesn't exist, a failback file is used for the settings.
