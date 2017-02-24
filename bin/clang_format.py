@@ -60,7 +60,7 @@ class ClangFormatFileInfo(FileInfo):
             # major releases of clang-format. The recommendation should
             # probably follow the latest widely-available stable release.
             repo_info = self['repository'].repo_info
-            rbadd("\nUsing clang-format version %s or higher is recommended\n"
+            b.add("\nUsing clang-format version %s or higher is recommended\n"
                   % repo_info['clang_format_recommended']['min_version'])
             b.add("Use the --force option to override and proceed anyway.\n\n")
             b.flush()
@@ -232,7 +232,7 @@ class CheckCmd(ClangFormatCmd):
         if self.json:
             return super()._output(results)
         b = PrintBuffer()
-        r.add(super()._output(results))
+        b.add(super()._output(results))
         r = results
         for f in r['failures']:
             b.add("A code format issue was detected in ")
@@ -252,7 +252,8 @@ class CheckCmd(ClangFormatCmd):
         return str(b)
 
     def _shell_exit(self, results):
-        return (0 if len(results) == 0 else "*** code format issue found")
+        return (0 if len(results['failures']) == 0 else
+                "*** code format issue found")
 
 
 def add_check_cmd(subparsers):

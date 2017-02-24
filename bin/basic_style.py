@@ -268,8 +268,8 @@ class CheckCmd(BasicStyleCmd):
             return super()._output(results)
         b = PrintBuffer()
         b.add(super()._output(results))
-        b = results
-        for issue in b['issues']:
+        r = results
+        for issue in r['issues']:
             b.separator()
             b.add("An issue was found with ")
             b.add_red("%s\n" % issue['file_path'])
@@ -279,13 +279,13 @@ class CheckCmd(BasicStyleCmd):
             b.add(' ' * (issue['line']['character'] - 1))
             b.add_red("^\n")
         b.separator()
-        if len(b['issues']) == 0:
+        if len(r['issues']) == 0:
             b.add_green("No style issues found!\n")
         else:
             b.add_red("These issues can be fixed automatically by running:\n")
             b.add("$ basic_style.py fix [target [target ...]]\n")
         b.separator()
-        return str(r)
+        return str(b)
 
     def _shell_exit(self, results):
         return (0 if len(results['issues']) == 0 else "*** style issue found")

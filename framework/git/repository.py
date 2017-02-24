@@ -13,9 +13,16 @@ from framework.repository.info import RepositoryInfo
 from framework.git.path import GitPath
 
 
+LS_TRACKED = "git ls-files"
+CHECK_UNTRACKED_UNIGNORED = "git ls-files --exclude-standard --others"
+CHECK_CHANGES = "git diff-index --quiet HEAD"
+RESET_HARD_HEAD = "git reset --hard HEAD"
+
+
 class GitRepository(object):
     """
-    Represents and queries information from a git repository clone.
+    Represents queries information, and performs actions on a git repository
+    clone.
     """
     def __init__(self, repository_base):
         self.repository_base = str(Path(repository_base))
@@ -34,7 +41,7 @@ class GitRepository(object):
     def tracked_files(self):
         orig = os.getcwd()
         os.chdir(self.repository_base)
-        out = subprocess.check_output(['git', 'ls-files'])
+        out = subprocess.check_output(LS_TRACKED.split(" "))
         os.chdir(orig)
         return [os.path.join(self.repository_base, f) for f in
                 out.decode("utf-8").split('\n') if f != '']
@@ -45,22 +52,33 @@ class GitRepository(object):
             sys.exit("*** no Makefile found in %s. You must ./autogen.sh "
                      "and/or ./configure first" % self.repository_base)
 
+    def _has_changes(self):
+        orig = os.getcwd()
+        os.chdir(self.repository_base)
+        rc = subprocess.call(CHECK_CHANGES.split(" "))
+        os.chdir(orig)
+        return rc != 0
 
-class GitRepositoryAction(argparse.Action):
-    """
-    Checks taht the string points to a valid git repository.
-    """
-    def __call__(self, parser, namespace, values, option_string=None):
-        if not isinstance(values, str):
-            sys.exit("*** %s is not a string" % values)
-        repository = GitRepository(values)
-        repository.assert_has_makefile()
-        namespace.repository = repository
-        namespace.target_fnmatches = [os.path.join(str(repository), '*')]
+    def _has_untracked_or_unignored(self):
+        orig = os.getcwd()
+        os.chdir(self.repository_base)
+        out = subprocess.check_output(CHECK_UNTRACKED_UNIGNORED.split(" "))
+        os.chdir(orig)
+        return out.decode("utf-8") != ""
 
+    def _is_dirty(self):
+        return self._has_changes() or self._has_untracked_or_unignored()
 
-def add_git_repository_arg(parser):
-    repo_help = ("A source code repository for which the static analysis is "
-                 "to be performed upon.")
-    parser.add_argument("repository", type=str, action=GitRepositoryAction,
-                        help=repo_help)
+    def assert_not_dirty(self):
+        if self._is_dirty():
+            sys.exit("*** repository has uncommitted changes.")
+
+    def assert_dirty(self):
+        if not self._is_dirty():
+            sys.exit("*** repository has no uncommitted changes.")
+
+    def reset_hard_head(self):
+        orig = os.getcwd()
+        os.chdir(self.repository_base)
+        out = subprocess.check_output(RESET_HARD_HEAD.split(" "))
+        os.chdir(orig)
