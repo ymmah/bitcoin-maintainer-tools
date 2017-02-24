@@ -15,7 +15,7 @@ from framework.clang.args import add_clang_format_args
 from framework.clang.args import clang_format_from_options
 from framework.clang.args import add_force_arg
 from framework.file.info import FileInfo
-from framework.file.style import StyleDiff, StyleScore
+from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
 from framework.git.args import add_git_tracked_targets_arg
 
@@ -70,7 +70,7 @@ class ClangFormatFileInfo(FileInfo):
         self['matching'] = self['content'] == self['formatted']
         self['formatted_md5'] = (
             hashlib.md5(self['formatted'].encode('utf-8')).hexdigest())
-        self.update(StyleDiff(self['content'], self['formatted']))
+        self.update(FileStyleDiff(self['content'], self['formatted']))
 
 
 ###############################################################################
@@ -138,9 +138,9 @@ class ReportCmd(ClangFormatCmd):
         r['lines_removed'] = sum(f['lines_removed'] for f in file_infos)
         r['lines_unchanged'] = sum(f['lines_unchanged'] for f in file_infos)
         r['lines_after'] = sum(f['lines_after'] for f in file_infos)
-        score = StyleScore(r['lines_before'], r['lines_added'],
-                           r['lines_removed'], r['lines_unchanged'],
-                           r['lines_after'])
+        score = FileStyleScore(r['lines_before'], r['lines_added'],
+                               r['lines_removed'], r['lines_unchanged'],
+                               r['lines_after'])
         r['style_score'] = float(score)
         r['slow_diffs'] = [{'file_path': f['file_path'],
                             'diff_time': f['diff_time']} for f in
@@ -185,9 +185,9 @@ class ReportCmd(ClangFormatCmd):
                                    r['files_in_ranges'][score_range]))
         b.separator()
         b.add("Overall scoring:\n\n")
-        score = StyleScore(r['lines_before'], r['lines_added'],
-                           r['lines_removed'], r['lines_unchanged'],
-                           r['lines_after'])
+        score = FileStyleScore(r['lines_before'], r['lines_added'],
+                               r['lines_removed'], r['lines_unchanged'],
+                               r['lines_after'])
         b.add(str(score))
         b.separator()
         return str(b)
@@ -237,9 +237,9 @@ class CheckCmd(ClangFormatCmd):
         for f in r['failures']:
             b.add("A code format issue was detected in ")
             b.add_red("%s\n\n" % f['file_path'])
-            score = StyleScore(f['lines_before'], f['lines_added'],
-                               f['lines_removed'], f['lines_unchanged'],
-                               f['lines_after'])
+            score = FileStyleScore(f['lines_before'], f['lines_added'],
+                                   f['lines_removed'], f['lines_unchanged'],
+                                   f['lines_after'])
             b.add(str(score))
             b.separator()
         if len(r['failures']) == 0:

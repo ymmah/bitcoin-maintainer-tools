@@ -12,7 +12,7 @@ import json
 from framework.print.buffer import PrintBuffer
 from framework.file.filter import FileFilter
 from framework.file.info import FileInfo
-from framework.file.style import StyleDiff, StyleScore
+from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args  import add_json_arg
@@ -135,7 +135,7 @@ class BasicStyleFileInfo(FileInfo):
         self['issues'] = list(self._find_issues(self['content']))
         self['fixed_content'] = self._fix_content()
         self.set_write_content(self['fixed_content'])
-        self.update(StyleDiff(self['content'], self['fixed_content']))
+        self.update(FileStyleDiff(self['content'], self['fixed_content']))
         self['matching'] = self['content'] == self['fixed_content']
 
 
@@ -179,9 +179,9 @@ class ReportCmd(BasicStyleCmd):
         r['lines_removed'] = sum(f['lines_removed'] for f in file_infos)
         r['lines_unchanged'] = sum(f['lines_unchanged'] for f in file_infos)
         r['lines_after'] = sum(f['lines_after'] for f in file_infos)
-        score = StyleScore(r['lines_before'], r['lines_added'],
-                           r['lines_removed'], r['lines_unchanged'],
-                           r['lines_after'])
+        score = FileStyleScore(r['lines_before'], r['lines_added'],
+                               r['lines_removed'], r['lines_unchanged'],
+                               r['lines_after'])
         r['style_score'] = float(score)
         r['matching'] = sum(1 for f in file_infos if f['matching'])
         r['not_matching'] = sum(1 for f in file_infos if not f['matching'])
@@ -224,9 +224,9 @@ class ReportCmd(BasicStyleCmd):
         b.add("%-32s %8d\n" % ("Files scoring <100%", r['not_matching']))
         b.separator()
         b.add("Overall scoring:\n\n")
-        score = StyleScore(r['lines_before'], r['lines_added'],
-                           r['lines_removed'], r['lines_unchanged'],
-                           r['lines_after'])
+        score = FileStyleScore(r['lines_before'], r['lines_added'],
+                               r['lines_removed'], r['lines_unchanged'],
+                               r['lines_after'])
         b.add(str(score))
         b.separator()
         return str(b)

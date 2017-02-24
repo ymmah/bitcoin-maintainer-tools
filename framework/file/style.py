@@ -7,7 +7,7 @@ import difflib
 import time
 
 
-class StyleScore(object):
+class FileStyleScore(object):
     """
     A crude calculation to give a percentage rating for adherence to a
     defined style.
@@ -41,13 +41,13 @@ class StyleScore(object):
         return self.score
 
     def in_range(self, lower, upper):
-        # inclusive
+        # inclusive:
         return (self.score >= lower) and (self.score <= upper)
 
 
 DIFFER = difflib.Differ()
 
-class StyleDiff(dict):
+class FileStyleDiff(dict):
     """
     Computes metrics about a diff between two versions of content in a file.
     """
@@ -62,11 +62,11 @@ class StyleDiff(dict):
         (self['lines_added'],
          self['lines_removed'],
          self['lines_unchanged']) = self._sum_lines_of_type(diff)
-        self['score'] = StyleScore(self['lines_before'],
-                                   self['lines_added'],
-                                   self['lines_removed'],
-                                   self['lines_unchanged'],
-                                   self['lines_after'])
+        self['score'] = FileStyleScore(self['lines_before'],
+                                       self['lines_added'],
+                                       self['lines_removed'],
+                                       self['lines_unchanged'],
+                                       self['lines_after'])
         self['diff_time'] = time.time() - start_time
 
     def _sum_lines_of_type(self, diff):
