@@ -86,7 +86,7 @@ ISSUE_2 = {
     'resolution': """
 The header was not expected due to a setting in copyright_header.py. If a valid
 copyright header has been added to the file, the filename can be removed from
-the NO_HEADER_EXPECTED listing.
+the 'no_copyright_header_expected' settings.
 """
 }
 
@@ -97,7 +97,7 @@ ISSUE_3 = {
 This file's body has a regular expression match for the (case-sensitive) words
 "Copyright", "COPYRIGHT" or 'copyright". If this was an appropriate addition,
 copyright_header.py can be edited to add the file to the
-OTHER_COPYRIGHT_EXPECTED listing.
+'other_copyright_occurrences_expected' settings.
 """
 }
 
@@ -109,7 +109,7 @@ A use of the (case-sensitive) words "Copyright", "COPYRIGHT", or 'copyright'
 outside of the regular copyright header was expected due to a setting in
 copyright_header.py but it was not found. If this text was appropriately
 removed from the file, copyright_header.py can be edited to remove the file
-from the OTHER_COPYRIGHT_EXPECTED listing.
+from the 'other_copyright_occurrences_expected' settings.
 """
 }
 
