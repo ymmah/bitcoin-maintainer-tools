@@ -9,7 +9,7 @@ import sys
 import subprocess
 import argparse
 
-from framework.clang.find import ClangFind
+from framework.clang.find import ClangFind, CLANG_BINARIES
 from framework.clang.format import ClangFormat
 from framework.path.path import Path
 from framework.argparse.action import ReadableFileAction
@@ -103,9 +103,10 @@ def scan_build_binaries_from_options(options):
         scan_view = options.clang_executables['scan-view']
     else:
         finder = ClangFind()
+        clang_format = finder.best('clang-format')
         scan_build = finder.best('scan-build')
         scan_view = finder.best('scan-view')
-    return scan_build, scan_view
+    return clang_format, scan_build, scan_view
 
 
 def add_clang_args(parser):
@@ -118,3 +119,26 @@ def add_force_arg(parser):
     f_help = ("force proceeding with if clang-format doesn't support all "
               "parameters in the style file (default=False)")
     parser.add_argument("-f", "--force", action='store_true', help=f_help)
+
+
+
+###############################################################################
+# finish options
+###############################################################################
+
+def clang_finish_options(options):
+    """
+    """
+    if hasattr(options, 'clang_executables'):
+        clang_format = options.clang_executables['clang-format']
+        scan_build = options.clang_executables['scan-build']
+        scan_view = options.clang_executables['scan-view']
+    else:
+        finder = ClangFind()
+        clang_format = finder.best('clang-format')
+        scan_build = finder.best('scan-build')
+        scan_view = finder.best('scan-view')
+
+    options.clang_format = clang_format
+    options.scan_build = scan_build
+    options.scan_view = scan_view
