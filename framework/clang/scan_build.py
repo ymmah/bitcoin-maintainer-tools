@@ -12,10 +12,6 @@ from framework.path.path import Path
 from framework.make.make import Make
 
 
-###############################################################################
-# run scan-build
-###############################################################################
-
 class ScanBuild(Make):
     """
     Executes 'make' wrapped in scan-build to get static analysis results.
@@ -33,11 +29,11 @@ class ScanBuild(Make):
                              super()._cmd())
 
 
-###############################################################################
-# run scan-build
-###############################################################################
-
 class ScanBuildPlistDirectory(Path):
+    """
+    Represents the directory created by scan-build to hold the output
+    plist files. Parses the plist files to reveal discovered issues.
+    """
     def __init__(self, directory):
         path = Path(directory)
         path.assert_exists()
@@ -75,6 +71,10 @@ class ScanBuildPlistDirectory(Path):
 
 
 class ScanBuildResultDirectory(Path):
+    """
+    Represents the directory that is given to scan-build for it to create
+    a directory containing the results from the run.
+    """
     def __init__(self, directory):
         self._create_if_missing(directory)
         path = Path(directory)

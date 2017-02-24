@@ -9,10 +9,6 @@ from multiprocessing import Pool
 
 from framework.file.io import read_file, write_file
 
-###############################################################################
-# single file
-###############################################################################
-
 
 class FileInfo(dict):
     """
@@ -38,11 +34,6 @@ class FileInfo(dict):
         if self['content'] == self['write_content']:
             return
         write_file(self['file_path'], self['write_content'])
-
-
-###############################################################################
-# a set of files
-###############################################################################
 
 
 def compute_file_info(file_info):

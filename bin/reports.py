@@ -15,7 +15,7 @@ from framework.argparse.args import add_json_arg
 from framework.clang.args import scan_build_binaries_from_options
 from framework.clang.args import clang_format_from_options
 from framework.clang.args import add_clang_args
-from framework.git.args import add_git_repository_arg
+from framework.git.args import add_git_tracked_targets_arg
 
 
 class Reports(RepositoryCmds):
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_args(parser)
-    add_git_repository_arg(parser)
+    add_git_tracked_targets_arg(parser)
     options = parser.parse_args()
     options.clang_format = clang_format_from_options(options)
     options.scan_build, options.scan_view = (

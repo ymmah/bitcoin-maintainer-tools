@@ -18,7 +18,7 @@ from framework.git.repository import GitRepository
 
 class GitRepositoryAction(argparse.Action):
     """
-    Checks taht the string points to a valid git repository.
+    Checks that the string points to a valid git repository.
     """
     def __call__(self, parser, namespace, values, option_string=None):
         if not isinstance(values, str):

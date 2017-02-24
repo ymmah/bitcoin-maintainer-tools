@@ -26,10 +26,6 @@ VERSION_ASK_REGEX = re.compile("version (?P<version>[0-9]\.[0-9](\.[0-9])?)")
 VERSION_PATH_REGEX = re.compile("(?P<version>[0-9]\.[0-9](\.[0-9])?)")
 
 
-###############################################################################
-# Find the version of a particular binary
-###############################################################################
-
 class ClangVersion(object):
     """
     Obtains and represents the version of a particular clang binary.
@@ -58,10 +54,6 @@ class ClangVersion(object):
             return "0.0.0"
         return match.group('version')
 
-
-###############################################################################
-# find usable clang binaries
-###############################################################################
 
 class ClangFind(object):
     """

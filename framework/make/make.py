@@ -8,7 +8,7 @@ from framework.make.step import BuildStep
 
 class MakeClean(BuildStep):
     """
-    Executes 'make clean' on the respository.'
+    Executes 'make clean' on the respository.
     """
     def _cmd(self):
         return "make clean"
@@ -16,7 +16,7 @@ class MakeClean(BuildStep):
 
 class Make(BuildStep):
     """
-    Executes 'make' on the respository.'
+    Executes 'make' on the respository.
     """
     def __init__(self, repository, output_file, jobs, options=None):
         super().__init__(repository, output_file)

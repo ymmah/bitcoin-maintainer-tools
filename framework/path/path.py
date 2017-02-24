@@ -11,7 +11,7 @@ import subprocess
 class Path(object):
     """
     Base class for representing and validating command-line arguments that
-    are strings but supposed to be a filesystem path with particular
+    are strings but are supposed to be a filesystem path with particular
     properties.
     """
     def __init__(self, path):
