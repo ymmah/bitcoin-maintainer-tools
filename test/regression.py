@@ -189,8 +189,8 @@ def test_modify(repo, silent):
 ###############################################################################
 
 class RegressionCmd(RepositoryCmd):
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Regression test command"
 
     def _exec(self):
@@ -229,5 +229,5 @@ normal ./configure already performed.
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     add_git_repository_parameter(parser)
-    options = parser.parse_args()
-    RegressionCmd(options).run()
+    settings = parser.parse_args()
+    RegressionCmd(settings).run()

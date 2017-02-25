@@ -147,9 +147,9 @@ class BasicStyleCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, options):
-        options.include_fnmatches = APPLIES_TO
-        super().__init__(options)
+    def __init__(self, settings):
+        settings.include_fnmatches = APPLIES_TO
+        super().__init__(settings)
         self.rules = BasicStyleRules(self.repository)
 
     def _file_info_list(self):
@@ -165,8 +165,8 @@ class ReportCmd(BasicStyleCmd):
     """
     'report' subcommand class.
     """
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Basic Style Report"
 
     def _exec(self):
@@ -252,8 +252,8 @@ class CheckCmd(BasicStyleCmd):
     """
     'check' subcommand class.
     """
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Basic Style Check"
 
     def _exec(self):
@@ -311,9 +311,9 @@ class FixCmd(BasicStyleCmd):
     """
     'fix' subcommand class.
     """
-    def __init__(self, options):
-        options.json = False
-        super().__init__(options)
+    def __init__(self, settings):
+        settings.json = False
+        super().__init__(settings)
         self.title = "Basic Style Fix"
 
     def _exec(self):
@@ -347,8 +347,8 @@ if __name__ == "__main__":
     add_report_cmd(subparsers)
     add_check_cmd(subparsers)
     add_fix_cmd(subparsers)
-    options = parser.parse_args()
-    if not hasattr(options, "cmd"):
+    settings = parser.parse_args()
+    if not hasattr(settings, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    options.cmd(options).run()
+    settings.cmd(settings).run()

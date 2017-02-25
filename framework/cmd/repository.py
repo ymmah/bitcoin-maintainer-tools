@@ -12,10 +12,10 @@ class RepositoryCmd(object):
     'silent=True' instructs to only print what is produced by the _output()
     function.
     """
-    def __init__(self, options, silent=False):
-        assert hasattr(options, 'repository')
-        self.options = options
-        self.repository = options.repository
+    def __init__(self, settings, silent=False):
+        assert hasattr(settings, 'repository')
+        self.settings = settings
+        self.repository = settings.repository
         self.silent = silent
         self.title = "RepositoryCmd superclass"
 
@@ -46,8 +46,8 @@ class RepositoryCmds(RepositoryCmd):
     a single invocation. The individual instances are passed in as a
     dictionary.
     """
-    def __init__(self, options, repository_cmds, silent=False):
-        super().__init__(options, silent=silent)
+    def __init__(self, settings, repository_cmds, silent=False):
+        super().__init__(settings, silent=silent)
         assert type(repository_cmds) is dict
         for k, v in repository_cmds.items():
             assert type(k) is str

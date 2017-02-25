@@ -22,15 +22,15 @@ class Reports(RepositoryCmds):
     Invokes several underlying RepositoryCmd report command instances and and
     aggregates them into a single report.
     """
-    def __init__(self, options):
+    def __init__(self, settings):
         repository_cmds = {
-            'copyright_header':      CopyrightHeaderReport(options),
-            'basic_style':           BasicStyleReport(options),
-            'clang_format':          ClangFormatReport(options),
-            'clang_static_analysis': ClangStaticAnalysisReport(options),
+            'copyright_header':      CopyrightHeaderReport(settings),
+            'basic_style':           BasicStyleReport(settings),
+            'clang_format':          ClangFormatReport(settings),
+            'clang_static_analysis': ClangStaticAnalysisReport(settings),
         }
-        self.json = options.json
-        super().__init__(options, repository_cmds, silent=options.json)
+        self.json = settings.json
+        super().__init__(settings, repository_cmds, silent=settings.json)
 
     def _output(self, results):
         if self.json:
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     add_json_arg(parser)
     add_clang_options(parser, report_path=True, style_file=True)
     add_git_tracked_targets_parameter(parser)
-    options = parser.parse_args()
-    finish_clang_settings(options)
-    reports = Reports(options)
-    output = reports.run()
+    settings = parser.parse_args()
+    finish_clang_settings(settings)
+    reports = Reports(settings)
+    reports.run()

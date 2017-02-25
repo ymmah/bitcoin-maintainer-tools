@@ -22,15 +22,15 @@ class Checks(RepositoryCmds):
     Invokes several underlying RepositoryCmd check command instances and and
     aggregates the results.
     """
-    def __init__(self, options):
+    def __init__(self, settings):
         repository_cmds = {
-            'copyright_header':      CopyrightHeaderCheck(options),
-            'basic_style':           BasicStyleCheck(options),
-            'clang_format':          ClangFormatCheck(options),
-            'clang_static_analysis': ClangStaticAnalysisCheck(options),
+            'copyright_header':      CopyrightHeaderCheck(settings),
+            'basic_style':           BasicStyleCheck(settings),
+            'clang_format':          ClangFormatCheck(settings),
+            'clang_static_analysis': ClangStaticAnalysisCheck(settings),
         }
-        self.json = options.json
-        super().__init__(options, repository_cmds, silent=options.json)
+        self.json = settings.json
+        super().__init__(settings, repository_cmds, silent=settings.json)
 
     def _output(self, results):
         if self.json:
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     add_json_arg(parser)
     add_clang_options(parser, report_path=True, style_file=True, force=True)
     add_git_tracked_targets_parameter(parser)
-    options = parser.parse_args()
-    finish_clang_settings(options)
-    checks = Checks(options)
-    output = checks.run()
+    settings = parser.parse_args()
+    finish_clang_settings(settings)
+    checks = Checks(settings)
+    checks.run()

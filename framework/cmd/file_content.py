@@ -19,24 +19,25 @@ class FileContentCmd(RepositoryCmd):
     a subset of files that the operation is to apply to via lists of
     fnmatch expressions.
     """
-    def __init__(self, options):
-        assert hasattr(options, 'json')
-        super().__init__(options, silent=options.json)
-        assert hasattr(options, 'jobs')
-        assert hasattr(options, 'include_fnmatches')
-        assert hasattr(options, 'target_fnmatches')
+    def __init__(self, settings):
+        assert hasattr(settings, 'json')
+        super().__init__(settings, silent=settings.json)
+        assert hasattr(settings, 'jobs')
+        assert hasattr(settings, 'include_fnmatches')
+        assert hasattr(settings, 'target_fnmatches')
         self.title = "FileContentCmd superclass"
-        self.json = options.json
-        self.jobs = options.jobs
+        self.json = settings.json
+        self.jobs = settings.jobs
         self.tracked_files = self.repository.tracked_files()
         exclude_fnmatches = self.repository.repo_info['subtrees']['fnmatches']
         self.files_in_scope = list(
             self._files_in_scope(self.repository, self.tracked_files,
-                                 options.include_fnmatches, exclude_fnmatches))
+                                 settings.include_fnmatches,
+                                 exclude_fnmatches))
         self.files_targeted = list(
             self._files_targeted(self.repository, self.files_in_scope,
-                                 options.include_fnmatches, exclude_fnmatches,
-                                 options.target_fnmatches))
+                                 settings.include_fnmatches, exclude_fnmatches,
+                                 settings.target_fnmatches))
 
     def _scope_filter(self, repository, include_fnmatches, exclude_fnmatches):
         file_filter = FileFilter()

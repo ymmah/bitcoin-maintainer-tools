@@ -80,13 +80,13 @@ class ClangFormatCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, options):
-        assert hasattr(options, 'force')
-        assert hasattr(options, 'clang_format')
-        options.include_fnmatches = APPLIES_TO
-        super().__init__(options)
-        self.force = options.force
-        self.clang_format = options.clang_format
+    def __init__(self, settings):
+        assert hasattr(settings, 'force')
+        assert hasattr(settings, 'clang_format')
+        settings.include_fnmatches = APPLIES_TO
+        super().__init__(settings)
+        self.force = settings.force
+        self.clang_format = settings.clang_format
 
     def _file_info_list(self):
         return [ClangFormatFileInfo(self.repository, f, self.clang_format,
@@ -102,9 +102,9 @@ class ReportCmd(ClangFormatCmd):
     """
     'report' subcommand class.
     """
-    def __init__(self, options):
-        options.force = True
-        super().__init__(options)
+    def __init__(self, settings):
+        settings.force = True
+        super().__init__(settings)
         self.title = "Clang Format Report"
 
     def _cumulative_md5(self):
@@ -211,8 +211,8 @@ class CheckCmd(ClangFormatCmd):
     """
     'check' subcommand class.
     """
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Clang Format Check"
 
     def _exec(self):
@@ -275,10 +275,10 @@ class FormatCmd(ClangFormatCmd):
     """
     'format' subcommand class.
     """
-    def __init__(self, options):
-        options.json = False
-        options.jobs = 1
-        super().__init__(options)
+    def __init__(self, settings):
+        settings.json = False
+        settings.jobs = 1
+        super().__init__(settings)
         self.title = "Clang Format"
 
     def _exec(self):
@@ -311,9 +311,9 @@ if __name__ == "__main__":
     add_report_cmd(subparsers)
     add_check_cmd(subparsers)
     add_format_cmd(subparsers)
-    options = parser.parse_args()
-    if not hasattr(options, "cmd"):
+    settings = parser.parse_args()
+    if not hasattr(settings, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    finish_clang_settings(options)
-    options.cmd(options).run()
+    finish_clang_settings(settings)
+    settings.cmd(settings).run()

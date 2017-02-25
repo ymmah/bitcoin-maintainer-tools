@@ -199,9 +199,9 @@ class CopyrightHeaderCmd(FileContentCmd):
     """
     Common base class for the commands in this script.
     """
-    def __init__(self, options):
-        options.include_fnmatches = APPLIES_TO
-        super().__init__(options)
+    def __init__(self, settings):
+        settings.include_fnmatches = APPLIES_TO
+        super().__init__(settings)
         self.no_copyright_filter = FileFilter()
         repo_info = self.repository.repo_info
         self.no_copyright_filter.append_include(
@@ -233,8 +233,8 @@ class ReportCmd(CopyrightHeaderCmd):
     """
     'report' subcommand class.
     """
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Copyright Header Report"
 
     def _exec(self):
@@ -300,8 +300,8 @@ class CheckCmd(CopyrightHeaderCmd):
     """
     'check' subcommand class.
     """
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Copyright Header Check"
 
     def _exec(self):
@@ -358,10 +358,10 @@ class UpdateCmd(CopyrightHeaderCmd):
     """
     'update' subcommand class.
     """
-    def __init__(self, options):
-        options.json = False
-        options.jobs = 1
-        super().__init__(options)
+    def __init__(self, settings):
+        settings.json = False
+        settings.jobs = 1
+        super().__init__(settings)
         self.title = "Copyright Header Update"
 
     def _updatable_copyright_line(self, file_lines):
@@ -469,10 +469,10 @@ class InsertCmd(CopyrightHeaderCmd):
     """
     'insert' subcommand class.
     """
-    def __init__(self, options):
-        options.json = False
-        options.jobs = 1
-        super().__init__(options)
+    def __init__(self, settings):
+        settings.json = False
+        settings.jobs = 1
+        super().__init__(settings)
         self.title = "Copyright Header Insert"
 
     def _year_range_string(self, start_year, end_year):
@@ -543,8 +543,8 @@ if __name__ == "__main__":
     add_check_cmd(subparsers)
     add_update_cmd(subparsers)
     add_insert_cmd(subparsers)
-    options = parser.parse_args()
-    if not hasattr(options, "cmd"):
+    settings = parser.parse_args()
+    if not hasattr(settings, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    options.cmd(options).run()
+    settings.cmd(settings).run()

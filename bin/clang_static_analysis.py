@@ -25,11 +25,11 @@ class ClangStaticAnalysisCmd(RepositoryCmd):
     """
     Superclass for a command that runs clang static analysis.
     """
-    def __init__(self, options):
-        assert hasattr(options, 'scan_build')
-        super().__init__(options)
-        self.json = options.json
-        self.scan_build = options.scan_build
+    def __init__(self, settings):
+        assert hasattr(settings, 'scan_build')
+        super().__init__(settings)
+        self.json = settings.json
+        self.scan_build = settings.scan_build
 
     def _exec(self):
         start_time = time.time()
@@ -79,8 +79,8 @@ class ReportCmd(ClangStaticAnalysisCmd):
     """
     'report' subcommand class.
     """
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Clang Static Analysis Report"
 
     def _output(self, results):
@@ -120,8 +120,8 @@ class CheckCmd(ClangStaticAnalysisCmd):
     """
     'check' subcommand class.
     """
-    def __init__(self, options):
-        super().__init__(options)
+    def __init__(self, settings):
+        super().__init__(settings)
         self.title = "Clang Static Analysis Check"
 
     def _output(self, results):
@@ -179,9 +179,9 @@ if __name__ == "__main__":
     subparsers = parser.add_subparsers()
     add_report_cmd(subparsers)
     add_check_cmd(subparsers)
-    options = parser.parse_args()
-    if not hasattr(options, "cmd"):
+    settings = parser.parse_args()
+    if not hasattr(settings, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    finish_clang_settings(options)
-    options.cmd(options).run()
+    finish_clang_settings(settings)
+    settings.cmd(settings).run()

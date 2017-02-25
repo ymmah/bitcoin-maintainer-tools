@@ -112,41 +112,41 @@ def add_clang_options(parser, report_path=False, style_file=False,
 # finish settings
 ###############################################################################
 
-def finish_clang_settings(options):
+def finish_clang_settings(settings):
     """
     Makes the settings namepsce uniform by instantiating classes filled in with
-    default behavior if options have not been specified by the user.
+    default behavior if settings have not been specified by the user.
     """
-    assert hasattr(options, 'repository')
-    assert hasattr(options, 'jobs')
+    assert hasattr(settings, 'repository')
+    assert hasattr(settings, 'jobs')
     # locate clang executables:
-    if hasattr(options, 'clang_executables'):
-        clang_format = options.clang_executables['clang-format']
-        scan_build = options.clang_executables['scan-build']
-        scan_view = options.clang_executables['scan-view']
+    if hasattr(settings, 'clang_executables'):
+        clang_format = settings.clang_executables['clang-format']
+        scan_build = settings.clang_executables['scan-build']
+        scan_view = settings.clang_executables['scan-view']
     else:
         finder = ClangFind()
         clang_format = finder.best('clang-format')
         scan_build = finder.best('scan-build')
         scan_view = finder.best('scan-view')
     # clang-format settings:
-    default_style = os.path.join(str(options.repository),
-        options.repository.repo_info['clang_format_style']['value'])
-    clang_format_style_path = (options.style_file if
-                               (hasattr(options, 'style_file') and
-                                options.style_file) else default_style)
-    options.clang_format = ClangFormat(clang_format,
-                                       clang_format_style_path)
+    default_style = os.path.join(str(settings.repository),
+        settings.repository.repo_info['clang_format_style']['value'])
+    clang_format_style_path = (settings.style_file if
+                               (hasattr(settings, 'style_file') and
+                                settings.style_file) else default_style)
+    settings.clang_format = ClangFormat(clang_format,
+                                        clang_format_style_path)
     # scan-build settings:
     viewer = ScanView(scan_view)
-    scan_build_report_dir = (options.report_path if
-                             hasattr(options, "report_path") else
+    scan_build_report_dir = (settings.report_path if
+                             hasattr(settings, "report_path") else
                              DEFAULT_REPORT_DIR)
     make_clean_output_file = os.path.join(scan_build_report_dir,
                                           MAKE_CLEAN_OUTPUT)
-    cleaner = MakeClean(str(options.repository), make_clean_output_file)
+    cleaner = MakeClean(str(settings.repository), make_clean_output_file)
     scan_build_output_file = os.path.join(scan_build_report_dir,
                                           SCAN_BUILD_OUTPUT)
-    options.scan_build = ScanBuild(scan_build, scan_build_report_dir,
-                                   cleaner, viewer, str(options.repository),
-                                   scan_build_output_file, options.jobs)
+    settings.scan_build = ScanBuild(scan_build, scan_build_report_dir,
+                                    cleaner, viewer, str(settings.repository),
+                                    scan_build_output_file, settings.jobs)
