@@ -3,8 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import re
+import sys
 import os
+import re
 import subprocess
 
 from framework.path.path import Path
@@ -69,6 +70,8 @@ class ClangFind(object):
             # in the PATH environment variable.
             search_directories = list(set(self._installed_directories()))
         self.binaries = self._find_binaries(search_directories)
+        if len(self.binaries) == 0:
+            sys.exit("*** could not locate clang binaries")
 
     def _parameter_directory(self, path_arg_str):
         p = Path(path_arg_str)
