@@ -15,8 +15,8 @@ from framework.file.info import FileInfo
 from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
 from framework.git.parameter import add_git_tracked_targets_parameter
-from framework.clang.args import add_clang_options
-from framework.clang.args import finish_clang_settings
+from framework.clang.option import add_clang_options
+from framework.clang.option import finish_clang_settings
 
 
 APPLIES_TO = ['*.cpp', '*.h']

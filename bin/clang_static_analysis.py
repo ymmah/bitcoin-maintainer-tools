@@ -14,8 +14,8 @@ from framework.argparse.option import add_jobs_option
 from framework.argparse.option import add_json_option
 from framework.git.parameter import add_git_repository_parameter
 from framework.cmd.repository import RepositoryCmd
-from framework.clang.args import add_clang_options
-from framework.clang.args import finish_clang_settings
+from framework.clang.option import add_clang_options
+from framework.clang.option import finish_clang_settings
 
 ###############################################################################
 # cmd base class

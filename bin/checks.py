@@ -12,8 +12,8 @@ from copyright_header import CheckCmd as CopyrightHeaderCheck
 from clang_format import CheckCmd as ClangFormatCheck
 from framework.argparse.option import add_jobs_option
 from framework.argparse.option import add_json_option
-from framework.clang.args import add_clang_options
-from framework.clang.args import finish_clang_settings
+from framework.clang.option import add_clang_options
+from framework.clang.option import finish_clang_settings
 from framework.git.parameter import add_git_tracked_targets_parameter
 
 
