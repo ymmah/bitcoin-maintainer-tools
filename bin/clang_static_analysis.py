@@ -12,7 +12,7 @@ import json
 from framework.print.buffer import PrintBuffer
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
-from framework.git.args import add_git_repository_arg
+from framework.git.parameter import add_git_repository_parameter
 from framework.cmd.repository import RepositoryCmd
 from framework.clang.args import add_clang_options
 from framework.clang.args import finish_clang_settings
@@ -109,7 +109,7 @@ def add_report_cmd(subparsers):
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_options(parser, report_path=True)
-    add_git_repository_arg(parser)
+    add_git_repository_parameter(parser)
 
 
 ###############################################################################
@@ -165,7 +165,7 @@ def add_check_cmd(subparsers):
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_options(parser, report_path=True)
-    add_git_repository_arg(parser)
+    add_git_repository_parameter(parser)
 
 
 ###############################################################################

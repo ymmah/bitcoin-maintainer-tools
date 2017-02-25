@@ -12,7 +12,7 @@ import time
 
 from framework.print.buffer import PrintBuffer
 from framework.cmd.repository import RepositoryCmd
-from framework.git.args import add_git_repository_arg
+from framework.git.parameter import add_git_repository_parameter
 
 ###############################################################################
 # test single commands with a single repo as a target
@@ -228,6 +228,6 @@ normal ./configure already performed.
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
-    add_git_repository_arg(parser)
+    add_git_repository_parameter(parser)
     options = parser.parse_args()
     RegressionCmd(options).run()

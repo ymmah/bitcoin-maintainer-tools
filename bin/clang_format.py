@@ -14,7 +14,7 @@ from framework.argparse.args import add_json_arg
 from framework.file.info import FileInfo
 from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
-from framework.git.args import add_git_tracked_targets_arg
+from framework.git.parameter import add_git_tracked_targets_parameter
 from framework.clang.args import add_clang_options
 from framework.clang.args import finish_clang_settings
 
@@ -200,7 +200,7 @@ def add_report_cmd(subparsers):
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_options(parser, style_file=True)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
@@ -264,7 +264,7 @@ def add_check_cmd(subparsers):
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_options(parser, style_file=True, force=True)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
@@ -294,7 +294,7 @@ def add_format_cmd(subparsers):
     parser = subparsers.add_parser('format', help=format_help)
     parser.set_defaults(cmd=lambda o: FormatCmd(o))
     add_clang_options(parser, style_file=True, force=True)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################

@@ -48,7 +48,7 @@ class ReportPathAction(argparse.Action):
             sys.exit("*** %s is not a single string" % values)
         p = Path(values)
         p.assert_exists()
-        p.assert_is_file()
+        p.assert_is_directory()
         p.assert_mode(os.R_OK | os.W_OK)
 
 

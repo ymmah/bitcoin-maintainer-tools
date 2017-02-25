@@ -14,7 +14,7 @@ from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
 from framework.clang.args import add_clang_options
 from framework.clang.args import finish_clang_settings
-from framework.git.args import add_git_tracked_targets_arg
+from framework.git.parameter import add_git_tracked_targets_parameter
 
 
 class Checks(RepositoryCmds):
@@ -48,7 +48,7 @@ if __name__ == "__main__":
     add_jobs_arg(parser)
     add_json_arg(parser)
     add_clang_options(parser, report_path=True, style_file=True, force=True)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
     options = parser.parse_args()
     finish_clang_settings(options)
     checks = Checks(options)

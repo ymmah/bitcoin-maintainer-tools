@@ -14,7 +14,7 @@ from framework.file.info import FileInfo
 from framework.cmd.file_content import FileContentCmd
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
-from framework.git.args import add_git_tracked_targets_arg
+from framework.git.parameter import add_git_tracked_targets_parameter
 from framework.git.path import GitFilePath
 
 
@@ -84,9 +84,9 @@ ISSUE_2 = {
     'description': "A valid header was found in the file, but it wasn't "
                    "expected.",
     'resolution': """
-The header was not expected due to a setting in copyright_header.py. If a valid
-copyright header has been added to the file, the filename can be removed from
-the 'no_copyright_header_expected' settings.
+The header was not expected due to a setting. If a valid copyright header has
+been added to the file, the filename can be removed from the
+'no_copyright_header_expected' settings.
 """
 }
 
@@ -96,8 +96,7 @@ ISSUE_3 = {
     'resolution': """
 This file's body has a regular expression match for the (case-sensitive) words
 "Copyright", "COPYRIGHT" or 'copyright". If this was an appropriate addition,
-copyright_header.py can be edited to add the file to the
-'other_copyright_occurrences_expected' settings.
+the file can be added to the 'other_copyright_occurrences_expected' settings.
 """
 }
 
@@ -106,10 +105,9 @@ ISSUE_4 = {
                    "found.",
     'resolution': """
 A use of the (case-sensitive) words "Copyright", "COPYRIGHT", or 'copyright'
-outside of the regular copyright header was expected due to a setting in
-copyright_header.py but it was not found. If this text was appropriately
-removed from the file, copyright_header.py can be edited to remove the file
-from the 'other_copyright_occurrences_expected' settings.
+outside of the regular copyright header was expected due to a setting but it
+was not found. If this was an appropriate removal, it can be removed from the
+'other_copyright_occurrences_expected' settings.
 """
 }
 
@@ -291,7 +289,7 @@ def add_report_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
@@ -343,7 +341,7 @@ def add_check_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
@@ -434,7 +432,7 @@ def add_update_cmd(subparsers):
                    'than the year that is listed.')
     parser = subparsers.add_parser('update', help=update_help)
     parser.set_defaults(cmd=lambda o: UpdateCmd(o))
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
@@ -529,7 +527,7 @@ def add_insert_cmd(subparsers):
                    'currently found.')
     parser = subparsers.add_parser('insert', help=insert_help)
     parser.set_defaults(cmd=lambda o: InsertCmd(o))
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################

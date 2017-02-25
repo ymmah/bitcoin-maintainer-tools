@@ -11,7 +11,6 @@ import argparse
 from framework.git.repository import GitPath
 from framework.git.repository import GitRepository
 
-
 ###############################################################################
 # actions
 ###############################################################################
@@ -78,14 +77,14 @@ class GitTrackedTargetsAction(argparse.Action):
 ###############################################################################
 
 
-def add_git_repository_arg(parser):
+def add_git_repository_parameter(parser):
     repo_help = ("A source code repository for which the static analysis is "
                  "to be performed upon.")
     parser.add_argument("repository", type=str, action=GitRepositoryAction,
                         help=repo_help)
 
 
-def add_git_tracked_targets_arg(parser):
+def add_git_tracked_targets_parameter(parser):
     t_help = ("A list of files and/or directories that select the subset of "
               "files for this action. If a directory is given as a target, "
               "all files contained in it and its subdirectories are "

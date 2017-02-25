@@ -16,7 +16,7 @@ from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args  import add_json_arg
-from framework.git.args import add_git_tracked_targets_arg
+from framework.git.parameter import add_git_tracked_targets_parameter
 
 ###############################################################################
 # style rules
@@ -241,7 +241,7 @@ def add_report_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
@@ -300,7 +300,7 @@ def add_check_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
@@ -329,7 +329,7 @@ def add_fix_cmd(subparsers):
     parser = subparsers.add_parser('fix', help=fix_help)
     parser.set_defaults(cmd=lambda o: FixCmd(o))
     add_jobs_arg(parser)
-    add_git_tracked_targets_arg(parser)
+    add_git_tracked_targets_parameter(parser)
 
 
 ###############################################################################
