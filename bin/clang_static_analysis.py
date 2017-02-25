@@ -10,8 +10,8 @@ import argparse
 import json
 
 from framework.print.buffer import PrintBuffer
-from framework.argparse.args import add_jobs_arg
-from framework.argparse.args import add_json_arg
+from framework.argparse.option import add_jobs_option
+from framework.argparse.option import add_json_option
 from framework.git.parameter import add_git_repository_parameter
 from framework.cmd.repository import RepositoryCmd
 from framework.clang.args import add_clang_options
@@ -106,8 +106,8 @@ def add_report_cmd(subparsers):
                    "of the findings.")
     parser = subparsers.add_parser('report', help=report_help)
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_clang_options(parser, report_path=True)
     add_git_repository_parameter(parser)
 
@@ -162,8 +162,8 @@ def add_check_cmd(subparsers):
                   "issues are found.")
     parser = subparsers.add_parser('check', help=check_help)
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_clang_options(parser, report_path=True)
     add_git_repository_parameter(parser)
 

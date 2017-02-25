@@ -9,8 +9,8 @@ import hashlib
 import json
 
 from framework.print.buffer import PrintBuffer
-from framework.argparse.args import add_jobs_arg
-from framework.argparse.args import add_json_arg
+from framework.argparse.option import add_jobs_option
+from framework.argparse.option import add_json_option
 from framework.file.info import FileInfo
 from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
@@ -197,8 +197,8 @@ def add_report_cmd(subparsers):
                    "adherence of the selected targets taken as a group.")
     parser = subparsers.add_parser('report', help=report_help)
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_clang_options(parser, style_file=True)
     add_git_tracked_targets_parameter(parser)
 
@@ -261,8 +261,8 @@ def add_check_cmd(subparsers):
                   "there are any format issues discovered.")
     parser = subparsers.add_parser('check', help=check_help)
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_clang_options(parser, style_file=True, force=True)
     add_git_tracked_targets_parameter(parser)
 

@@ -12,8 +12,8 @@ from framework.print.buffer import PrintBuffer
 from framework.file.filter import FileFilter
 from framework.file.info import FileInfo
 from framework.cmd.file_content import FileContentCmd
-from framework.argparse.args import add_jobs_arg
-from framework.argparse.args import add_json_arg
+from framework.argparse.option import add_jobs_option
+from framework.argparse.option import add_json_option
 from framework.git.parameter import add_git_tracked_targets_parameter
 from framework.git.path import GitFilePath
 
@@ -287,8 +287,8 @@ def add_report_cmd(subparsers):
                    "expectations.")
     parser = subparsers.add_parser('report', help=report_help)
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_git_tracked_targets_parameter(parser)
 
 
@@ -339,8 +339,8 @@ def add_check_cmd(subparsers):
                   "non-zero shell status if there are any issues discovered.")
     parser = subparsers.add_parser('check', help=check_help)
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_git_tracked_targets_parameter(parser)
 
 

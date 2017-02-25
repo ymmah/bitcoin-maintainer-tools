@@ -10,8 +10,8 @@ from clang_static_analysis import CheckCmd as ClangStaticAnalysisCheck
 from basic_style import CheckCmd as BasicStyleCheck
 from copyright_header import CheckCmd as CopyrightHeaderCheck
 from clang_format import CheckCmd as ClangFormatCheck
-from framework.argparse.args import add_jobs_arg
-from framework.argparse.args import add_json_arg
+from framework.argparse.option import add_jobs_option
+from framework.argparse.option import add_json_option
 from framework.clang.args import add_clang_options
 from framework.clang.args import finish_clang_settings
 from framework.git.parameter import add_git_tracked_targets_parameter
@@ -45,8 +45,8 @@ if __name__ == "__main__":
     description = ("Wrapper to invoke a collection of scripts that check on "
                    "the state of the repository.")
     parser = argparse.ArgumentParser(description=description)
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_clang_options(parser, report_path=True, style_file=True, force=True)
     add_git_tracked_targets_parameter(parser)
     settings = parser.parse_args()

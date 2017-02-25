@@ -14,8 +14,8 @@ from framework.file.filter import FileFilter
 from framework.file.info import FileInfo
 from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
-from framework.argparse.args import add_jobs_arg
-from framework.argparse.args  import add_json_arg
+from framework.argparse.option import add_jobs_option
+from framework.argparse.option  import add_json_option
 from framework.git.parameter import add_git_tracked_targets_parameter
 
 ###############################################################################
@@ -239,8 +239,8 @@ def add_report_cmd(subparsers):
                    "discovered.")
     parser = subparsers.add_parser('report', help=report_help)
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_git_tracked_targets_parameter(parser)
 
 
@@ -298,8 +298,8 @@ def add_check_cmd(subparsers):
                   "discovered.")
     parser = subparsers.add_parser('check', help=check_help)
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
-    add_jobs_arg(parser)
-    add_json_arg(parser)
+    add_jobs_option(parser)
+    add_json_option(parser)
     add_git_tracked_targets_parameter(parser)
 
 
@@ -328,7 +328,7 @@ def add_fix_cmd(subparsers):
     fix_help = ("Applies basic style fixes to the target files.")
     parser = subparsers.add_parser('fix', help=fix_help)
     parser.set_defaults(cmd=lambda o: FixCmd(o))
-    add_jobs_arg(parser)
+    add_jobs_option(parser)
     add_git_tracked_targets_parameter(parser)
 
 
