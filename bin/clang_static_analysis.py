@@ -12,13 +12,10 @@ import json
 from framework.print.buffer import PrintBuffer
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
-from framework.clang.args import add_clang_static_analysis_args
-from framework.clang.args import scan_build_binaries_from_options
 from framework.git.args import add_git_repository_arg
-from framework.make.make import MakeClean
-from framework.clang.scan_build import ScanBuildResultDirectory
-from framework.clang.scan_build import ScanBuild
 from framework.cmd.repository import RepositoryCmd
+from framework.clang.args import add_clang_options
+from framework.clang.args import finish_clang_settings
 
 ###############################################################################
 # cmd base class
@@ -30,45 +27,30 @@ class ClangStaticAnalysisCmd(RepositoryCmd):
     """
     def __init__(self, options):
         assert hasattr(options, 'scan_build')
-        assert hasattr(options, 'report_path')
-        assert hasattr(options, 'scan_view')
         super().__init__(options)
-        self.jobs = options.jobs
         self.json = options.json
-        self.scan_build = options.scan_build['path']
-        self.scan_build_report_path = options.report_path
-        self.scan_build_result = ScanBuildResultDirectory(
-            self.scan_build_report_path)
-        self.scan_view = options.scan_view['path']
-        self.make_clean_output_file = (
-            os.path.join(self.scan_build_report_path, 'make_clean.log'))
-        self.make_clean_step = MakeClean(str(self.repository),
-                                         self.make_clean_output_file)
-        self.scan_build_output_file = (
-            os.path.join(self.scan_build_report_path, 'scan_build.log'))
-        self.scan_build_step = ScanBuild(
-            self.scan_build, self.scan_build_report_path,
-            str(self.repository), self.scan_build_output_file, self.jobs)
+        self.scan_build = options.scan_build
 
     def _exec(self):
         start_time = time.time()
         b = PrintBuffer()
-        b.add("Running command:     %s\n" % str(self.make_clean_step))
-        b.add("stderr/stdout to:    %s\n" % self.make_clean_output_file)
+        b.add("Running command:     %s\n" % str(self.scan_build.cleaner))
+        b.add("stderr/stdout to:    %s\n" %
+              self.scan_build.cleaner.output_file)
         if not self.json:
             b.flush()
-        self.make_clean_step.run()
-        b.add("Running command:     %s\n" % str(self.scan_build_step))
-        b.add("stderr/stdout to:    %s\n" % self.scan_build_output_file)
+        self.scan_build.cleaner.run()
+        b.add("Running command:     %s\n" % str(self.scan_build))
+        b.add("stderr/stdout to:    %s\n" % self.scan_build.output_file)
         b.add("This might take a few minutes...")
         if not self.json:
             b.flush()
-        self.scan_build_step.run()
+        self.scan_build.run()
         b.add("Done.\n")
         if not self.json:
             b.flush()
         elapsed_time = time.time() - start_time
-        directory, issues = self.scan_build_result.most_recent_results()
+        directory, issues = self.scan_build.get_results()
         return {'elapsed_time':      time.time() - start_time,
                 'results_directory': directory,
                 'issues':            issues}
@@ -114,10 +96,8 @@ class ReportCmd(ClangStaticAnalysisCmd):
                                            issue['description']))
             issue_no = issue_no + 1
         if len(r['issues']) > 0:
-            b.separator()
-            b.add("Full details can be seen in a browser by running:\n")
-            b.add("    $ %s %s\n" % (self.scan_view, r['results_directory']))
-            b.separator()
+            viewer = self.scan_build.viewer
+            b.add(viewer.launch_instructions(r['results_directory']))
         return str(b)
 
 
@@ -128,7 +108,7 @@ def add_report_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_clang_static_analysis_args(parser)
+    add_clang_options(parser, report_path=True)
     add_git_repository_arg(parser)
 
 
@@ -168,9 +148,8 @@ class CheckCmd(ClangStaticAnalysisCmd):
             b.add_green("No static analysis issues found!\n")
             b.separator()
         else:
-            b.add_red("Full details can be seen in a browser by running:\n")
-            b.add("    $ %s %s\n" % (self.scan_view, r['results_directory']))
-            b.separator()
+            viewer = self.scan_build.viewer
+            b.add(viewer.launch_instructions(r['results_directory']))
         return str(b)
 
     def _shell_exit(self, results):
@@ -185,7 +164,7 @@ def add_check_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_clang_static_analysis_args(parser)
+    add_clang_options(parser, report_path=True)
     add_git_repository_arg(parser)
 
 
@@ -204,6 +183,5 @@ if __name__ == "__main__":
     if not hasattr(options, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    options.scan_build, options.scan_view = (
-        scan_build_binaries_from_options(options))
+    finish_clang_settings(options)
     options.cmd(options).run()

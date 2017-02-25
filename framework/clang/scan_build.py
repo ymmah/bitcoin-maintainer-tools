@@ -12,23 +12,6 @@ from framework.path.path import Path
 from framework.make.make import Make
 
 
-class ScanBuild(Make):
-    """
-    Executes 'make' wrapped in scan-build to get static analysis results.
-    """
-    def __init__(self, scan_build_path, report_dir, repository, output_file,
-                 jobs, make_options=None):
-        super().__init__(repository, output_file, jobs, options=make_options)
-        self.scan_build_path = scan_build_path
-        self.scan_build_options = ('-k -plist-html --keep-empty -o %s' %
-                                   report_dir)
-
-    def _cmd(self):
-        make_cmd = super()._cmd()
-        return "%s %s %s" % (self.scan_build_path, self.scan_build_options,
-                             super()._cmd())
-
-
 class ScanBuildPlistDirectory(Path):
     """
     Represents the directory created by scan-build to hold the output
@@ -70,7 +53,7 @@ class ScanBuildPlistDirectory(Path):
                                      relevant_plists]))
 
 
-class ScanBuildResultDirectory(Path):
+class ScanBuildReportDirectory(Path):
     """
     Represents the directory that is given to scan-build for it to create
     a directory containing the results from the run.
@@ -82,6 +65,9 @@ class ScanBuildResultDirectory(Path):
         path.assert_is_directory()
         path.assert_mode(os.R_OK | os.W_OK)
         self.directory = directory
+
+    def __str__(self):
+        return str(self.directory)
 
     def _create_if_missing(self, directory):
         if not os.path.exists(directory):
@@ -97,3 +83,27 @@ class ScanBuildResultDirectory(Path):
         directory = ScanBuildPlistDirectory(os.path.join(self.directory,
                                                          subdirs[-1]))
         return directory.directory, directory.issues()
+
+
+class ScanBuild(Make):
+    """
+    Executes 'make' wrapped in scan-build to get static analysis results.
+    """
+    def __init__(self, binary, report_dir, cleaner, viewer, repository,
+                 output_file, jobs):
+        super().__init__(repository, output_file, jobs)
+        self.binary_path = binary['path']
+        self.binary_version = binary['version']
+        self.report_dir = ScanBuildReportDirectory(report_dir)
+        self.options_str = ('-k -plist-html --keep-empty -o %s' %
+                            str(self.report_dir))
+        self.cleaner = cleaner
+        self.viewer = viewer
+
+    def _cmd(self):
+        return "%s %s %s" % (self.binary_path, self.options_str,
+                             super()._cmd())
+
+    def get_results(self):
+        return self.report_dir.most_recent_results()
+

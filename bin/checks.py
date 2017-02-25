@@ -12,10 +12,8 @@ from copyright_header import CheckCmd as CopyrightHeaderCheck
 from clang_format import CheckCmd as ClangFormatCheck
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
-from framework.clang.args import add_force_arg
-from framework.clang.args import scan_build_binaries_from_options
-from framework.clang.args import clang_format_from_options
-from framework.clang.args import add_clang_args
+from framework.clang.args import add_clang_options
+from framework.clang.args import finish_clang_settings
 from framework.git.args import add_git_tracked_targets_arg
 
 
@@ -49,12 +47,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_force_arg(parser)
-    add_clang_args(parser)
+    add_clang_options(parser, report_path=True, style_file=True, force=True)
     add_git_tracked_targets_arg(parser)
     options = parser.parse_args()
-    options.clang_format = clang_format_from_options(options)
-    options.scan_build, options.scan_view = (
-        scan_build_binaries_from_options(options))
+    finish_clang_settings(options)
     checks = Checks(options)
     output = checks.run()

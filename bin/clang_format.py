@@ -11,13 +11,12 @@ import json
 from framework.print.buffer import PrintBuffer
 from framework.argparse.args import add_jobs_arg
 from framework.argparse.args import add_json_arg
-from framework.clang.args import add_clang_format_args
-from framework.clang.args import clang_format_from_options
-from framework.clang.args import add_force_arg
 from framework.file.info import FileInfo
 from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
 from framework.git.args import add_git_tracked_targets_arg
+from framework.clang.args import add_clang_options
+from framework.clang.args import finish_clang_settings
 
 
 APPLIES_TO = ['*.cpp', '*.h']
@@ -200,7 +199,7 @@ def add_report_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: ReportCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_clang_format_args(parser)
+    add_clang_options(parser, style_file=True)
     add_git_tracked_targets_arg(parser)
 
 
@@ -264,8 +263,7 @@ def add_check_cmd(subparsers):
     parser.set_defaults(cmd=lambda o: CheckCmd(o))
     add_jobs_arg(parser)
     add_json_arg(parser)
-    add_force_arg(parser)
-    add_clang_format_args(parser)
+    add_clang_options(parser, style_file=True, force=True)
     add_git_tracked_targets_arg(parser)
 
 
@@ -295,8 +293,7 @@ def add_format_cmd(subparsers):
     format_help = ("Applies the style formatting to the target files.")
     parser = subparsers.add_parser('format', help=format_help)
     parser.set_defaults(cmd=lambda o: FormatCmd(o))
-    add_force_arg(parser)
-    add_clang_format_args(parser)
+    add_clang_options(parser, style_file=True, force=True)
     add_git_tracked_targets_arg(parser)
 
 
@@ -318,5 +315,5 @@ if __name__ == "__main__":
     if not hasattr(options, "cmd"):
         parser.print_help()
         sys.exit("*** missing argument")
-    options.clang_format = clang_format_from_options(options)
+    finish_clang_settings(options)
     options.cmd(options).run()

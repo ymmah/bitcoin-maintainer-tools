@@ -9,7 +9,6 @@ import subprocess
 
 from framework.path.path import Path
 
-
 class BuildStep(object):
     """
     Superclass for running build operations on a git repository. The output

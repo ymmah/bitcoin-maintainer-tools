@@ -11,6 +11,9 @@ import argparse
 
 from framework.clang.find import ClangFind, CLANG_BINARIES
 from framework.clang.format import ClangFormat
+from framework.clang.scan_build import ScanBuild
+from framework.clang.scan_view import ScanView
+from framework.make.make import MakeClean
 from framework.path.path import Path
 from framework.argparse.action import ReadableFileAction
 from framework.file.io import read_file, write_file
@@ -50,85 +53,73 @@ class ReportPathAction(argparse.Action):
 
 
 ###############################################################################
-# arg management
+# defaults
 ###############################################################################
 
-def add_bin_path_arg(parser):
+DEFAULT_REPORT_DIR = "/tmp/bitcoin-scan-build/"
+
+SCAN_BUILD_OUTPUT = "scan_build.log"
+MAKE_CLEAN_OUTPUT = "make_clean.log"
+
+###############################################################################
+# add options
+###############################################################################
+
+def add_clang_bin_path_option(parser):
     b_help = ("path to the clang directory or binary to be used "
               "(default=The required clang binary installed in PATH with the "
               "highest version number)")
     parser.add_argument("-b", "--bin-path", type=str,
                         action=ClangDirectoryAction, help=b_help)
 
-def add_style_file_arg(parser):
+
+def add_scan_build_report_path_option(parser):
+    r_help = ("path for scan-build to write its report files. "
+              "(default=%s)" % DEFAULT_REPORT_DIR)
+    parser.add_argument("-r", "--report-path", default=DEFAULT_REPORT_DIR,
+                        type=str, action=ReportPathAction, help=r_help)
+
+
+def add_clang_format_style_file_option(parser):
     sf_help = ("path to the clang style file to be used (default=The "
-               "src/.clang_format file of the repository which holds the "
-               "targets)")
+               "src/.clang_format file specified in the repo info)")
     parser.add_argument("-s", "--style-file", type=str,
                         action=ReadableFileAction, help=sf_help)
 
 
-def add_clang_format_args(parser):
-    add_bin_path_arg(parser)
-    add_style_file_arg(parser)
-
-
-def clang_format_from_options(options):
-    binary = (options.clang_executables['clang-format'] if
-              hasattr(options, 'clang_executables') else
-              ClangFind().best('clang-format'))
-    style_path = (options.style_file if options.style_file else
-                  os.path.join(str(options.repository),
-                  options.repository.repo_info['clang_format_style']['value']))
-    return ClangFormat(binary, style_path)
-
-
-DEFAULT_REPORT_PATH = "/tmp/bitcoin-scan-build/"
-
-def add_report_path_arg(parser):
-    r_help = ("The path for scan-build to write its report files. "
-              "(default=%s)" % DEFAULT_REPORT_PATH)
-    parser.add_argument("-r", "--report-path", default=DEFAULT_REPORT_PATH,
-                        type=str, action=ReportPathAction, help=r_help)
-
-
-def add_clang_static_analysis_args(parser):
-    add_bin_path_arg(parser)
-    add_report_path_arg(parser)
-
-
-def scan_build_binaries_from_options(options):
-    if hasattr(options, 'clang_executables'):
-        scan_build = options.clang_executables['scan-build']
-        scan_view = options.clang_executables['scan-view']
-    else:
-        finder = ClangFind()
-        clang_format = finder.best('clang-format')
-        scan_build = finder.best('scan-build')
-        scan_view = finder.best('scan-view')
-    return clang_format, scan_build, scan_view
-
-
-def add_clang_args(parser):
-    add_bin_path_arg(parser)
-    add_report_path_arg(parser)
-    add_style_file_arg(parser)
-
-
-def add_force_arg(parser):
+def add_clang_format_force_option(parser):
     f_help = ("force proceeding with if clang-format doesn't support all "
               "parameters in the style file (default=False)")
     parser.add_argument("-f", "--force", action='store_true', help=f_help)
 
 
+def add_clang_options(parser, report_path=False, style_file=False,
+                      force=False):
+    """
+    Adds optional arguments to the parser for specifying options for
+    clang binaries and their execution settings.
+    """
+    add_clang_bin_path_option(parser)
+    if report_path:
+        add_scan_build_report_path_option(parser)
+    if style_file:
+        add_clang_format_style_file_option(parser)
+    if force:
+        add_clang_format_force_option(parser)
+
 
 ###############################################################################
-# finish options
+# finish settings
 ###############################################################################
 
-def clang_finish_options(options):
+def finish_clang_settings(options):
     """
+    Makes the settings namepsce uniform by instantiating classes filled in with
+    default behavior if options have not been specified by the user.
     """
+    assert hasattr(options, 'repository')
+    assert hasattr(options, 'jobs')
+    # locate clang executables:
     if hasattr(options, 'clang_executables'):
         clang_format = options.clang_executables['clang-format']
         scan_build = options.clang_executables['scan-build']
@@ -138,7 +129,24 @@ def clang_finish_options(options):
         clang_format = finder.best('clang-format')
         scan_build = finder.best('scan-build')
         scan_view = finder.best('scan-view')
-
-    options.clang_format = clang_format
-    options.scan_build = scan_build
-    options.scan_view = scan_view
+    # clang-format settings:
+    default_style = os.path.join(str(options.repository),
+        options.repository.repo_info['clang_format_style']['value'])
+    clang_format_style_path = (options.style_file if
+                               (hasattr(options, 'style_file') and
+                                options.style_file) else default_style)
+    options.clang_format = ClangFormat(clang_format,
+                                       clang_format_style_path)
+    # scan-build settings:
+    viewer = ScanView(scan_view)
+    scan_build_report_dir = (options.report_path if
+                             hasattr(options, "report_path") else
+                             DEFAULT_REPORT_DIR)
+    make_clean_output_file = os.path.join(scan_build_report_dir,
+                                          MAKE_CLEAN_OUTPUT)
+    cleaner = MakeClean(str(options.repository), make_clean_output_file)
+    scan_build_output_file = os.path.join(scan_build_report_dir,
+                                          SCAN_BUILD_OUTPUT)
+    options.scan_build = ScanBuild(scan_build, scan_build_report_dir,
+                                   cleaner, viewer, str(options.repository),
+                                   scan_build_output_file, options.jobs)
