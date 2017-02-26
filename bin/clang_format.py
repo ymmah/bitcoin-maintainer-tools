@@ -277,7 +277,6 @@ class FormatCmd(ClangFormatCmd):
     """
     def __init__(self, settings):
         settings.json = False
-        settings.jobs = 1
         super().__init__(settings)
         self.title = "Clang Format"
 

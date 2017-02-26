@@ -118,7 +118,8 @@ def finish_clang_settings(settings):
     default behavior if settings have not been specified by the user.
     """
     assert hasattr(settings, 'repository')
-    assert hasattr(settings, 'jobs')
+    if not hasattr(settings, 'jobs'):
+        settings.jobs = 1
     # locate clang executables:
     if hasattr(settings, 'clang_executables'):
         clang_format = settings.clang_executables['clang-format']
