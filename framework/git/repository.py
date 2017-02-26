@@ -16,7 +16,8 @@ from framework.git.path import GitPath
 LS_TRACKED = "git ls-files"
 CHECK_UNTRACKED_UNIGNORED = "git ls-files --exclude-standard --others"
 CHECK_CHANGES = "git diff-index --quiet HEAD"
-RESET_HARD_HEAD = "git reset --hard HEAD"
+RESET_HARD = "git reset --hard %s"
+FETCH = "git fetch"
 
 
 class GitRepository(object):
@@ -77,8 +78,18 @@ class GitRepository(object):
         if not self._is_dirty():
             sys.exit("*** repository has no uncommitted changes.")
 
-    def reset_hard_head(self):
+    def reset_hard(self, branch):
         orig = os.getcwd()
         os.chdir(self.repository_base)
-        out = subprocess.check_output(RESET_HARD_HEAD.split(" "))
+        cmd = RESET_HARD % branch
+        out = subprocess.check_output(cmd.split(" "))
+        os.chdir(orig)
+
+    def reset_hard_head(self):
+        self.reset_hard('HEAD')
+
+    def fetch(self):
+        orig = os.getcwd()
+        os.chdir(self.repository_base)
+        rc = subprocess.call(FETCH.split(" "))
         os.chdir(orig)

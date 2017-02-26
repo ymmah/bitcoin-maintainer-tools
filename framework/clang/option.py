@@ -16,6 +16,8 @@ from framework.clang.scan_view import ScanView
 from framework.make.make import MakeClean
 from framework.path.path import Path
 from framework.argparse.action import ReadableFileAction
+from framework.argparse.option import add_tmp_directory_option
+from framework.argparse.option import DEFAULT_TMP_DIR
 from framework.file.io import read_file, write_file
 
 ###############################################################################
@@ -56,8 +58,6 @@ class ReportPathAction(argparse.Action):
 # defaults
 ###############################################################################
 
-DEFAULT_REPORT_DIR = "/tmp/bitcoin-scan-build/"
-
 SCAN_BUILD_OUTPUT = "scan_build.log"
 MAKE_CLEAN_OUTPUT = "make_clean.log"
 
@@ -71,14 +71,6 @@ def add_clang_bin_path_option(parser):
               "highest version number)")
     parser.add_argument("-b", "--bin-path", type=str,
                         action=ClangDirectoryAction, help=b_help)
-
-
-def add_scan_build_report_path_option(parser):
-    r_help = ("path for scan-build to write its report files. "
-              "(default=%s)" % DEFAULT_REPORT_DIR)
-    parser.add_argument("-r", "--report-path", default=DEFAULT_REPORT_DIR,
-                        type=str, action=ReportPathAction, help=r_help)
-
 
 def add_clang_format_style_file_option(parser):
     sf_help = ("path to the clang style file to be used (default=The "
@@ -101,7 +93,7 @@ def add_clang_options(parser, report_path=False, style_file=False,
     """
     add_clang_bin_path_option(parser)
     if report_path:
-        add_scan_build_report_path_option(parser)
+        add_tmp_directory_option(parser)
     if style_file:
         add_clang_format_style_file_option(parser)
     if force:
@@ -140,14 +132,14 @@ def finish_clang_settings(settings):
                                         clang_format_style_path)
     # scan-build settings:
     viewer = ScanView(scan_view)
-    scan_build_report_dir = (settings.report_path if
-                             hasattr(settings, "report_path") else
-                             DEFAULT_REPORT_DIR)
-    make_clean_output_file = os.path.join(scan_build_report_dir,
+    settings.tmp_directory = (settings.tmp_directory if
+                              hasattr(settings, "tmp_directory") else
+                              DEFAULT_TMP_DIR)
+    make_clean_output_file = os.path.join(settings.tmp_directory,
                                           MAKE_CLEAN_OUTPUT)
     cleaner = MakeClean(str(settings.repository), make_clean_output_file)
-    scan_build_output_file = os.path.join(scan_build_report_dir,
+    scan_build_output_file = os.path.join(settings.tmp_directory,
                                           SCAN_BUILD_OUTPUT)
-    settings.scan_build = ScanBuild(scan_build, scan_build_report_dir,
+    settings.scan_build = ScanBuild(scan_build, settings.tmp_directory,
                                     cleaner, viewer, str(settings.repository),
                                     scan_build_output_file, settings.jobs)

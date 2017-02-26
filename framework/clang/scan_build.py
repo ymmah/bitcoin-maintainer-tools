@@ -59,7 +59,6 @@ class ScanBuildReportDirectory(Path):
     a directory containing the results from the run.
     """
     def __init__(self, directory):
-        self._create_if_missing(directory)
         path = Path(directory)
         path.assert_exists()
         path.assert_is_directory()
@@ -68,10 +67,6 @@ class ScanBuildReportDirectory(Path):
 
     def __str__(self):
         return str(self.directory)
-
-    def _create_if_missing(self, directory):
-        if not os.path.exists(directory):
-            os.makedirs(directory)
 
     def most_recent_results(self):
         # scan-build puts results in a subdirectory where the directory name is

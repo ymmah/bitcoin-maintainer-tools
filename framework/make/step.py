@@ -17,6 +17,8 @@ class BuildStep(object):
     def __init__(self, repository, output_file):
         path = Path(output_file)
         containing_directory = Path(path.containing_directory())
+        if not os.path.exists(str(containing_directory)):
+            os.makedirs(str(containing_directory))
         containing_directory.assert_exists()
         containing_directory.assert_mode(os.R_OK | os.W_OK)
         self.repository = repository

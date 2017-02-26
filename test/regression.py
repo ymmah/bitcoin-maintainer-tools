@@ -12,7 +12,8 @@ import time
 
 from framework.print.buffer import PrintBuffer
 from framework.cmd.repository import RepositoryCmd
-from framework.git.parameter import add_git_repository_parameter
+from framework.argparse.option import add_tmp_directory_option
+from framework.git.clone import GitClone
 
 ###############################################################################
 # test single commands with a single repo as a target
@@ -188,16 +189,26 @@ def test_modify(repo, silent):
 # test
 ###############################################################################
 
+UPSTREAM_URL = "https://github.com/bitcoin/bitcoin/"
+CLONE_DIR = "bitcoin-test-repo"
+BDB_DIR = "berkeley-db"
+TEST_BRANCH = "v0.13.2"
+
 class RegressionCmd(RepositoryCmd):
     def __init__(self, settings):
+        self.start_time = time.time()
+        self.cloner = GitClone(UPSTREAM_URL)
+        self.clone_dir = os.path.join(settings.tmp_directory, CLONE_DIR)
+        self.bdb_dir = os.path.join(settings.tmp_directory, BDB_DIR)
+        settings.repository = self.cloner.clone_or_fetch(self.clone_dir)
+        settings.repository.reset_hard(TEST_BRANCH)
         super().__init__(settings)
         self.title = "Regression test command"
 
     def _exec(self):
-        start_time = time.time()
         test_single(self.repository, self.silent)
         test_modify(self.repository, self.silent)
-        return {'elapsed_time': time.time() - start_time}
+        return {'elapsed_time': time.time() - self.start_time}
 
     def _output(self, results):
         b = PrintBuffer()
@@ -228,6 +239,6 @@ normal ./configure already performed.
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
-    add_git_repository_parameter(parser)
+    add_tmp_directory_option(parser)
     settings = parser.parse_args()
     RegressionCmd(settings).run()
