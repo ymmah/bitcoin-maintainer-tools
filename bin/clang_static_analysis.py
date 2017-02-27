@@ -33,22 +33,8 @@ class ClangStaticAnalysisCmd(RepositoryCmd):
 
     def _exec(self):
         start_time = time.time()
-        b = PrintBuffer()
-        b.add("Running command:     %s\n" % str(self.scan_build.cleaner))
-        b.add("stderr/stdout to:    %s\n" %
-              self.scan_build.cleaner.output_file)
-        if not self.json:
-            b.flush()
-        self.scan_build.cleaner.run()
-        b.add("Running command:     %s\n" % str(self.scan_build))
-        b.add("stderr/stdout to:    %s\n" % self.scan_build.output_file)
-        b.add("This might take a few minutes...")
-        if not self.json:
-            b.flush()
-        self.scan_build.run()
-        b.add("Done.\n")
-        if not self.json:
-            b.flush()
+        self.scan_build.cleaner.run(silent=self.json)
+        self.scan_build.run(silent=self.json)
         elapsed_time = time.time() - start_time
         directory, issues = self.scan_build.get_results()
         return {'elapsed_time':      time.time() - start_time,

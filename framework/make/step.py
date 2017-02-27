@@ -14,14 +14,14 @@ class BuildStep(object):
     Superclass for running build operations on a git repository. The output
     is routed to a specified file.
     """
-    def __init__(self, repository, output_file):
+    def __init__(self, invocation_dir, output_file):
         path = Path(output_file)
         containing_directory = Path(path.containing_directory())
         if not os.path.exists(str(containing_directory)):
             os.makedirs(str(containing_directory))
         containing_directory.assert_exists()
         containing_directory.assert_mode(os.R_OK | os.W_OK)
-        self.repository = repository
+        self.invocation_dir = invocation_dir
         self.output_file = str(path)
 
     def __str__(self):
@@ -30,13 +30,19 @@ class BuildStep(object):
     def _cmd(self):
         sys.exit("*** subclass must override _cmd() method.")
 
-    def run(self):
+    def run(self, silent=False):
+        if not silent:
+            print("Running command:     %s" % str(self))
+            print("stderr/stdout to:    %s" % self.output_file)
+            print("This might take a few minutes...")
         cmd = self._cmd()
         original_dir = os.getcwd()
-        os.chdir(self.repository)
+        os.chdir(self.invocation_dir)
         f = open(os.path.abspath(self.output_file), 'w')
         if subprocess.call(cmd.split(' '), stdout=f, stderr=f) != 0:
             sys.exit("*** '%s' returned a non-zero status. log in %s" %
                      (cmd, self.output_file))
         f.close()
         os.chdir(original_dir)
+        if not silent:
+            print("Done.")
