@@ -3,8 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from framework.make.step import BuildStep
-
+from framework.build.step import BuildStep
 
 class Configure(BuildStep):
     """

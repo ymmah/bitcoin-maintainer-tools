@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from framework.make.bdb import BerkeleyDb
+from framework.build.bdb import BerkeleyDb
 
 
 bdb = BerkeleyDb("/tmp/bdb-test/")

@@ -10,8 +10,8 @@ import urllib.request as Download
 import hashlib
 import shutil
 
-from framework.make.make import Make
-from framework.make.configure import Configure
+from framework.build.make import Make
+from framework.build.configure import Configure
 from framework.file.hash import FileHash
 
 BDB_SRC_DIR = "db-4.8.30.NC"
@@ -20,9 +20,9 @@ BDB_URL = "http://download.oracle.com/berkeley-db/" + BDB_FILE
 BDB_SHA256 = "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef"
 BDB_BUILD = "berkeleydb-build"
 CONFIGURE_SCRIPT = "../dist/configure"
-CONFIGURE_OUTFILE = "configure.log"
+CONFIGURE_OUTFILE = "bdb-configure.log"
 CONFIGURE_OPTIONS ="--enable-cxx --disable-shared --with-pic --prefix=%s"
-MAKE_OUTFILE = "make.log"
+MAKE_OUTFILE = "bdb-make-install.log"
 
 UNTAR = "tar -xzf %s" % BDB_FILE
 

@@ -13,7 +13,7 @@ from framework.clang.find import ClangFind, CLANG_BINARIES
 from framework.clang.format import ClangFormat
 from framework.clang.scan_build import ScanBuild
 from framework.clang.scan_view import ScanView
-from framework.make.make import MakeClean
+from framework.build.make import MakeClean
 from framework.path.path import Path
 from framework.argparse.action import ReadableFileAction
 from framework.argparse.option import add_tmp_directory_option

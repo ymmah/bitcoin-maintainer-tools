@@ -9,7 +9,7 @@ import plistlib
 import itertools
 
 from framework.path.path import Path
-from framework.make.make import Make
+from framework.build.make import Make
 
 
 class ScanBuildPlistDirectory(Path):
