@@ -18,14 +18,12 @@ BDB_SRC_DIR = "db-4.8.30.NC"
 BDB_FILE = "%s.tar.gz" % BDB_SRC_DIR
 BDB_URL = "http://download.oracle.com/berkeley-db/" + BDB_FILE
 BDB_SHA256 = "12edc0df75bf9abd7f82f821795bcee50f42cb2e5f76a6a281b85732798364ef"
+UNTAR = "tar -xzf %s" % BDB_FILE
 BDB_BUILD = "berkeleydb-build"
 CONFIGURE_SCRIPT = "../dist/configure"
 CONFIGURE_OUTFILE = "bdb-configure.log"
 CONFIGURE_OPTIONS ="--enable-cxx --disable-shared --with-pic --prefix=%s"
 MAKE_OUTFILE = "bdb-make-install.log"
-
-UNTAR = "tar -xzf %s" % BDB_FILE
-
 
 class BerkeleyDb(object):
     """

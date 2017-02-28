@@ -38,6 +38,9 @@ class BuildStep(object):
         cmd = self._cmd()
         original_dir = os.getcwd()
         os.chdir(self.invocation_dir)
+        print("from dir:")
+        print(os.getcwd())
+        print("cmd: %s" % cmd)
         f = open(os.path.abspath(self.output_file), 'w')
         if subprocess.call(cmd.split(' '), stdout=f, stderr=f) != 0:
             sys.exit("*** '%s' returned a non-zero status. log in %s" %

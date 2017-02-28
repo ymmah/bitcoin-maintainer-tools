@@ -6,7 +6,6 @@
 import re
 import os
 import sys
-import subprocess
 import argparse
 
 from framework.clang.find import ClangFind, CLANG_BINARIES

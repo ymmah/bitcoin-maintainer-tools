@@ -5,7 +5,6 @@
 
 import os
 import sys
-import subprocess
 import argparse
 
 from framework.git.repository import GitPath

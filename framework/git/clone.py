@@ -27,8 +27,9 @@ class GitClone(object):
 
     def clone_or_fetch(self, repository_base):
         """
-        Clones a fresh repository at the given base, unless it exists, in
-        which case it will fetch the latest upstream state. The result will
+        Clones a fresh repository at the given base unless it exists already.
+        If it exists already, it will fetch the latest upstream state (which is
+        less abusive of the github servers than a full clone). The result will
         be returned as a GitRepository instance.
         """
         p = Path(repository_base)
