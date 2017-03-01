@@ -10,10 +10,12 @@ from framework.git.repository import GitRepository
 from framework.path.path import Path
 
 class GitClone(object):
-    def __init__(self, upstream_url):
+    def __init__(self, upstream_url, silent=False):
         self.upstream_url = upstream_url
+        self.silent = silent
 
-    def _clone(self, repository_base):
+    def clone(self, repository_base):
+        # TODO self.silent
         cmd = "git clone %s %s" % (self.upstream_url, repository_base)
         rc = subprocess.call(cmd.split(" "))
         if rc != 0:
@@ -34,4 +36,4 @@ class GitClone(object):
         """
         p = Path(repository_base)
         return (self._fetch(repository_base) if p.exists() else
-                self._clone(repository_base))
+                self.clone(repository_base))

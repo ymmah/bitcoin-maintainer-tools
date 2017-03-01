@@ -14,6 +14,7 @@ from framework.print.buffer import PrintBuffer
 from framework.cmd.repository import RepositoryCmd
 from framework.argparse.option import add_tmp_directory_option
 from framework.git.clone import GitClone
+from framework.bitcoin.repository import BitcoinRepository
 
 ###############################################################################
 # test single commands with a single repo as a target
@@ -189,19 +190,23 @@ def test_modify(repo, silent):
 # test
 ###############################################################################
 
-UPSTREAM_URL = "https://github.com/bitcoin/bitcoin/"
 CLONE_DIR = "bitcoin-test-repo"
 BDB_DIR = "berkeley-db"
+AUTOGEN_LOG = "autogen.log"
+CONFIGURE_LOG = "configure.log"
 TEST_BRANCH = "v0.13.2"
 
 class RegressionCmd(RepositoryCmd):
     def __init__(self, settings):
         self.start_time = time.time()
-        self.cloner = GitClone(UPSTREAM_URL)
-        self.clone_dir = os.path.join(settings.tmp_directory, CLONE_DIR)
-        self.bdb_dir = os.path.join(settings.tmp_directory, BDB_DIR)
-        settings.repository = self.cloner.clone_or_fetch(self.clone_dir)
+        base = settings.tmp_directory
+        bdb_dir = os.path.join(base, BDB_DIR)
+        clone_dir = os.path.join(base, CLONE_DIR)
+        autogen_log = os.path.join(base, AUTOGEN_LOG)
+        configure_log = os.path.join(base, CONFIGURE_LOG)
+        settings.repository = BitcoinRepository(clone_dir, clone=True)
         settings.repository.reset_hard(TEST_BRANCH)
+        settings.repository.build_prepare(bdb_dir, autogen_log, configure_log)
         super().__init__(settings)
         self.title = "Regression test command"
 
@@ -227,15 +232,7 @@ description = """
 Performs a basic smoke test of the tools with some variety of options.
 This isn't intended to be comprehensive, but it is useful for not breaking
 things while developing.
-
-This script has hard-coded assumptions about the state of the bitcoin repository
-for whether some commands are successful or not, so a failure might be due to
-the target repo as opposed to the script.
-
-It should fully pass agianst a target repo of release x.x.x checked out with a
-normal ./configure already performed.
 """
-# TODO test with well-known release
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)

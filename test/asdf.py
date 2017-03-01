@@ -5,7 +5,7 @@
 
 import os
 
-from framework.build.bdb import BerkeleyDb
+from framework.berkeleydb.berkeleydb import BerkeleyDb
 from framework.git.clone import GitClone
 from framework.build.autogen import Autogen
 from framework.build.configure import Configure
@@ -19,11 +19,10 @@ TEST_BRANCH = "v0.13.2"
 tmp = "/tmp/1234/"
 bdb = BerkeleyDb("/tmp/1234/")
 bdb.build()
-prefix = bdb.prefix
+prefix = bdb.prefix()
 
 cloner = GitClone(UPSTREAM_URL)
 clone_dir = os.path.join(tmp, CLONE_DIR)
-bdb_dir = os.path.join(tmp, BDB_DIR)
 repository = cloner.clone_or_fetch(clone_dir)
 repository.reset_hard(TEST_BRANCH)
 
