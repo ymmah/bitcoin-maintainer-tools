@@ -229,9 +229,14 @@ class RegressionCmd(RepositoryCmd):
 ###############################################################################
 
 description = """
-Performs a basic smoke test of the tools with some variety of options.
-This isn't intended to be comprehensive, but it is useful for not breaking
-things while developing.
+Performs a test of the tools with some variety of options. It is useful for not
+breaking things while refactoring and developing. The exact expected outputs
+are not thoroughly validated.
+
+A bitcoin repository is cloned and set up for build with 'normal' settings with
+a download and build of berkeleydb to serve as a target for the tools to
+operate on. It is assumed that the environment has the correct dependencies
+for building already installed.
 """
 
 if __name__ == "__main__":

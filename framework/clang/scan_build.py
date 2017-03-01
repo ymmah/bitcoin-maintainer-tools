@@ -59,9 +59,9 @@ class ScanBuildReportDirectory(Path):
     a directory containing the results from the run.
     """
     def __init__(self, directory):
+        if not os.path.exists(str(directory)):
+            os.makedirs(str(directory))
         path = Path(directory)
-        path.assert_exists()
-        path.assert_is_directory()
         path.assert_mode(os.R_OK | os.W_OK)
         self.directory = directory
 

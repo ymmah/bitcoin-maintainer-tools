@@ -59,6 +59,7 @@ class ReportPathAction(argparse.Action):
 
 SCAN_BUILD_OUTPUT = "scan_build.log"
 MAKE_CLEAN_OUTPUT = "make_clean.log"
+SCAN_BUILD_REPORT_DIR = 'scan-build'
 
 ###############################################################################
 # add options
@@ -139,6 +140,8 @@ def finish_clang_settings(settings):
     cleaner = MakeClean(str(settings.repository), make_clean_output_file)
     scan_build_output_file = os.path.join(settings.tmp_directory,
                                           SCAN_BUILD_OUTPUT)
-    settings.scan_build = ScanBuild(scan_build, settings.tmp_directory,
+    scan_build_report_dir = os.path.join(settings.tmp_directory,
+                                         SCAN_BUILD_REPORT_DIR)
+    settings.scan_build = ScanBuild(scan_build, scan_build_report_dir,
                                     cleaner, viewer, str(settings.repository),
                                     scan_build_output_file, settings.jobs)
