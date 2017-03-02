@@ -13,8 +13,7 @@ import time
 from framework.print.buffer import PrintBuffer
 from framework.cmd.repository import RepositoryCmd
 from framework.argparse.option import add_tmp_directory_option
-from framework.git.clone import GitClone
-from framework.bitcoin.repository import BitcoinRepository
+from framework.bitcoin.setup import setup_build_ready_bitcoin_repo
 
 ###############################################################################
 # test single commands with a single repo as a target
@@ -190,23 +189,11 @@ def test_modify(repo, silent):
 # test
 ###############################################################################
 
-CLONE_DIR = "bitcoin-test-repo"
-BDB_DIR = "berkeley-db"
-AUTOGEN_LOG = "autogen.log"
-CONFIGURE_LOG = "configure.log"
-TEST_BRANCH = "v0.13.2"
-
 class RegressionCmd(RepositoryCmd):
     def __init__(self, settings):
         self.start_time = time.time()
-        base = settings.tmp_directory
-        bdb_dir = os.path.join(base, BDB_DIR)
-        clone_dir = os.path.join(base, CLONE_DIR)
-        autogen_log = os.path.join(base, AUTOGEN_LOG)
-        configure_log = os.path.join(base, CONFIGURE_LOG)
-        settings.repository = BitcoinRepository(clone_dir, clone=True)
-        settings.repository.reset_hard(TEST_BRANCH)
-        settings.repository.build_prepare(bdb_dir, autogen_log, configure_log)
+        settings.repository = (
+            setup_build_ready_bitcoin_repo(settings.tmp_directory))
         super().__init__(settings)
         self.title = "Regression test command"
 

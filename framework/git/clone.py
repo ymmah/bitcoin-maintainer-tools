@@ -3,8 +3,9 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import subprocess
+import os
 import sys
+import subprocess
 
 from framework.git.repository import GitRepository
 from framework.path.path import Path
@@ -15,9 +16,9 @@ class GitClone(object):
         self.silent = silent
 
     def clone(self, repository_base):
-        # TODO self.silent
         cmd = "git clone %s %s" % (self.upstream_url, repository_base)
-        rc = subprocess.call(cmd.split(" "))
+        outfile = open(os.devnull, 'w') if self.silent else None
+        rc = subprocess.call(cmd.split(" "), stdout=outfile, stderr=outfile)
         if rc != 0:
             sys.exit("*** clone command '%s' failed" % cmd)
         return GitRepository(repository_base)

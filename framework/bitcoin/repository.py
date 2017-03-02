@@ -5,28 +5,11 @@
 
 import os
 
-from framework.git.clone import GitClone
+from framework.bitcoin.clone import BitcoinClone, DEFAULT_UPSTREAM_URL
 from framework.git.repository import GitRepository
 from framework.berkeleydb.berkeleydb import BerkeleyDb
 from framework.build.autogen import Autogen
 from framework.build.configure import Configure
-
-
-DEFAULT_UPSTREAM_URL = "https://github.com/bitcoin/bitcoin/"
-
-class BitcoinClone(object):
-    """
-    Clones a bitcoin repository to a directory. If the directory already
-    exists, just fetch changes from upstream to avoid re-downloading.
-    """
-    def __init__(self, directory, upstream_url=None, silent=False):
-        self.directory = directory
-        self.upstream_url = (upstream_url if upstream_url else
-                             DEFAULT_UPSTREAM_URL)
-        self.cloner = GitClone(self.upstream_url, silent=silent)
-
-    def clone(self):
-        self.cloner.clone_or_fetch(self.directory)
 
 
 class BitcoinRepository(GitRepository):
@@ -43,6 +26,10 @@ class BitcoinRepository(GitRepository):
         super().__init__(self.directory)
 
     def build_prepare(self, bdb_directory, autogen_log, configure_log):
+        """
+        Downloads and builds BerkeleyDb, runs ./autogen.sh and ./configure
+        with the prefix set to the built BerkeleyDb.
+        """
         bdb = BerkeleyDb(bdb_directory, silent=self.silent)
         bdb.build()
         prefix = bdb.prefix()

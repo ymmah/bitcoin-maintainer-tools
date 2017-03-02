@@ -88,8 +88,9 @@ class GitRepository(object):
     def reset_hard_head(self):
         self.reset_hard('HEAD')
 
-    def fetch(self):
+    def fetch(self, silent=False):
         orig = os.getcwd()
         os.chdir(self.repository_base)
-        rc = subprocess.call(FETCH.split(" "))
+        outfile = open(os.devnull, 'w') if silent else None
+        rc = subprocess.call(FETCH.split(" "), stdout=outfile, stderr=outfile)
         os.chdir(orig)
