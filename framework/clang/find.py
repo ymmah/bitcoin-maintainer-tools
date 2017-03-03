@@ -12,11 +12,12 @@ from framework.path.path import Path
 
 
 # The clang binaries of interest to this framework
-CLANG_BINARIES = ['clang-format', 'scan-build', 'scan-view']
+CLANG_BINARIES = ['clang-format', 'scan-build', 'scan-view', 'ccc-analyzer',
+                  'c++-analyzer']
 
 # the method of finding the version of a particluar binary:
 ASK_FOR_VERSION = ['clang-format']
-VERSION_FROM_PATH = ['scan-build', 'scan-view']
+VERSION_FROM_PATH = ['scan-build', 'scan-view', 'ccc-analyzer', 'c++-analyzer']
 
 assert set(ASK_FOR_VERSION + VERSION_FROM_PATH) == set(CLANG_BINARIES)
 

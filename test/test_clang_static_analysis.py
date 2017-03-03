@@ -7,13 +7,14 @@ import os
 import argparse
 
 from framework.argparse.option import add_tmp_directory_option
-from framework.bitcoin.setup import setup_bitcoin_repo
+from framework.bitcoin.setup import setup_build_ready_bitcoin_repo
 from framework.test.exec import exec_cmd_no_error
 from framework.test.exec import exec_cmd_error
 from framework.test.exec import exec_cmd_json_no_error
 from framework.test.exec import exec_cmd_json_error
 from framework.test.exec import exec_modify_fixes_check
 from framework.test.exec import exec_modify_doesnt_fix_check
+from framework.test.clang import setup_test_bin_dir
 from framework.test.cmd import ScriptTestCmd
 
 ###############################################################################
@@ -22,63 +23,52 @@ from framework.test.cmd import ScriptTestCmd
 
 
 def test_help(repository):
-    cmd = 'bin/basic_style.py -h'
+    cmd = 'bin/clang_static_analysis.py -h'
     print(exec_cmd_no_error(cmd))
 
 
-def test_report(repository):
-    cmd = 'bin/basic_style.py report -h'
+def test_report(repository, test_bin_dir):
+    cmd = 'bin/clang_static_analysis.py report -h'
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/basic_style.py report %s' % repository
+    cmd = 'bin/clang_static_analysis.py report %s' % repository
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/basic_style.py report -j8 %s' % repository
-    print(exec_cmd_no_error(cmd))
-    cmd = ('bin/basic_style.py report -j8 %s/src/init.cpp %s/src/qt/' %
-           (repository, repository))
-    print(exec_cmd_no_error(cmd))
-    cmd = 'bin/basic_style.py report --json %s' % repository
+    cmd = ("bin/clang_static_analysis.py report -j8 %s/src/init.cpp "
+           "%s/src/qt/" % (repository, repository))
+    print(exec_cmd_error(cmd))
+    cmd = 'bin/clang_static_analysis.py report -j8 --json %s' % repository
     print(exec_cmd_json_no_error(cmd))
-    cmd = ('bin/basic_style.py report --json %s/src/init.cpp %s/src/qt/' %
-           (repository, repository))
-    print(exec_cmd_json_no_error(cmd))
+    cmd = 'bin/clang_static_analysis.py report -j8 -b %s %s' % (test_bin_dir,
+                                                               repository)
+    print(exec_cmd_no_error(cmd))
     # no speecified targets runs it on the path/repository it is invoked from:
-    cmd = 'bin/basic_style.py report'
+    cmd = 'bin/clang_static_analysis.py report'
     original = os.getcwd()
     os.chdir(str(repository))
     print(exec_cmd_no_error(cmd))
     os.chdir(original)
 
 
-def test_check(repository):
-    cmd = 'bin/basic_style.py check -h'
+def test_check(repository, test_bin_dir):
+    cmd = 'bin/clang_static_analysis.py check -h'
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/basic_style.py check -j3 %s' % repository
+    cmd = 'bin/clang_static_analysis.py check -j8 %s' % repository
     e, out = exec_cmd_error(cmd)
     print("%d\n%s" % (e, out))
-    cmd = 'bin/basic_style.py check --json %s' % repository
+    cmd = 'bin/clang_static_analysis.py check --json %s' % repository
     e, out = exec_cmd_json_error(cmd)
+    cmd = 'bin/clang_static_analysis.py check -j8 -b %s %s' % (test_bin_dir,
+                                                               repository)
+    e, out = exec_cmd_error(cmd)
     print("%d\n%s" % (e, out))
-    cmd = 'bin/basic_style.py check %s/src/init.cpp' % repository
-    print(exec_cmd_no_error(cmd))
-
-
-def test_fix(repository):
-    cmd = 'bin/basic_style.py fix -h'
-    print(exec_cmd_no_error(cmd))
-    check_cmd = "bin/basic_style.py check %s" % repository
-    modify_cmd = "bin/basic_style.py fix %s" % repository
-    exec_modify_fixes_check(repository, check_cmd, modify_cmd)
-    repository.reset_hard_head()
 
 
 def tests(settings):
     test_help(settings.repository)
-    test_report(settings.repository)
-    test_check(settings.repository)
-    test_fix(settings.repository)
+    test_report(settings.repository, settings.test_bin_dir)
+    test_check(settings.repository, settings.test_bin_dir)
 
 
-class TestBasicStyleCmd(ScriptTestCmd):
+class TestClangStaticAnalysisCmd(ScriptTestCmd):
     def __init__(self, settings):
         super().__init__(settings)
         self.title = __file__
@@ -86,17 +76,18 @@ class TestBasicStyleCmd(ScriptTestCmd):
     def _exec(self):
         return super()._exec(tests)
 
-
 ###############################################################################
 # UI
 ###############################################################################
 
 if __name__ == "__main__":
-    description = ("Tests basic_style.py through its range of subcommands and "
-                   "options.")
+    description = ("Tests clang_static_analysis.py through its range of "
+                   "subcommands and options.")
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
-    settings.repository = setup_bitcoin_repo(settings.tmp_directory,
-                                             branch="v0.13.2")
-    TestBasicStyleCmd(settings).run()
+    settings.repository = (
+        setup_build_ready_bitcoin_repo(settings.tmp_directory,
+                                       branch="v0.13.2"))
+    settings.test_bin_dir = setup_test_bin_dir(settings.tmp_directory)
+    TestClangStaticAnalysisCmd(settings).run()

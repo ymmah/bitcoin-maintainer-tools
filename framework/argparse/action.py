@@ -10,21 +10,6 @@ import tempfile
 
 from framework.path.path import Path
 
-
-class ReadableFileAction(argparse.Action):
-    """
-    Validate that 'values' is a string that represents a path that points to a
-    single readable file.
-    """
-    def __call__(self, parser, namespace, values, option_string=None):
-        if not isinstance(values, str):
-            sys.exit("*** %s is not a string" % values)
-        self.path = Path(values)
-        self.path.assert_exists()
-        self.path.assert_is_file()
-        self.path.assert_mode(os.R_OK)
-
-
 class TmpDirectoryAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not isinstance(values, str):

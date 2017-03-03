@@ -14,7 +14,6 @@ from framework.clang.scan_build import ScanBuild
 from framework.clang.scan_view import ScanView
 from framework.build.make import MakeClean
 from framework.path.path import Path
-from framework.argparse.action import ReadableFileAction
 from framework.argparse.option import add_tmp_directory_option
 from framework.argparse.option import DEFAULT_TMP_DIR
 from framework.file.io import read_file, write_file
@@ -22,6 +21,16 @@ from framework.file.io import read_file, write_file
 ###############################################################################
 # actions
 ###############################################################################
+
+class StyleFileAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        if not isinstance(values, str):
+            sys.exit("*** %s is not a string" % values)
+        self.path = Path(values)
+        self.path.assert_exists()
+        self.path.assert_is_file()
+        self.path.assert_mode(os.R_OK)
+        namespace.style_file = str(self.path)
 
 
 class ClangDirectoryAction(argparse.Action):
@@ -75,8 +84,8 @@ def add_clang_bin_path_option(parser):
 def add_clang_format_style_file_option(parser):
     sf_help = ("path to the clang style file to be used (default=The "
                "src/.clang_format file specified in the repo info)")
-    parser.add_argument("-s", "--style-file", type=str,
-                        action=ReadableFileAction, help=sf_help)
+    parser.add_argument("-s", "--style-file", type=str, action=StyleFileAction,
+                        help=sf_help)
 
 
 def add_clang_format_force_option(parser):

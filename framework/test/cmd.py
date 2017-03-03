@@ -3,78 +3,33 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-import os
 import sys
+import time
 import json
 import subprocess
+import argparse
 
-from framework.git.path import GitPath
+from framework.print.buffer import PrintBuffer
+from framework.cmd.repository import RepositoryCmd
 
-###############################################################################
-# helpers
-###############################################################################
-
-def prep(cmd):
+class ScriptTestCmd(RepositoryCmd):
     """
-    Splits the command string into the list and finds the absolute path of
-    the script being invoked.
+    Superclass for structuring a command that invokes a script in order to test
+    it.
     """
-    l = cmd.split(" ")
-    gp = GitPath(os.path.abspath(os.path.realpath(__file__)))
-    l[0] = os.path.join(str(gp.repository_base()), l[0])
-    return l
+    def __init__(self, settings):
+        super().__init__(settings)
+        self.title = "script test cmd superclass"
 
+    def _exec(self, tests):
+        start_time = time.time()
+        tests(self.settings)
+        return {'elapsed_time': time.time() - start_time}
 
-###############################################################################
-# test actions that run a command
-###############################################################################
-
-def test_cmd_no_error(cmd):
-    return subprocess.check_output(prep(cmd)).decode('utf-8')
-
-
-def test_cmd_error(cmd):
-    print(cmd)
-    try:
-        subprocess.check_output(prep(cmd))
-    except subprocess.CalledProcessError as e:
-        assert e.returncode == 1
-        output = e.output.decode('utf-8')
-        assert "Traceback" not in output
-        return e.returncode, output
-    sys.exit("*** command unexpectedly succeeded")
-
-
-def test_cmd_json_no_error(cmd):
-    out = subprocess.check_output(prep(cmd)).decode('utf-8')
-    return json.dumps(json.loads(out))
-
-
-def test_cmd_json_error(cmd):
-    try:
-        subprocess.check_output(prep(cmd))
-    except subprocess.CalledProcessError as e:
-        assert e.returncode == 1
-        output = e.output.decode('utf-8')
-        assert "Traceback" not in output
-        return e.returncode, json.dumps(json.loads(output))
-    sys.exit("*** command unexpectedly succeeded")
-
-
-###############################################################################
-# test actions that that modify a repo
-###############################################################################
-
-
-def test_modify_fixes_check(repo, check_cmd, modify_cmd):
-    _ = test_cmd_error(check_cmd)
-    _ = subprocess.check_output(prep(modify_cmd)).decode('utf-8')
-    repo.assert_dirty()
-    _ = test_cmd_no_error(check_cmd)
-
-
-def test_modify_doesnt_fix_check(repo, check_cmd, modify_cmd):
-    _ = test_cmd_error(check_cmd)
-    _ = subprocess.check_output(prep(modify_cmd)).decode('utf-8')
-    repo.assert_dirty()
-    _ = test_cmd_error(check_cmd)
+    def _output(self, results):
+        b = PrintBuffer()
+        b.separator()
+        b.add_green("%s passed!\n" % self.title)
+        b.add("Elapsed time: %.2fs\n" % results['elapsed_time'])
+        b.separator()
+        return str(b)
