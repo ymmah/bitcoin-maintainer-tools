@@ -1,0 +1,7 @@
+dist: trusty
+os: linux
+language: generic
+python:
+  - "3.6"
+script:
+    - test/test_all.py
