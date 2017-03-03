@@ -98,11 +98,9 @@ class TestBasicStyleCmd(RepositoryCmd):
 # UI
 ###############################################################################
 
-description = """
-Tests basic_style.py through its range of subcommands and options.
-"""
-
 if __name__ == "__main__":
+    description = ("Tests basic_style.py through its range of subcommands and "
+                   "options.")
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
