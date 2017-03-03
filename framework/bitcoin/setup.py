@@ -14,16 +14,22 @@ AUTOGEN_LOG = "autogen.log"
 CONFIGURE_LOG = "configure.log"
 TEST_BRANCH = "v0.13.2"
 
+def setup_bitcoin_repo(directory, upstream_url=DEFAULT_UPSTREAM_URL,
+                       branch=TEST_BRANCH, silent=False):
+    clone_dir = os.path.join(directory, CLONE_DIR)
+    repository = BitcoinRepository(clone_dir, clone=True,
+                                   upstream_url=upstream_url, silent=silent)
+    repository.reset_hard(branch)
+    return repository
+
 
 def setup_build_ready_bitcoin_repo(directory,
                                    upstream_url=DEFAULT_UPSTREAM_URL,
                                    branch=TEST_BRANCH, silent=False):
+    repository = setup_bitcoin_repo(directory, upstream_url=upstream_url,
+                                    branch=branch, silent=silent)
     bdb_dir = os.path.join(directory, BDB_DIR)
-    clone_dir = os.path.join(directory, CLONE_DIR)
     autogen_log = os.path.join(directory, AUTOGEN_LOG)
     configure_log = os.path.join(directory, CONFIGURE_LOG)
-    repository = BitcoinRepository(clone_dir, clone=True,
-                                   upstream_url=upstream_url, silent=silent)
-    repository.reset_hard(TEST_BRANCH)
     repository.build_prepare(bdb_dir, autogen_log, configure_log)
     return repository

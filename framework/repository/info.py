@@ -5,9 +5,11 @@
 
 import json
 import os
+import sys
 
 from framework.path.path import Path
 from framework.file.io import read_file
+from framework.git.path import GitPath
 
 REPO_INFO_FILENAME = ".bitcoin-maintainer-tools.json"
 
@@ -24,8 +26,9 @@ class RepositoryInfo(dict):
         path = Path(json_file)
         if not path.exists():
             # If there is no .json file in the repo, it might be an old version
-            # checked out. We can still do best-effort with a default file.
-            json_file = os.path.abspath(FAILBACK_REPO_INFO_FILENAME)
+            # checked out. We can still do best-effort with a default file
+            # that is located in this repo.
+            json_file = self._failback_file()
             path = Path(json_file)
             if not path.exists():
                 sys.exit("Could not find a .json repository info file to use.")
@@ -33,3 +36,8 @@ class RepositoryInfo(dict):
         path.assert_mode(os.R_OK)
         content = read_file(json_file)
         self.update(json.loads(content))
+
+    def _failback_file(self):
+        gp = GitPath(os.path.abspath(os.path.realpath(__file__)))
+        return os.path.join(str(gp.repository_base()),
+                            FAILBACK_REPO_INFO_FILENAME)
