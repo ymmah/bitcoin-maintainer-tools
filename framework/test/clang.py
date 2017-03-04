@@ -81,9 +81,9 @@ def setup_test_bin_dir(directory):
     if not os.path.exists(str(clang_dir)):
         os.makedirs(str(clang_dir))
     finder = ClangFind()
-    src_path = Path(finder.best('scan-build')['path']).containing_directory()
+    # This is inelegant - copy all the files in the same directory as the
+    # installed binary to the new directory.
     for binary in CLANG_BINARIES:
-        bin_path = os.path.join(src_path, binary)
-        if Path(bin_path).exists():
-            subprocess.call(['cp', bin_path, clang_dir])
+        src_path = Path(finder.best(binary)['path']).containing_directory()
+        subprocess.call(['cp', '-r', os.path.join(src_path, '*'), clang_dir])
     return clang_dir
