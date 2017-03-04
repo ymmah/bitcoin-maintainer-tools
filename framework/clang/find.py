@@ -89,6 +89,8 @@ class ClangFind(object):
 
     def _installed_directories(self):
         for path in os.environ["PATH"].split(os.pathsep):
+            if not os.path.exists(path):
+                continue
             for e in os.listdir(path):
                 b = Path(os.path.join(path, e))
                 if b.is_file() and b.filename() in CLANG_BINARIES:
