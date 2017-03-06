@@ -55,8 +55,7 @@ def test_check(repository, test_bin_dir, test_style_file):
     cmd = 'bin/clang_format.py check -h'
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/clang_format.py check -j3 --force %s' % repository
-    e, out = exec_cmd_error(cmd)
-    print("%d\n%s" % (e, out))
+    print("%d\n%s" % exec_cmd_error(cmd))
     cmd = 'bin/clang_format.py check --json --force %s' % repository
     e, out = exec_cmd_json_error(cmd)
     print("%d\n%s" % (e, out))
@@ -65,9 +64,9 @@ def test_check(repository, test_bin_dir, test_style_file):
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/clang_format.py check --force -b %s %s' % (test_bin_dir,
                                                           repository)
-    print(exec_cmd_error(cmd))
+    print("%d\n%s" % exec_cmd_error(cmd))
     cmd = 'bin/clang_format.py check -s %s %s' % (test_style_file, repository)
-    print(exec_cmd_error(cmd))
+    print("%d\n%s" % exec_cmd_error(cmd))
 
 
 def test_format(repository):
