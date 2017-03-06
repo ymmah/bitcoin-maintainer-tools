@@ -15,4 +15,4 @@ env:
 install:
     - travis_retry sudo apt-get install libboost-all-dev libevent-dev libprotobuf-dev clang-3.8
 script:
-    - $TEST_SCRIPT
+    - travis_wait 30 $TEST_SCRIPT || cat /tmp/bitcoin-maintainer-tools/scan_build.log
