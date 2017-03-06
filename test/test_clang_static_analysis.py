@@ -32,17 +32,17 @@ def test_report(repository, tmp_directory, test_bin_dir):
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/clang_static_analysis.py report %s' % repository
     print(exec_cmd_no_error(cmd))
-    cmd = ("bin/clang_static_analysis.py report -j8 %s/src/init.cpp "
+    cmd = ("bin/clang_static_analysis.py report -j3 %s/src/init.cpp "
            "%s/src/qt/" % (repository, repository))
     print(exec_cmd_error(cmd))
-    cmd = 'bin/clang_static_analysis.py report -j8 --json %s' % repository
+    cmd = 'bin/clang_static_analysis.py report -j3 --json %s' % repository
     print(exec_cmd_json_no_error(cmd))
-    cmd = 'bin/clang_static_analysis.py report -j8 -b %s %s' % (test_bin_dir,
+    cmd = 'bin/clang_static_analysis.py report -j3 -b %s %s' % (test_bin_dir,
                                                                 repository)
     print(exec_cmd_no_error(cmd))
     # put the results in a different directory:
     test_tmp_dir = os.path.join(tmp_directory, "another-tmp-directory")
-    cmd = 'bin/clang_static_analysis.py report -j8 -t %s %s' % (test_tmp_dir,
+    cmd = 'bin/clang_static_analysis.py report -j3 -t %s %s' % (test_tmp_dir,
                                                                 repository)
     print(exec_cmd_no_error(cmd))
     # no speecified targets runs it on the path/repository it is invoked from:
@@ -56,12 +56,12 @@ def test_report(repository, tmp_directory, test_bin_dir):
 def test_check(repository, test_bin_dir):
     cmd = 'bin/clang_static_analysis.py check -h'
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/clang_static_analysis.py check -j8 %s' % repository
+    cmd = 'bin/clang_static_analysis.py check -j3 %s' % repository
     e, out = exec_cmd_error(cmd)
     print("%d\n%s" % (e, out))
     cmd = 'bin/clang_static_analysis.py check --json %s' % repository
     e, out = exec_cmd_json_error(cmd)
-    cmd = 'bin/clang_static_analysis.py check -j8 -b %s %s' % (test_bin_dir,
+    cmd = 'bin/clang_static_analysis.py check -j3 -b %s %s' % (test_bin_dir,
                                                                repository)
     e, out = exec_cmd_error(cmd)
     print("%d\n%s" % (e, out))

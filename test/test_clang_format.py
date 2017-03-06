@@ -34,7 +34,7 @@ def test_report(repository, test_bin_dir, test_style_file):
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/clang_format.py report %s' % repository
     print(exec_cmd_no_error(cmd))
-    cmd = ('bin/clang_format.py report -j8 %s/src/init.cpp %s/src/qt/' %
+    cmd = ('bin/clang_format.py report -j3 %s/src/init.cpp %s/src/qt/' %
            (repository, repository))
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/clang_format.py report --json %s' % repository

@@ -31,9 +31,9 @@ def test_report(repository):
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/basic_style.py report %s' % repository
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/basic_style.py report -j8 %s' % repository
+    cmd = 'bin/basic_style.py report -j3 %s' % repository
     print(exec_cmd_no_error(cmd))
-    cmd = ('bin/basic_style.py report -j8 %s/src/init.cpp %s/src/qt/' %
+    cmd = ('bin/basic_style.py report -j3 %s/src/init.cpp %s/src/qt/' %
            (repository, repository))
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/basic_style.py report --json %s' % repository
