@@ -74,6 +74,7 @@ SCAN_BUILD_REPORT_DIR = 'scan-build'
 # add options
 ###############################################################################
 
+
 def add_clang_bin_path_option(parser):
     b_help = ("path to the clang directory or binary to be used "
               "(default=The required clang binary installed in PATH with the "

@@ -24,30 +24,31 @@ from framework.test.cmd import ScriptTestCmd
 
 
 def tests(settings):
-    cmd = 'bin/reports.py -h'
+    cmd = 'bin/checks.py -h'
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/reports.py -j8 %s' % settings.repository
-    print(exec_cmd_no_error(cmd))
-    cmd = 'bin/reports.py --json -j8 %s' % settings.repository
-    print(exec_cmd_json_no_error(cmd))
-    cmd = 'bin/reports.py -b %s -s %s -j8 %s' % (settings.test_bin_dir,
-                                                 settings.test_style_file,
-                                                 settings.repository)
-    print(exec_cmd_no_error(cmd))
+    cmd = 'bin/checks.py -j8 --force %s' % settings.repository
+    print("%d\n%s" % exec_cmd_error(cmd))
+    cmd = 'bin/checks.py --force --json -j8 %s' % settings.repository
+    print(exec_cmd_json_error(cmd))
+    cmd = ('bin/checks.py --force -b %s -s %s -j8 %s' %
+           (settings.test_bin_dir, settings.test_style_file,
+            settings.repository))
+    print("%d\n%s" % exec_cmd_error(cmd))
     # put the results in a different directory:
     test_tmp_dir = os.path.join(settings.tmp_directory,
                                 "another-tmp-directory")
-    cmd = 'bin/reports.py -j8 -t %s %s' % (test_tmp_dir, settings.repository)
-    print(exec_cmd_no_error(cmd))
+    cmd = 'bin/checks.py --force -j8 -t %s %s' % (test_tmp_dir,
+                                                  settings.repository)
+    print("%d\n%s" % exec_cmd_error(cmd))
     # no speecified targets runs it on the path/repository it is invoked from:
-    cmd = 'bin/reports.py'
+    cmd = 'bin/checks.py --force'
     original = os.getcwd()
     os.chdir(str(settings.repository))
-    print(exec_cmd_no_error(cmd))
+    print("%d\n%s" % exec_cmd_error(cmd))
     os.chdir(original)
 
 
-class TestReportsCmd(ScriptTestCmd):
+class TestChecksCmd(ScriptTestCmd):
     def __init__(self, settings):
         super().__init__(settings)
         self.title = __file__
@@ -61,8 +62,8 @@ class TestReportsCmd(ScriptTestCmd):
 ###############################################################################
 
 if __name__ == "__main__":
-    description = ("Tests reports.py through its range of subcommands "
-                   "and options.")
+    description = ("Tests checks.py through its range of subcommands and"
+                   "options.")
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
@@ -71,4 +72,4 @@ if __name__ == "__main__":
                                        branch="v0.13.2"))
     settings.test_bin_dir = setup_test_bin_dir(settings.tmp_directory)
     settings.test_style_file = setup_test_style_file(settings.tmp_directory)
-    TestReportsCmd(settings).run()
+    TestChecksCmd(settings).run()

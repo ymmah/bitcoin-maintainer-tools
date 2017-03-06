@@ -29,12 +29,12 @@ def prep(cmd):
 # test actions that run a command
 ###############################################################################
 
+
 def exec_cmd_no_error(cmd):
     return subprocess.check_output(prep(cmd)).decode('utf-8')
 
 
 def exec_cmd_error(cmd):
-    print(cmd)
     try:
         subprocess.check_output(prep(cmd))
     except subprocess.CalledProcessError as e:

@@ -77,7 +77,7 @@ class BerkeleyDb(object):
         self.src_dir = os.path.join(self.directory, SRC_SUBDIR)
         self.build_from_dir = os.path.join(self.src_dir, BUILD_FROM_SUBDIR)
         self.configure_outfile = os.path.join(self.directory, CONFIGURE_OUTFILE)
-        self.make_outfile = os.path.join(self.directory, CONFIGURE_OUTFILE)
+        self.make_outfile = os.path.join(self.directory, MAKE_OUTFILE)
 
     def _prep_directory(self):
         if not os.path.exists(self.directory):

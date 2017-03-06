@@ -6,4 +6,4 @@ python:
   - "3.6"
 script:
     - travis_retry sudo apt-get install libboost-all-dev libevent-dev libprotobuf-dev
-    - test/test_all.py || cat /tmp/bitcoin-maintainer-tools/configure.log
+    - test/test_all.py

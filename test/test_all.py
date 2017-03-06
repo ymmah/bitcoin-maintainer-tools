@@ -13,6 +13,7 @@ from test_copyright_header import TestCopyrightHeaderCmd
 from test_clang_format import TestClangFormatCmd
 from test_clang_static_analysis import TestClangStaticAnalysisCmd
 from test_reports import TestReportsCmd
+from test_checks import TestChecksCmd
 from framework.test.clang import setup_test_bin_dir
 from framework.test.clang import setup_test_style_file
 
@@ -26,8 +27,9 @@ class TestAll(RepositoryCmds):
             'basic_style':           TestBasicStyleCmd(settings),
             'copyright_header':      TestCopyrightHeaderCmd(settings),
             'clang_format':          TestClangFormatCmd(settings),
-            'clang_static_analysis': TestClangStaticAnalyisCmd(settings),
+            'clang_static_analysis': TestClangStaticAnalysisCmd(settings),
             'reports':               TestReportsCmd(settings),
+            'checks':                TestChecksCmd(settings),
         }
         super().__init__(settings, repository_cmds)
 
@@ -40,14 +42,14 @@ class TestAll(RepositoryCmds):
 
 if __name__ == "__main__":
     description = ("Runs all test scripts in serial to make sure they all "
-                   "pass. This might take a while to finish.")
+                   "pass.")
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
-    print("Warning - this test takes a long time to run since many builds are "
-          "done (in serial). It might better to invoke the individual scripts "
-          "in a targeted fashion or run the TravisCI check instead (where the "
-          "components are run in parallel).")
+    print("\nWarning - This test takes a long time to run since many builds "
+          "are done in serial. It might better to invoke the individual "
+          "scripts individualy or run via the TravisCI check instead (where "
+          "the components are run in parallel).\n")
     settings.repository = (
         setup_build_ready_bitcoin_repo(settings.tmp_directory,
                                        branch="v0.13.2"))
