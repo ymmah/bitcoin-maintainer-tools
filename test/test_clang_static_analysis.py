@@ -35,11 +35,11 @@ def test_report(repository, test_bin_dir):
     #cmd = ("bin/clang_static_analysis.py report -j8 %s/src/init.cpp "
     #       "%s/src/qt/" % (repository, repository))
     #print(exec_cmd_error(cmd))
-    cmd = 'bin/clang_static_analysis.py report -j8 --json %s' % repository
-    print(exec_cmd_json_no_error(cmd))
-    cmd = 'bin/clang_static_analysis.py report -j8 -b %s %s' % (test_bin_dir,
-                                                                repository)
-    print(exec_cmd_no_error(cmd))
+ #   cmd = 'bin/clang_static_analysis.py report -j8 --json %s' % repository
+ #   print(exec_cmd_json_no_error(cmd))
+  #  cmd = 'bin/clang_static_analysis.py report -j8 -b %s %s' % (test_bin_dir,
+  #                                                              repository)
+  #  print(exec_cmd_no_error(cmd))
     # no speecified targets runs it on the path/repository it is invoked from:
     cmd = 'bin/clang_static_analysis.py report'
     original = os.getcwd()

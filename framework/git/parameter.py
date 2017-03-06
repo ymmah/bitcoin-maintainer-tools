@@ -77,10 +77,10 @@ class GitTrackedTargetsAction(argparse.Action):
 
 
 def add_git_repository_parameter(parser):
-    repo_help = ("A source code repository for which the static analysis is "
-                 "to be performed upon.")
+    repo_help = ("A source code repository for which the operation is to be "
+                 "performed upon.")
     parser.add_argument("repository", type=str, action=GitRepositoryAction,
-                        help=repo_help)
+                        nargs='?', default='.', help=repo_help)
 
 
 def add_git_tracked_targets_parameter(parser):

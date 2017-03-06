@@ -5,6 +5,7 @@
 
 import os
 import subprocess
+import shutil
 
 from framework.clang.find import ClangFind, CLANG_BINARIES
 from framework.file.io import write_file
@@ -82,8 +83,14 @@ def setup_test_bin_dir(directory):
         os.makedirs(str(clang_dir))
     finder = ClangFind()
     # This is inelegant - copy all the files in the same directory as the
-    # installed binary to the new directory.
+    # installed binary into the new directory to make it look like an directory
+    # where stuff was 'installed'.
     for binary in CLANG_BINARIES:
         src_path = Path(finder.best(binary)['path']).containing_directory()
-        subprocess.call(['cp', '-r', os.path.join(src_path, '*'), clang_dir])
+        cps = [(os.path.join(src_path, f), os.path.join(clang_dir, f)) for f
+               in os.listdir(src_path) if
+               os.path.isfile(os.path.join(src_path, f))]
+        for src, dst in cps:
+            shutil.copyfile(src, dst)
+            shutil.copymode(src, dst)
     return clang_dir
