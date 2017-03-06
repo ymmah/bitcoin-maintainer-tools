@@ -15,6 +15,7 @@ from framework.test.exec import exec_cmd_json_error
 from framework.test.exec import exec_modify_fixes_check
 from framework.test.exec import exec_modify_doesnt_fix_check
 from framework.test.clang import setup_test_bin_dir
+from framework.test.clang import setup_test_style_file
 from framework.test.cmd import ScriptTestCmd
 
 ###############################################################################
@@ -22,59 +23,31 @@ from framework.test.cmd import ScriptTestCmd
 ###############################################################################
 
 
-def test_help(repository):
-    cmd = 'bin/clang_static_analysis.py -h'
+def tests(settings):
+    cmd = 'bin/reports.py -h'
     print(exec_cmd_no_error(cmd))
-
-
-def test_report(repository, tmp_directory, test_bin_dir):
-    cmd = 'bin/clang_static_analysis.py report -h'
+    cmd = 'bin/reports.py -j8 %s' % settings.repository
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/clang_static_analysis.py report %s' % repository
-    print(exec_cmd_no_error(cmd))
-    cmd = ("bin/clang_static_analysis.py report -j8 %s/src/init.cpp "
-           "%s/src/qt/" % (repository, repository))
-    print(exec_cmd_error(cmd))
-    cmd = 'bin/clang_static_analysis.py report -j8 --json %s' % repository
+    cmd = 'bin/reports.py --json -j8 %s' % settings.repository
     print(exec_cmd_json_no_error(cmd))
-    cmd = 'bin/clang_static_analysis.py report -j8 -b %s %s' % (test_bin_dir,
-                                                                repository)
+    cmd = 'bin/reports.py -b %s -s %s -j8 %s' % (settings.test_bin_dir,
+                                                 settings.test_style_file,
+                                                 settings.repository)
     print(exec_cmd_no_error(cmd))
     # put the results in a different directory:
-    test_tmp_dir = os.path.join(tmp_directory, "another-tmp-directory")
-    cmd = 'bin/clang_static_analysis.py report -j8 -t %s %s' % (test_tmp_dir,
-                                                                repository)
+    test_tmp_dir = os.path.join(settings.tmp_directory,
+                                "another-tmp-directory")
+    cmd = 'bin/reports.py -j8 -t %s %s' % (test_tmp_dir, settings.repository)
     print(exec_cmd_no_error(cmd))
     # no speecified targets runs it on the path/repository it is invoked from:
-    cmd = 'bin/clang_static_analysis.py report'
+    cmd = 'bin/reports.py'
     original = os.getcwd()
-    os.chdir(str(repository))
+    os.chdir(str(settings.repository))
     print(exec_cmd_no_error(cmd))
     os.chdir(original)
 
 
-def test_check(repository, test_bin_dir):
-    cmd = 'bin/clang_static_analysis.py check -h'
-    print(exec_cmd_no_error(cmd))
-    cmd = 'bin/clang_static_analysis.py check -j8 %s' % repository
-    e, out = exec_cmd_error(cmd)
-    print("%d\n%s" % (e, out))
-    cmd = 'bin/clang_static_analysis.py check --json %s' % repository
-    e, out = exec_cmd_json_error(cmd)
-    cmd = 'bin/clang_static_analysis.py check -j8 -b %s %s' % (test_bin_dir,
-                                                               repository)
-    e, out = exec_cmd_error(cmd)
-    print("%d\n%s" % (e, out))
-
-
-def tests(settings):
-    test_help(settings.repository)
-    test_report(settings.repository, settings.tmp_directory,
-                settings.test_bin_dir)
-    test_check(settings.repository, settings.test_bin_dir)
-
-
-class TestClangStaticAnalysisCmd(ScriptTestCmd):
+class TestReportsCmd(ScriptTestCmd):
     def __init__(self, settings):
         super().__init__(settings)
         self.title = __file__
@@ -87,8 +60,8 @@ class TestClangStaticAnalysisCmd(ScriptTestCmd):
 ###############################################################################
 
 if __name__ == "__main__":
-    description = ("Tests clang_static_analysis.py through its range of "
-                   "subcommands and options.")
+    description = ("Tests reports.py through its range of subcommands "
+                   "and options.")
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
@@ -96,4 +69,5 @@ if __name__ == "__main__":
         setup_build_ready_bitcoin_repo(settings.tmp_directory,
                                        branch="v0.13.2"))
     settings.test_bin_dir = setup_test_bin_dir(settings.tmp_directory)
-    TestClangStaticAnalysisCmd(settings).run()
+    settings.test_style_file = setup_test_style_file(settings.tmp_directory)
+    TestReportsCmd(settings).run()

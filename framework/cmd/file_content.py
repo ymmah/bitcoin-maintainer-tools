@@ -95,8 +95,8 @@ class FileContentCmd(RepositoryCmd):
         r = results
         b.separator()
         b.add("%4d files tracked in repo\n" % r['tracked_files'])
-        b.add("%4d files in scope according to script settings\n" %
-              r['files_in_scope'])
+        b.add("%4d files in scope according to .bitcoin_maintainer_tools.json "
+              "settings\n" % r['files_in_scope'])
         b.add("%4d files examined according to listed targets\n" %
               r['files_targeted'])
         b.add("%4d parallel jobs for computing analysis\n" % r['jobs'])

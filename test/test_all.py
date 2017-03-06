@@ -11,6 +11,8 @@ from framework.cmd.repository import RepositoryCmds
 from test_basic_style import TestBasicStyleCmd
 from test_copyright_header import TestCopyrightHeaderCmd
 from test_clang_format import TestClangFormatCmd
+from test_clang_static_analysis import TestClangStaticAnalysisCmd
+from test_reports import TestReportsCmd
 from framework.test.clang import setup_test_bin_dir
 from framework.test.clang import setup_test_style_file
 
@@ -25,6 +27,7 @@ class TestAll(RepositoryCmds):
             'copyright_header':      TestCopyrightHeaderCmd(settings),
             'clang_format':          TestClangFormatCmd(settings),
             'clang_static_analysis': TestClangStaticAnalyisCmd(settings),
+            'reports':               TestReportsCmd(settings),
         }
         super().__init__(settings, repository_cmds)
 
@@ -41,6 +44,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
+    print("Warning - this test takes a long time to run since many builds are "
+          "done (in serial). It might better to invoke the individual scripts "
+          "in a targeted fashion or run the TravisCI check instead (where the "
+          "components are run in parallel).")
     settings.repository = (
         setup_build_ready_bitcoin_repo(settings.tmp_directory,
                                        branch="v0.13.2"))
