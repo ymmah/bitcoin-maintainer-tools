@@ -29,9 +29,13 @@ class FileFilter(object):
         return re.compile('|'.join([fnmatch.translate(f) for f in fnmatches]))
 
     def append_include(self, fnmatches, base_path=None):
+        if len(fnmatches) == 0:
+            return
         self._append('include', self._compile(fnmatches, base_path))
 
     def append_exclude(self, fnmatches, base_path=None):
+        if len(fnmatches) == 0:
+            return
         self._append('exclude', self._compile(fnmatches, base_path))
 
     def _matches_regex(self, path, regex):

@@ -20,7 +20,8 @@
          "bin/reports.py",
          "bin/copyright_header.py",
          "test/test_all.py",
-         "test/test_copyright_header.py"
+         "test/test_copyright_header.py",
+         "clang-format.py"
       ]
    }
 }
