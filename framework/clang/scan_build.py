@@ -50,7 +50,7 @@ class ScanBuildPlistDirectory(Path):
         relevant_plists = (plist for plist in read_plists if
                            len(plist['diagnostics']) > 0)
         return list(itertools.chain(*[self._plist_to_issue(plist) for plist in
-                                     relevant_plists]))
+                                    relevant_plists]))
 
 
 class ScanBuildReportDirectory(Path):
@@ -101,4 +101,3 @@ class ScanBuild(Make):
 
     def get_results(self):
         return self.report_dir.most_recent_results()
-

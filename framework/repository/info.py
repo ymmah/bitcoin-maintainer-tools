@@ -12,8 +12,8 @@ from framework.file.io import read_file
 from framework.git.path import GitPath
 
 REPO_INFO_FILENAME = ".bitcoin-maintainer-tools.json"
-
 FAILBACK_REPO_INFO_FILENAME = ".failback-bitcoin-maintainer-tools.json"
+
 
 class RepositoryInfo(dict):
     """

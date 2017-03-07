@@ -15,7 +15,7 @@ BUILD_TARGET_SUBDIR = "berkeleydb-install"
 BUILD_FROM_SUBDIR = "build_unix"
 CONFIGURE_SCRIPT = "../dist/configure"
 CONFIGURE_OUTFILE = "bdb-configure.log"
-CONFIGURE_OPTIONS ="--enable-cxx --disable-shared --with-pic --prefix=%s"
+CONFIGURE_OPTIONS = "--enable-cxx --disable-shared --with-pic --prefix=%s"
 MAKE_OUTFILE = "bdb-make-install.log"
 
 
@@ -32,7 +32,8 @@ class BerkeleyDbBuild(object):
                                              BUILD_TARGET_SUBDIR)
         self.src_dir = os.path.join(self.directory, SRC_SUBDIR)
         self.build_from_dir = os.path.join(self.src_dir, BUILD_FROM_SUBDIR)
-        self.configure_outfile = os.path.join(self.directory, CONFIGURE_OUTFILE)
+        self.configure_outfile = os.path.join(self.directory,
+                                              CONFIGURE_OUTFILE)
         self.make_outfile = os.path.join(self.directory, MAKE_OUTFILE)
         self.downloader = BerkeleyDbDownload(self.directory,
                                              silent=self.silent)

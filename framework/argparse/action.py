@@ -10,6 +10,7 @@ import tempfile
 
 from framework.path.path import Path
 
+
 class TmpDirectoryAction(argparse.Action):
     def __call__(self, parser, namespace, values, option_string=None):
         if not isinstance(values, str):

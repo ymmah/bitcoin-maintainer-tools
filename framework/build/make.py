@@ -33,4 +33,4 @@ class Make(BuildStep):
             args = args + " %s" % self.options
         if self.target:
             args = args + " %s" % self.target
-        return  "make%s" % (args)
+        return "make%s" % args

@@ -12,6 +12,7 @@ import argparse
 from framework.print.buffer import PrintBuffer
 from framework.cmd.repository import RepositoryCmd
 
+
 class ScriptTestCmd(RepositoryCmd):
     """
     Superclass for structuring a command that invokes a script in order to test

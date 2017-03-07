@@ -9,6 +9,7 @@ from framework.git.clone import GitClone
 
 DEFAULT_UPSTREAM_URL = "https://github.com/bitcoin/bitcoin/"
 
+
 class BitcoinClone(object):
     """
     Clones a bitcoin repository to a directory. If the directory already

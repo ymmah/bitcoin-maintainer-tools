@@ -5,6 +5,7 @@
 
 from framework.build.step import BuildStep
 
+
 class Configure(BuildStep):
     """
     Executes './configure' on the source directory.

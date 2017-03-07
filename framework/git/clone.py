@@ -10,6 +10,7 @@ import subprocess
 from framework.git.repository import GitRepository
 from framework.path.path import Path
 
+
 class GitClone(object):
     def __init__(self, upstream_url, silent=False):
         self.upstream_url = upstream_url

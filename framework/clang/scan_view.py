@@ -5,6 +5,7 @@
 
 from framework.print.buffer import PrintBuffer
 
+
 class ScanView(object):
     """
     Encapsulates clang's 'scan-view' utility which displays 'scan-build'

@@ -7,6 +7,7 @@ import hashlib
 
 BUF_SIZE = 65536
 
+
 class FileHash(object):
     """
     Calculates and represents the SHA256 hash of the contents of the file

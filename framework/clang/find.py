@@ -121,4 +121,3 @@ class ClangFind(object):
 
     def best(self, bin_name):
         return self.best_binaries()[bin_name]
-

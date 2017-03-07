@@ -5,6 +5,7 @@
 
 from framework.build.step import BuildStep
 
+
 class Autogen(BuildStep):
     """
     Executes './autogen' on the source directory.

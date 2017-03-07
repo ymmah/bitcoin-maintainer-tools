@@ -14,6 +14,7 @@ AUTOGEN_LOG = "autogen.log"
 CONFIGURE_LOG = "configure.log"
 TEST_BRANCH = "v0.14.0"
 
+
 def bitcoin_setup_repo(directory, upstream_url=DEFAULT_UPSTREAM_URL,
                        branch=TEST_BRANCH, silent=False):
     clone_dir = os.path.join(directory, CLONE_DIR)

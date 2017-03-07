@@ -9,6 +9,7 @@ import subprocess
 
 from framework.path.path import Path
 
+
 class GitPath(Path):
     """
     A Path that has some additional functions for awareness of the git
@@ -45,6 +46,7 @@ class GitPath(Path):
 
 
 GIT_LOG_CMD = "git log --follow --pretty=format:%%ai %s"
+
 
 class GitFilePath(GitPath):
     """

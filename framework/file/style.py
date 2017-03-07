@@ -47,6 +47,7 @@ class FileStyleScore(object):
 
 DIFFER = difflib.Differ()
 
+
 class FileStyleDiff(dict):
     """
     Computes metrics about a diff between two versions of content in a file.
@@ -81,4 +82,3 @@ class FileStyleDiff(dict):
 
         sums = [sum(c) for c in zip(*classify_diff_lines(diff))]
         return (sums[0], sums[1], sums[2]) if len(sums) == 3 else (0, 0, 0)
-

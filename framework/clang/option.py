@@ -18,6 +18,7 @@ from framework.argparse.option import add_tmp_directory_option
 from framework.argparse.option import DEFAULT_TMP_DIR
 from framework.file.io import read_file, write_file
 
+
 ###############################################################################
 # actions
 ###############################################################################
@@ -82,6 +83,7 @@ def add_clang_bin_path_option(parser):
     parser.add_argument("-b", "--bin-path", type=str,
                         action=ClangDirectoryAction, help=b_help)
 
+
 def add_clang_format_style_file_option(parser):
     sf_help = ("path to the clang style file to be used (default=The "
                "src/.clang_format file specified in the repo info)")
@@ -133,8 +135,8 @@ def finish_clang_settings(settings):
         scan_build = finder.best('scan-build')
         scan_view = finder.best('scan-view')
     # clang-format settings:
-    default_style = os.path.join(str(settings.repository),
-        settings.repository.repo_info['clang_format_style']['value'])
+    json_style = settings.repository.repo_info['clang_format_style']['value']
+    default_style = os.path.join(str(settings.repository), json_style)
     clang_format_style_path = (settings.style_file if
                                (hasattr(settings, 'style_file') and
                                 settings.style_file) else default_style)

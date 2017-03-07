@@ -8,6 +8,7 @@ import os
 
 from framework.argparse.action import TmpDirectoryAction
 
+
 def add_jobs_option(parser):
     j_help = "parallel jobs for computations (default=4)"
     parser.add_argument("-j", "--jobs", type=int, default=4, help=j_help)
@@ -20,6 +21,7 @@ def add_json_option(parser):
 
 DEFAULT_TMP_DIR = os.path.join(tempfile.gettempdir(),
                                'bitcoin-maintainer-tools/')
+
 
 def add_tmp_directory_option(parser):
     r_help = ("path for the maintainer tools to write temporary files."

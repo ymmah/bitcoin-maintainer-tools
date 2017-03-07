@@ -13,6 +13,7 @@ from framework.clang.tarball import ClangTarball
 
 UNTAR = "tar -xJf %s"
 
+
 class ClangDownload(object):
     """
     Downloads, verifies and unpacks a clang 3.9.0 release tarball that
@@ -55,4 +56,3 @@ class ClangDownload(object):
             sys.exit("*** could not unpack %s" % self.download_path)
         return os.path.join(self.directory,
                             self.tarball.unpacked_directory())
-

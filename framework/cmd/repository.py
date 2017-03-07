@@ -6,11 +6,12 @@
 import sys
 import json
 
+
 class RepositoryCmd(object):
     """
-    Superclass for a command or subcommand that is targeted at a git repository.
-    'silent=True' instructs to only print what is produced by the _output()
-    function.
+    Superclass for a command or subcommand that is targeted at a git
+    repository. 'silent=True' instructs to only print what is produced by the
+    _output() function.
     """
     def __init__(self, settings, silent=False):
         assert hasattr(settings, 'repository')

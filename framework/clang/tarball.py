@@ -5,6 +5,7 @@
 
 import platform
 
+
 class ClangTarball(object):
     """
     Matches the current platform to the LLVM download. Only works for platforms
