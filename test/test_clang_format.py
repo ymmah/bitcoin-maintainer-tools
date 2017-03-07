@@ -74,7 +74,9 @@ def test_format(repository):
     print(exec_cmd_no_error(cmd))
     check_cmd = "bin/clang_format.py check --force %s" % repository
     modify_cmd = "bin/clang_format.py format --force %s" % repository
-    exec_modify_fixes_check(repository, check_cmd, modify_cmd)
+    # Two rounds of 'format' are needed to adjust the style of
+    # src/validation.cpp to match, so this fails.
+    exec_modify_doesnt_fix_check(repository, check_cmd, modify_cmd)
     repository.reset_hard_head()
     check_cmd = ("bin/clang_format.py check --force %s/src/init.cpp" %
                  repository)
