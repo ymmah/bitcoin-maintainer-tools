@@ -12,9 +12,9 @@ CLONE_DIR = "bitcoin-test-repo"
 BDB_DIR = "berkeley-db"
 AUTOGEN_LOG = "autogen.log"
 CONFIGURE_LOG = "configure.log"
-TEST_BRANCH = "v0.13.2"
+TEST_BRANCH = "v0.14.0"
 
-def setup_bitcoin_repo(directory, upstream_url=DEFAULT_UPSTREAM_URL,
+def bitcoin_setup_repo(directory, upstream_url=DEFAULT_UPSTREAM_URL,
                        branch=TEST_BRANCH, silent=False):
     clone_dir = os.path.join(directory, CLONE_DIR)
     repository = BitcoinRepository(clone_dir, clone=True,
@@ -23,10 +23,10 @@ def setup_bitcoin_repo(directory, upstream_url=DEFAULT_UPSTREAM_URL,
     return repository
 
 
-def setup_build_ready_bitcoin_repo(directory,
+def bitcoin_setup_build_ready_repo(directory,
                                    upstream_url=DEFAULT_UPSTREAM_URL,
                                    branch=TEST_BRANCH, silent=False):
-    repository = setup_bitcoin_repo(directory, upstream_url=upstream_url,
+    repository = bitcoin_setup_repo(directory, upstream_url=upstream_url,
                                     branch=branch, silent=silent)
     bdb_dir = os.path.join(directory, BDB_DIR)
     autogen_log = os.path.join(directory, AUTOGEN_LOG)

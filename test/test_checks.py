@@ -7,15 +7,15 @@ import os
 import argparse
 
 from framework.argparse.option import add_tmp_directory_option
-from framework.bitcoin.setup import setup_build_ready_bitcoin_repo
 from framework.test.exec import exec_cmd_no_error
 from framework.test.exec import exec_cmd_error
 from framework.test.exec import exec_cmd_json_no_error
 from framework.test.exec import exec_cmd_json_error
 from framework.test.exec import exec_modify_fixes_check
 from framework.test.exec import exec_modify_doesnt_fix_check
-from framework.test.clang import setup_test_bin_dir
-from framework.test.clang import setup_test_style_file
+from framework.bitcoin.setup import bitcoin_setup_build_ready_repo
+from framework.clang.setup import clang_setup_bin_dir
+from framework.clang.setup import clang_setup_test_style_file
 from framework.test.cmd import ScriptTestCmd
 
 ###############################################################################
@@ -68,8 +68,9 @@ if __name__ == "__main__":
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
     settings.repository = (
-        setup_build_ready_bitcoin_repo(settings.tmp_directory,
-                                       branch="v0.13.2"))
-    settings.test_bin_dir = setup_test_bin_dir(settings.tmp_directory)
-    settings.test_style_file = setup_test_style_file(settings.tmp_directory)
+        bitcoin_setup_build_ready_repo(settings.tmp_directory,
+                                       branch="v0.14.0"))
+    settings.test_bin_dir = clang_setup_bin_dir(settings.tmp_directory)
+    settings.test_style_file = (
+        clang_setup_test_style_file(settings.tmp_directory))
     TestChecksCmd(settings).run()

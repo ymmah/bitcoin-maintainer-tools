@@ -7,7 +7,7 @@ import os
 
 from framework.bitcoin.clone import BitcoinClone, DEFAULT_UPSTREAM_URL
 from framework.git.repository import GitRepository
-from framework.berkeleydb.berkeleydb import BerkeleyDb
+from framework.berkeleydb.build import BerkeleyDbBuild
 from framework.build.autogen import Autogen
 from framework.build.configure import Configure
 
@@ -30,7 +30,7 @@ class BitcoinRepository(GitRepository):
         Downloads and builds BerkeleyDb, runs ./autogen.sh and ./configure
         with the prefix set to the built BerkeleyDb.
         """
-        bdb = BerkeleyDb(bdb_directory, silent=self.silent)
+        bdb = BerkeleyDbBuild(bdb_directory, silent=self.silent)
         bdb.build()
         prefix = bdb.prefix()
         Autogen(self.directory, autogen_log).run()

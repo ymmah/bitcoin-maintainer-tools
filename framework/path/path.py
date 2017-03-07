@@ -27,8 +27,6 @@ class Path(object):
 
     def assert_exists(self):
         if not self.exists():
-            import traceback
-            traceback.print_exc()
             sys.exit("*** does not exist: %s" % self.path)
 
     def assert_mode(self, flags):

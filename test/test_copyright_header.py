@@ -7,7 +7,7 @@ import os
 import argparse
 
 from framework.argparse.option import add_tmp_directory_option
-from framework.bitcoin.setup import setup_bitcoin_repo
+from framework.bitcoin.setup import bitcoin_setup_repo
 from framework.test.exec import exec_cmd_no_error
 from framework.test.exec import exec_cmd_error
 from framework.test.exec import exec_cmd_json_no_error
@@ -110,6 +110,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
-    settings.repository = setup_bitcoin_repo(settings.tmp_directory,
-                                             branch="v0.13.2")
+    settings.repository = bitcoin_setup_repo(settings.tmp_directory,
+                                             branch="v0.14.0")
     TestCopyrightHeaderCmd(settings).run()

@@ -6,7 +6,6 @@
 import argparse
 
 from framework.argparse.option import add_tmp_directory_option
-from framework.bitcoin.setup import setup_build_ready_bitcoin_repo
 from framework.cmd.repository import RepositoryCmds
 from test_basic_style import TestBasicStyleCmd
 from test_copyright_header import TestCopyrightHeaderCmd
@@ -14,8 +13,9 @@ from test_clang_format import TestClangFormatCmd
 from test_clang_static_analysis import TestClangStaticAnalysisCmd
 from test_reports import TestReportsCmd
 from test_checks import TestChecksCmd
-from framework.test.clang import setup_test_bin_dir
-from framework.test.clang import setup_test_style_file
+from framework.bitcoin.setup import bitcoin_setup_build_ready_repo
+from framework.clang.setup import clang_setup_bin_dir
+from framework.clang.setup import clang_setup_test_style_file
 
 class TestAll(RepositoryCmds):
     """
@@ -51,8 +51,9 @@ if __name__ == "__main__":
           "scripts individualy or run via the TravisCI check instead (where "
           "the components are run in parallel).\n")
     settings.repository = (
-        setup_build_ready_bitcoin_repo(settings.tmp_directory,
-                                       branch="v0.13.2"))
-    settings.test_bin_dir = setup_test_bin_dir(settings.tmp_directory)
-    settings.test_style_file = setup_test_style_file(settings.tmp_directory)
+        bitcoin_setup_build_ready_repo(settings.tmp_directory,
+                                       branch="v0.14.0"))
+    settings.test_bin_dir = clang_setup_bin_dir(settings.tmp_directory)
+    settings.test_style_file = (
+        clang_setup_test_style_file(settings.tmp_directory))
     TestAll(settings).run()

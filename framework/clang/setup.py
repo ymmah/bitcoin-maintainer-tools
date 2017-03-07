@@ -7,11 +7,10 @@ import os
 import subprocess
 import shutil
 
-from framework.clang.find import ClangFind, CLANG_BINARIES
 from framework.file.io import write_file
-from framework.path.path import Path
+from framework.clang.download import ClangDownload
 
-CLANG_DIR = "clang-test-files"
+CLANG_DIR = "clang-release-dl"
 TEST_STYLE_FILE_NAME = ".alternate-clang-format"
 TEST_STYLE_FILE_CONTENT = """
 Language:        Cpp
@@ -67,30 +66,18 @@ UseTab:          Never
 """
 
 
-def setup_test_style_file(directory):
+def clang_setup_test_style_file(directory):
     clang_dir = os.path.join(directory, CLANG_DIR)
     style_file = os.path.join(clang_dir, TEST_STYLE_FILE_NAME)
     write_file(style_file, TEST_STYLE_FILE_CONTENT)
     return style_file
 
 
-def setup_test_bin_dir(directory):
-    """
-    Copies installed clang binaries into a directory for test purposes
-    """
+def clang_setup_bin_dir(directory):
     clang_dir = os.path.join(directory, CLANG_DIR)
     if not os.path.exists(str(clang_dir)):
         os.makedirs(str(clang_dir))
-    finder = ClangFind()
-    # This is inelegant - copy all the files in the same directory as the
-    # installed binary into the new directory to make it look like an directory
-    # where stuff was 'installed'.
-    for binary in CLANG_BINARIES:
-        src_path = Path(finder.best(binary)['path']).containing_directory()
-        cps = [(os.path.join(src_path, f), os.path.join(clang_dir, f)) for f
-               in os.listdir(src_path) if
-               os.path.isfile(os.path.join(src_path, f))]
-        for src, dst in cps:
-            shutil.copyfile(src, dst)
-            shutil.copymode(src, dst)
-    return clang_dir
+    downloader = ClangDownload(clang_dir)
+    downloader.download()
+    downloader.verify()
+    return downloader.unpack()
