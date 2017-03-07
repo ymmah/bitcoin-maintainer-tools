@@ -17,6 +17,7 @@ from framework.cmd.repository import RepositoryCmd
 from framework.clang.option import add_clang_options
 from framework.clang.option import finish_clang_settings
 
+
 ###############################################################################
 # cmd base class
 ###############################################################################
@@ -141,6 +142,7 @@ class CheckCmd(ClangStaticAnalysisCmd):
     def _shell_exit(self, results):
         return (0 if len(results['issues']) == 0 else
                 "*** static analysis issues found.")
+
 
 def add_check_cmd(subparsers):
     check_help = ("Runs clang static analysis and output details for each "

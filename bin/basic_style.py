@@ -15,7 +15,7 @@ from framework.file.info import FileInfo
 from framework.file.style import FileStyleDiff, FileStyleScore
 from framework.cmd.file_content import FileContentCmd
 from framework.argparse.option import add_jobs_option
-from framework.argparse.option  import add_json_option
+from framework.argparse.option import add_json_option
 from framework.git.parameter import add_git_tracked_targets_parameter
 
 ###############################################################################
@@ -292,9 +292,9 @@ class CheckCmd(BasicStyleCmd):
 
 
 def add_check_cmd(subparsers):
-    check_help = ("Validates that the selected targets do not have basic style "
-                  "issues, give a per-file report and returns a non-zero "
-                  "shell status if there are any basic style issues "
+    check_help = ("Validates that the selected targets do not have basic "
+                  "style issues, give a per-file report and returns a "
+                  "non-zero shell status if there are any basic style issues "
                   "discovered.")
     parser = subparsers.add_parser('check', help=check_help)
     parser.set_defaults(cmd=lambda o: CheckCmd(o))

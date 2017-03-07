@@ -80,8 +80,8 @@ def test_format(repository):
     repository.reset_hard_head()
     check_cmd = ("bin/clang_format.py check --force %s/src/init.cpp" %
                  repository)
-    modify_cmd =("bin/clang_format.py format --force %s/src/init.cpp" %
-                 repository)
+    modify_cmd = ("bin/clang_format.py format --force %s/src/init.cpp" %
+                  repository)
     exec_modify_fixes_check(repository, check_cmd, modify_cmd)
     repository.reset_hard_head()
 
@@ -91,7 +91,7 @@ def tests(settings):
     test_report(settings.repository, settings.test_bin_dir,
                 settings.test_style_file)
     test_check(settings.repository, settings.test_bin_dir,
-                settings.test_style_file)
+               settings.test_style_file)
     test_format(settings.repository)
 
 

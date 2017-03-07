@@ -21,6 +21,7 @@ from framework.clang.option import finish_clang_settings
 
 APPLIES_TO = ['*.cpp', '*.h']
 
+
 ###############################################################################
 # gather file and diff info
 ###############################################################################
@@ -143,7 +144,7 @@ class ReportCmd(ClangFormatCmd):
         r['style_score'] = float(score)
         r['slow_diffs'] = [{'file_path': f['file_path'],
                             'diff_time': f['diff_time']} for f in
-                            file_infos if f['diff_time'] > 1.0]
+                           file_infos if f['diff_time'] > 1.0]
         r['matching'] = sum(1 for f in file_infos if f['matching'])
         r['not_matching'] = sum(1 for f in file_infos if not f['matching'])
         r['formatted_md5'] = self._cumulative_md5()

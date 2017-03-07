@@ -17,6 +17,7 @@ from framework.bitcoin.setup import bitcoin_setup_build_ready_repo
 from framework.clang.setup import clang_setup_bin_dir
 from framework.clang.setup import clang_setup_test_style_file
 
+
 class TestAll(RepositoryCmds):
     """
     Invokes several underlying RepositoryCmd check command instances and and
