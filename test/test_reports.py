@@ -26,8 +26,6 @@ from framework.test.cmd import ScriptTestCmd
 def tests(settings):
     cmd = 'bin/reports.py -h'
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/reports.py -j3 %s' % settings.repository
-    print(exec_cmd_no_error(cmd))
     cmd = 'bin/reports.py --json -j3 %s' % settings.repository
     print(exec_cmd_json_no_error(cmd))
     cmd = 'bin/reports.py -b %s -s %s -j3 %s' % (settings.test_bin_dir,
@@ -37,10 +35,8 @@ def tests(settings):
     # put the results in a different directory:
     test_tmp_dir = os.path.join(settings.tmp_directory,
                                 "another-tmp-directory")
-    cmd = 'bin/reports.py -j3 -t %s %s' % (test_tmp_dir, settings.repository)
-    print(exec_cmd_no_error(cmd))
     # no speecified targets runs it on the path/repository it is invoked from:
-    cmd = 'bin/reports.py'
+    cmd = 'bin/reports.py -t %s' % test_tmp_dir
     original = os.getcwd()
     os.chdir(str(settings.repository))
     print(exec_cmd_no_error(cmd))
