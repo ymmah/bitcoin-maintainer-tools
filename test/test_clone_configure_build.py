@@ -29,10 +29,7 @@ def tests(settings):
     elements_clone_dir = os.path.join(settings.tmp_directory, "elements-clone")
     cmd = 'bin/clone_configure_build.py -h'
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/clone_configure_build.py -j3 -b v0.13.2 %s' % bitcoin_clone_dir
-    print(exec_cmd_no_error(cmd))
-    shutil.rmtree(bitcoin_clone_dir)
-    cmd = 'bin/clone_configure_build.py -b v0.14.0 %s' % bitcoin_clone_dir
+    cmd = 'bin/clone_configure_build.py -j3 -b v0.14.0 %s' % bitcoin_clone_dir
     print(exec_cmd_no_error(cmd))
     shutil.rmtree(bitcoin_clone_dir)
     cmd = ("bin/clone_configure_build.py -u "
