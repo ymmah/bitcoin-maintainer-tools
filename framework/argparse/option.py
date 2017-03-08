@@ -10,7 +10,7 @@ from framework.argparse.action import TmpDirectoryAction
 
 
 def add_jobs_option(parser):
-    j_help = "parallel jobs for computations (default=4)"
+    j_help = "parallel jobs (default=4)"
     parser.add_argument("-j", "--jobs", type=int, default=4, help=j_help)
 
 

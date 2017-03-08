@@ -24,27 +24,26 @@ from framework.test.cmd import ScriptTestCmd
 
 
 def tests(settings):
-    cmd = 'bin/reports.py -h'
+    bitcoin_clone_dir = os.path.join(settings.tmp_directory, "bitcoin-clone")
+    knots_clone_dir = os.path.join(settings.tmp_directory, "knots-clone")
+    cmd = 'bin/clone_configure_build.py -h'
     print(exec_cmd_no_error(cmd))
-    cmd = 'bin/reports.py --json -j3 %s' % settings.repository
-    print(exec_cmd_json_no_error(cmd))
-    cmd = 'bin/reports.py -b %s -s %s -j3 %s' % (settings.test_bin_dir,
-                                                 settings.test_style_file,
-                                                 settings.repository)
+    cmd = 'bin/clone_configure_build.py -j3 -b v0.13.2 %s' % bitcoin_clone_dir
     print(exec_cmd_no_error(cmd))
-    # put the results in a different directory:
-    test_tmp_dir = os.path.join(settings.tmp_directory,
-                                "another-tmp-directory")
-    # no speecified targets runs it on the path/repository it is invoked from:
-    cmd = 'bin/reports.py -t %s' % test_tmp_dir
-    original = os.getcwd()
-    os.chdir(str(settings.repository))
+    os.rmdir(bitcoin_clone_dir)
+    cmd = 'bin/clone_configure_build.py -b v0.14.0 %s' % bitcoin_clone_dir
     print(exec_cmd_no_error(cmd))
-    os.chdir(original)
+    os.rmdir(bitcoin_clone_dir)
+    cmd = ("bin/clone_configure_build.py -u "
+           "https://github.com/bitcoinknots/bitcoin/ -b "
+           "v0.14.0.knots20170307 %s" % knots_clone_dir)
+    print(exec_cmd_no_error(cmd))
+    os.rmdir(knots_clone_dir)
 
 
-class TestReportsCmd(ScriptTestCmd):
+class TestCloneConfigureBuildCmd(ScriptTestCmd):
     def __init__(self, settings):
+        settings.repository = "No repository for this test"
         super().__init__(settings)
         self.title = __file__
 
@@ -57,14 +56,9 @@ class TestReportsCmd(ScriptTestCmd):
 ###############################################################################
 
 if __name__ == "__main__":
-    description = ("Tests reports.py through its range of options.")
+    description = ("Tests clone_configure_build.py through its range of "
+                   "options.")
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
-    settings.repository = (
-        bitcoin_setup_build_ready_repo(settings.tmp_directory,
-                                       branch="v0.14.0"))
-    settings.test_bin_dir = clang_setup_bin_dir(settings.tmp_directory)
-    settings.test_style_file = (
-        clang_setup_test_style_file(settings.tmp_directory))
-    TestReportsCmd(settings).run()
+    TestCloneConfigureBuildCmd(settings).run()

@@ -57,8 +57,7 @@ class TestChecksCmd(ScriptTestCmd):
 ###############################################################################
 
 if __name__ == "__main__":
-    description = ("Tests checks.py through its range of subcommands and"
-                   "options.")
+    description = ("Tests checks.py through its range of options.")
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()

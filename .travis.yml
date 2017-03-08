@@ -10,6 +10,7 @@ cache:
   - /tmp/bitcoin-maintainer-tools/berkeley-db/
 env:
   matrix:
+    - TEST_SCRIPT="test/test_clone_configure_build.py"
     - TEST_SCRIPT="test/test_clang_static_analysis.py"
     - TEST_SCRIPT="test/test_reports.py"
     - TEST_SCRIPT="test/test_checks.py"

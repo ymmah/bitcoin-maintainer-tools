@@ -13,6 +13,7 @@ from test_clang_format import TestClangFormatCmd
 from test_clang_static_analysis import TestClangStaticAnalysisCmd
 from test_reports import TestReportsCmd
 from test_checks import TestChecksCmd
+from test_clone_configure_build import TestCloneConfigureBuildCmd
 from framework.bitcoin.setup import bitcoin_setup_build_ready_repo
 from framework.clang.setup import clang_setup_bin_dir
 from framework.clang.setup import clang_setup_test_style_file
@@ -31,6 +32,7 @@ class TestAll(RepositoryCmds):
             'clang_static_analysis': TestClangStaticAnalysisCmd(settings),
             'reports':               TestReportsCmd(settings),
             'checks':                TestChecksCmd(settings),
+            'clone_configure_build': TestCloneConfigureBuildCmd(settings),
         }
         super().__init__(settings, repository_cmds)
 
