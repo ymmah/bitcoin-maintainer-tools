@@ -48,6 +48,7 @@
    "other_copyright_occurrences_expected" : {
       "description" : "Files where it is expected to have an occurrence of the sequence of characters 'Copyright', 'COPYRIGHT', or 'copyright' in the file outside of the MIT Licence copyright header. This list helps to ensures we are keeping close track where there may be external considerations for licence and copyright. Expressed as a list of fnmatch expressions.",
       "fnmatches" : [
+         "contrib/devtools/copyright_header.py",
          "contrib/devtools/gen-manpages.sh",
          "share/qt/extract_strings_qt.py",
          "src/Makefile.qt.include",

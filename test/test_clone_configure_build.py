@@ -5,6 +5,7 @@
 
 import os
 import argparse
+import shutil
 
 from framework.argparse.option import add_tmp_directory_option
 from framework.test.exec import exec_cmd_no_error
@@ -25,20 +26,20 @@ from framework.test.cmd import ScriptTestCmd
 
 def tests(settings):
     bitcoin_clone_dir = os.path.join(settings.tmp_directory, "bitcoin-clone")
-    knots_clone_dir = os.path.join(settings.tmp_directory, "knots-clone")
+    elements_clone_dir = os.path.join(settings.tmp_directory, "elements-clone")
     cmd = 'bin/clone_configure_build.py -h'
     print(exec_cmd_no_error(cmd))
     cmd = 'bin/clone_configure_build.py -j3 -b v0.13.2 %s' % bitcoin_clone_dir
     print(exec_cmd_no_error(cmd))
-    os.rmdir(bitcoin_clone_dir)
+    shutil.rmtree(bitcoin_clone_dir)
     cmd = 'bin/clone_configure_build.py -b v0.14.0 %s' % bitcoin_clone_dir
     print(exec_cmd_no_error(cmd))
-    os.rmdir(bitcoin_clone_dir)
+    shutil.rmtree(bitcoin_clone_dir)
     cmd = ("bin/clone_configure_build.py -u "
-           "https://github.com/bitcoinknots/bitcoin/ -b "
-           "v0.14.0.knots20170307 %s" % knots_clone_dir)
+           "https://github.com/ElementsProject/elements -b "
+           "elements-0.13.1 %s" % elements_clone_dir)
     print(exec_cmd_no_error(cmd))
-    os.rmdir(knots_clone_dir)
+    shutil.rmtree(elements_clone_dir)
 
 
 class TestCloneConfigureBuildCmd(ScriptTestCmd):

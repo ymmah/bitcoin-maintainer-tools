@@ -1,5 +1,5 @@
 {
-   "description" : "This json object is the failback for when the .bitcoin-maintainer-tools.json file is not present in the target repository. It describes the details of the repository to guide how the tools operate.",
+   "description" : "This json object describes the local details of the repository to guide how the tools tools operate.",
    "subtrees" : {
       "description" : "Subtrees of the repository which should be ignored since they follow different rules. Expressed as a list of fmnmatch expressions.",
       "fnmatches" : [
