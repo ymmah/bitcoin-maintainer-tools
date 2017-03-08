@@ -49,10 +49,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=description)
     add_tmp_directory_option(parser)
     settings = parser.parse_args()
-    print("\nWarning - This test takes a long time to run since many builds "
-          "are done in serial. It might better to invoke the individual "
-          "scripts individualy or run via the TravisCI check instead (where "
-          "the components are run in parallel).\n")
     settings.repository = (
         bitcoin_setup_build_ready_repo(settings.tmp_directory,
                                        branch="v0.14.0"))

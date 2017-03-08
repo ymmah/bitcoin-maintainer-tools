@@ -36,8 +36,8 @@ def tests(settings):
     print(exec_cmd_no_error(cmd))
     shutil.rmtree(bitcoin_clone_dir)
     cmd = ("bin/clone_configure_build.py -u "
-           "https://github.com/ElementsProject/elements -b "
-           "elements-0.13.1 %s" % elements_clone_dir)
+           "https://github.com/ElementsProject/elements -b elements-0.13.1 %s"
+           % elements_clone_dir)
     print(exec_cmd_no_error(cmd))
     shutil.rmtree(elements_clone_dir)
 
